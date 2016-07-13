@@ -13,12 +13,15 @@ import (
 	"time"
 
 	"github.com/admpub/core"
+	"github.com/webx-top/dbx/config"
 	"github.com/webx-top/dbx/driver"
 )
 
 const Version = "0.1.0"
 
-func connect(driverName string, dataSourceName string) (*core.DB, core.Dialect, error) {
+func connect(conf *config.Config) (*core.DB, core.Dialect, error) {
+	driverName := conf.Engine
+	dataSourceName := conf.String()
 	driver := core.QueryDriver(driverName)
 	if driver == nil {
 		return nil, nil, fmt.Errorf("Unsupported driver name: %v", driverName)
@@ -80,10 +83,10 @@ func close(engine *Engine) {
 
 // NewEngine new a db manager according to the parameter. Currently support four
 // drivers
-func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
+func NewEngine(conf *config.Config) (*Engine, error) {
 	driver.RegDatabaseDrivers()
 
-	db, dialect, err := connect(driverName, dataSourceName)
+	db, dialect, err := connect(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +100,8 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 }
 
 // AddSlaveDB .
-func (engine *Engine) AddSlaveDB(driverName string, dataSourceName string) error {
-	db, dialect, err := connect(driverName, dataSourceName)
+func (engine *Engine) AddSlaveDB(conf *config.Config) error {
+	db, dialect, err := connect(conf)
 	if err != nil {
 		return err
 	}
@@ -107,8 +110,8 @@ func (engine *Engine) AddSlaveDB(driverName string, dataSourceName string) error
 }
 
 // AddMasterDB .
-func (engine *Engine) AddMasterDB(driverName string, dataSourceName string) error {
-	db, dialect, err := connect(driverName, dataSourceName)
+func (engine *Engine) AddMasterDB(conf *config.Config) error {
+	db, dialect, err := connect(conf)
 	if err != nil {
 		return err
 	}
@@ -118,7 +121,8 @@ func (engine *Engine) AddMasterDB(driverName string, dataSourceName string) erro
 
 // Clone clone an engine
 func (engine *Engine) Clone() (*Engine, error) {
-	return NewEngine(engine.DriverName(), engine.DataSourceName())
+	newEngine := *engine
+	return &newEngine
 }
 
 func (engine *Engine) Init(db *core.DB, dialect core.Dialect) *Engine {
