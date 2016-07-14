@@ -4,47 +4,47 @@ import (
 	"github.com/admpub/core"
 )
 
-type DatabaseDriver struct {
+type DBDriver struct {
 	Type    core.DbType
 	Driver  func() core.Driver
 	Dialect func() core.Dialect
 }
 
-func (d *DatabaseDriver) IsZero() bool {
+func (d *DBDriver) IsZero() bool {
 	return d.Dialect == nil && d.Dialect == nil
 }
 
-var defaultDatabaseDriver = &DatabaseDriver{
+var defaultDBDriver = &DBDriver{
 	Type:    `None`,
 	Driver:  nil,
 	Dialect: nil,
 }
 
-var databaseDrivers = make(map[string]*DatabaseDriver)
+var dbDrivers = make(map[string]*DBDriver)
 
-func RegDatabaseDriver(name string, driver *DatabaseDriver) {
-	databaseDrivers[name] = driver
+func RegDBDriver(name string, driver *DBDriver) {
+	dbDrivers[name] = driver
 }
 
-func GetDatabaseDriver(name string) *DatabaseDriver {
-	if dr, ok := databaseDrivers[name]; ok {
+func GetDBDriver(name string) *DBDriver {
+	if dr, ok := dbDrivers[name]; ok {
 		return dr
 	}
-	return defaultDatabaseDriver
+	return defaultDBDriver
 }
 
-func DelDatabaseDriver(name string) {
-	if _, ok := databaseDrivers[name]; ok {
-		delete(databaseDrivers, name)
+func DelDBDriver(name string) {
+	if _, ok := dbDrivers[name]; ok {
+		delete(dbDrivers, name)
 	}
 }
 
-func ResetDatabaseDriver() {
-	databaseDrivers = make(map[string]*DatabaseDriver)
+func ResetDBDriver() {
+	dbDrivers = make(map[string]*DBDriver)
 }
 
-func RegDatabaseDrivers() {
-	for driverName, v := range databaseDrivers {
+func RegDBDrivers() {
+	for driverName, v := range dbDrivers {
 		if driver := core.QueryDriver(driverName); driver == nil {
 			core.RegisterDriver(driverName, v.Driver())
 			core.RegisterDialect(v.Type, v.Dialect)

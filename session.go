@@ -22,7 +22,8 @@ import (
 // Struct Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
-	db                     *core.DB
+	readDB                 *core.DB
+	writeDB                *core.DB
 	Engine                 *Engine
 	Tx                     *core.Tx
 	Statement              Statement
@@ -77,6 +78,7 @@ func (session *Session) Init() {
 	session.beforeClosures = make([]func(interface{}), 0)
 	session.afterClosures = make([]func(interface{}), 0)
 
+	session.stmtCache = make(map[uint32]*core.Stmt, 0)
 	session.lastSQL = ""
 	session.lastSQLArgs = []interface{}{}
 }
@@ -87,7 +89,7 @@ func (session *Session) Close() {
 		v.Close()
 	}
 
-	if session.db != nil {
+	if session.writeDB != nil || session.readDB != nil {
 		// When Close be called, if session is a transaction and do not call
 		// Commit or Rollback, then call Rollback.
 		if session.Tx != nil && !session.IsCommitedOrRollbacked {
@@ -96,7 +98,8 @@ func (session *Session) Close() {
 		session.Tx = nil
 		session.stmtCache = nil
 		session.Init()
-		session.db = nil
+		session.readDB = nil
+		session.writeDB = nil
 	}
 }
 
@@ -346,17 +349,22 @@ func (session *Session) Having(conditions string) *Session {
 
 // DB db return the wrapper of sql.DB
 func (session *Session) DB(args ...bool) *core.DB {
-	if session.db == nil {
-		session.db = session.Engine.DB(args...)
-		session.stmtCache = make(map[uint32]*core.Stmt, 0)
+	if session.Tx == nil && len(args) > 0 && args[0] {
+		if session.readDB == nil {
+			session.readDB = session.Engine.DB(R)
+		}
+		return session.readDB
 	}
-	return session.db
+	if session.writeDB == nil {
+		session.writeDB = session.Engine.DB(W)
+	}
+	return session.writeDB
 }
 
 // Begin a transaction
 func (session *Session) Begin() error {
 	if session.IsAutoCommit {
-		tx, err := session.DB().Begin()
+		tx, err := session.DB(W).Begin()
 		if err != nil {
 			return err
 		}
@@ -388,7 +396,6 @@ func (session *Session) Commit() error {
 			// handle processors after tx committed
 
 			closureCallFunc := func(closuresPtr *[]func(interface{}), bean interface{}) {
-
 				if closuresPtr != nil {
 					for _, closure := range *closuresPtr {
 						closure(bean)
@@ -484,7 +491,7 @@ func (session *Session) scanMapIntoStruct(obj interface{}, objMap map[string][]b
 // Execute sql
 func (session *Session) innerExec(sqlStr string, args ...interface{}) (sql.Result, error) {
 	if session.prepareStmt {
-		stmt, err := session.doPrepare(sqlStr)
+		stmt, err := session.doPrepare(sqlStr, W)
 		if err != nil {
 			return nil, err
 		}
@@ -496,7 +503,7 @@ func (session *Session) innerExec(sqlStr string, args ...interface{}) (sql.Resul
 		return res, nil
 	}
 
-	return session.DB().Exec(sqlStr, args...)
+	return session.DB(W).Exec(sqlStr, args...)
 }
 
 func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, error) {
@@ -714,7 +721,7 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 	table := session.Statement.RefTable
 	if err != nil {
 		var res = make([]string, len(table.PrimaryKeys))
-		rows, err := session.DB().Query(newsql, args...)
+		rows, err := session.DB(R).Query(newsql, args...)
 		if err != nil {
 			return false, err
 		}
@@ -812,7 +819,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 	cacher := session.Engine.getCacher2(table)
 	ids, err := core.GetCacheSql(cacher, session.Statement.TableName(), newsql, args)
 	if err != nil {
-		rows, err := session.DB().Query(newsql, args...)
+		rows, err := session.DB(R).Query(newsql, args...)
 		if err != nil {
 			return err
 		}
@@ -1017,13 +1024,13 @@ func (session *Session) Iterate(bean interface{}, fun IterFunc) error {
 	return err
 }
 
-func (session *Session) doPrepare(sqlStr string) (stmt *core.Stmt, err error) {
+func (session *Session) doPrepare(sqlStr string, args ...bool) (stmt *core.Stmt, err error) {
 	crc := crc32.ChecksumIEEE([]byte(sqlStr))
 	// TODO try hash(sqlStr+len(sqlStr))
 	var has bool
 	stmt, has = session.stmtCache[crc]
 	if !has {
-		stmt, err = session.DB().Prepare(sqlStr)
+		stmt, err = session.DB(args...).Prepare(sqlStr)
 		if err != nil {
 			return nil, err
 		}
@@ -1321,13 +1328,13 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 }
 
 // Ping test if database is ok
-func (session *Session) Ping() error {
+func (session *Session) Ping(args ...bool) error {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
 	}
 
-	return session.DB().Ping()
+	return session.DB(args...).Ping()
 }
 
 func (engine *Engine) tableName(beanOrTableName interface{}) (string, error) {
@@ -1384,7 +1391,7 @@ func (session *Session) isTableEmpty(tableName string) (bool, error) {
 
 	var total int64
 	sql := fmt.Sprintf("select count(*) from %s", session.Engine.Quote(tableName))
-	err := session.DB().QueryRow(sql).Scan(&total)
+	err := session.DB(R).QueryRow(sql).Scan(&total)
 	session.saveLastSQL(sql)
 	if err != nil {
 		return true, err
@@ -2040,7 +2047,7 @@ func (session *Session) innerQuery(sqlStr string, params ...interface{}) (*core.
 	var callback func() (*core.Stmt, *core.Rows, error)
 	if session.prepareStmt {
 		callback = func() (*core.Stmt, *core.Rows, error) {
-			stmt, err := session.doPrepare(sqlStr)
+			stmt, err := session.doPrepare(sqlStr, R)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -2052,7 +2059,7 @@ func (session *Session) innerQuery(sqlStr string, params ...interface{}) (*core.
 		}
 	} else {
 		callback = func() (*core.Stmt, *core.Rows, error) {
-			rows, err := session.DB().Query(sqlStr, params...)
+			rows, err := session.DB(R).Query(sqlStr, params...)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -3299,7 +3306,7 @@ func (session *Session) cacheUpdate(sqlStr string, args ...interface{}) error {
 	session.Engine.TagLogDebug("cache", "[Update] get cache sql", newsql, args[nStart:])
 	ids, err := core.GetCacheSql(cacher, tableName, newsql, args[nStart:])
 	if err != nil {
-		rows, err := session.DB().Query(newsql, args[nStart:]...)
+		rows, err := session.DB(R).Query(newsql, args[nStart:]...)
 		if err != nil {
 			return err
 		}

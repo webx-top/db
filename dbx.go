@@ -84,7 +84,7 @@ func close(engine *Engine) {
 // NewEngine new a db manager according to the parameter. Currently support four
 // drivers
 func NewEngine(conf *config.Config) (*Engine, error) {
-	driver.RegDatabaseDrivers()
+	driver.RegDBDrivers()
 
 	db, dialect, err := connect(conf)
 	if err != nil {
@@ -105,6 +105,7 @@ func (engine *Engine) AddSlaveDB(conf *config.Config) error {
 	if err != nil {
 		return err
 	}
+	dialect.SetLogger(engine.TLogger.Base.Logger)
 	engine.slaveDB = append(engine.slaveDB, &DB{DB: db, Dialect: dialect})
 	return nil
 }
@@ -115,6 +116,7 @@ func (engine *Engine) AddMasterDB(conf *config.Config) error {
 	if err != nil {
 		return err
 	}
+	dialect.SetLogger(engine.TLogger.Base.Logger)
 	engine.masterDB = append(engine.masterDB, &DB{DB: db, Dialect: dialect})
 	return engine
 }
@@ -129,6 +131,8 @@ func (engine *Engine) Init(db *core.DB, dialect core.Dialect) *Engine {
 
 	logger := NewSimpleLogger(os.Stdout)
 	logger.SetLevel(core.LOG_INFO)
+
+	dialect.SetLogger(logger)
 
 	engine.masterDB = []*DB{&DB{DB: db, Dialect: dialect}}
 	engine.slaveDB = []*DB{}
