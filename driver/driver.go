@@ -1,53 +1,50 @@
 package driver
 
 import (
-	"github.com/admpub/core"
+	"time"
 )
 
-type DBDriver struct {
-	Type    core.DbType
-	Driver  func() core.Driver
-	Dialect func() core.Dialect
+type Driver interface {
+	Connect(interface{}, string, ...time.Duration) error
+
+	//Read
+	All(Selecter, interface{}, ...string) error
+	Count(Selecter, interface{}, ...string) (int, error)
+	One(Selecter, interface{}, ...string) error
+
+	//Write
+	Delete(string, CondBuilder, ...string) error
+	Update(string, H, CondBuilder, ...string) error
+	Insert(string, H, ...string) error
+	Upsert(string, H, CondBuilder, ...string) (int, error)
 }
 
-func (d *DBDriver) IsZero() bool {
-	return d.Dialect == nil && d.Dialect == nil
+type H map[string]interface{}
+
+func (h H) Build() interface{} {
+	return h
 }
 
-var defaultDBDriver = &DBDriver{
-	Type:    `None`,
-	Driver:  nil,
-	Dialect: nil,
+type CondBuilder interface {
+	Build() interface{}
 }
 
-var dbDrivers = make(map[string]*DBDriver)
+type Selecter interface {
+	//Setter
+	SetTable(string) Selecter
+	SetCondition(CondBuilder) Selecter
+	SetDistinct(...string) Selecter
+	SetSort(...string) Selecter
+	SetLimit(...int) Selecter
+	SetGroup(...string) Selecter
+	SetHaving(CondBuilder) Selecter
 
-func RegDBDriver(name string, driver *DBDriver) {
-	dbDrivers[name] = driver
-}
-
-func GetDBDriver(name string) *DBDriver {
-	if dr, ok := dbDrivers[name]; ok {
-		return dr
-	}
-	return defaultDBDriver
-}
-
-func DelDBDriver(name string) {
-	if _, ok := dbDrivers[name]; ok {
-		delete(dbDrivers, name)
-	}
-}
-
-func ResetDBDriver() {
-	dbDrivers = make(map[string]*DBDriver)
-}
-
-func RegDBDrivers() {
-	for driverName, v := range dbDrivers {
-		if driver := core.QueryDriver(driverName); driver == nil {
-			core.RegisterDriver(driverName, v.Driver())
-			core.RegisterDialect(v.Type, v.Dialect)
-		}
-	}
+	//Getter
+	Table() string
+	Condition() CondBuilder
+	Distinct() []string
+	Sort() []string
+	Limit() (int, int) //limit,offset
+	Group() []string
+	Having() CondBuilder
 }
