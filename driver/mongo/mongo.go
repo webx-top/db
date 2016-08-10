@@ -3,6 +3,7 @@ package mongo
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	. "github.com/webx-top/dbx/driver"
@@ -70,10 +71,14 @@ func (m *Mongo) All(sel Selecter, result interface{}, args ...string) error {
 	return sess.All(result)
 }
 
-func (m *Mongo) Count(sel Selecter, _ interface{}, args ...string) (int, error) {
+func (m *Mongo) Count(sel Selecter, bean interface{}, args ...string) (int, error) {
 	skip, limit := sel.Limit()
 	sort := sel.Sort()
-	sess := m.Query(sel.Table(), sel.Condition().Build(), args...).Limit(limit).Skip(skip)
+	collection := sel.Table()
+	if len(collection) == 0 {
+		collection = m.CollectionName(bean)
+	}
+	sess := m.Query(collection, sel.Condition().Build(), args...).Limit(limit).Skip(skip)
 	if len(sort) > 0 {
 		sess.Sort(sort...)
 	}
@@ -94,19 +99,23 @@ func (m *Mongo) IsExists(err error) bool {
 	return err == nil || err != mgo.ErrNotFound
 }
 
-func (m *Mongo) Delete(collection string, condition CondBuilder, args ...string) error {
+func (m *Mongo) Delete(bean interface{}, condition CondBuilder, args ...string) error {
+	collection := m.CollectionName(bean)
 	return m.Collection(collection, args...).Remove(condition.Build())
 }
 
-func (m *Mongo) Update(collection string, values H, condition CondBuilder, args ...string) error {
+func (m *Mongo) Update(bean interface{}, values H, condition CondBuilder, args ...string) error {
+	collection := m.CollectionName(bean)
 	return m.Collection(collection, args...).Update(condition.Build(), bson.M(values))
 }
 
-func (m *Mongo) Insert(collection string, values H, args ...string) error {
+func (m *Mongo) Insert(bean interface{}, values H, args ...string) error {
+	collection := m.CollectionName(bean)
 	return m.Collection(collection, args...).Insert(bson.M(values))
 }
 
-func (m *Mongo) Upsert(collection string, values H, condition CondBuilder, args ...string) (int, error) {
+func (m *Mongo) Upsert(bean interface{}, values H, condition CondBuilder, args ...string) (int, error) {
+	collection := m.CollectionName(bean)
 	info, err := m.Collection(collection, args...).Upsert(condition.Build(), bson.M(values))
 	if err != nil {
 		return 0, err
@@ -114,7 +123,8 @@ func (m *Mongo) Upsert(collection string, values H, condition CondBuilder, args 
 	return info.Updated, err
 }
 
-func (m *Mongo) AddIndex(collection string, keyInfo interface{}, args ...string) error {
+func (m *Mongo) AddIndex(bean interface{}, keyInfo interface{}, args ...string) error {
+	collection := m.CollectionName(bean)
 	if key, ok := keyInfo.([]string); ok {
 		return m.Collection(collection, args...).EnsureIndexKey(key...)
 	}
@@ -124,7 +134,8 @@ func (m *Mongo) AddIndex(collection string, keyInfo interface{}, args ...string)
 	return nil
 }
 
-func (m *Mongo) DropIndex(collection string, keyInfo interface{}, args ...string) error {
+func (m *Mongo) DropIndex(bean interface{}, keyInfo interface{}, args ...string) error {
+	collection := m.CollectionName(bean)
 	if key, ok := keyInfo.([]string); ok {
 		return m.Collection(collection, args...).DropIndex(key...)
 	}
@@ -134,7 +145,8 @@ func (m *Mongo) DropIndex(collection string, keyInfo interface{}, args ...string
 	return nil
 }
 
-func (m *Mongo) DropTable(collection string, args ...string) error {
+func (m *Mongo) DropTable(bean interface{}, args ...string) error {
+	collection := m.CollectionName(bean)
 	return m.Collection(collection, args...).DropCollection()
 }
 
@@ -145,3 +157,27 @@ func (m *Mongo) AddTable(collection string, args ...string) error {
 	return m.Collection(collection, args...).Create(collectionInf)
 }
 */
+
+func (m *Mongo) CollectionName(bean interface{}) string {
+	v := reflect.ValueOf(bean)
+	if !v.CanSet() {
+		v = v.Elem()
+	}
+	name := v.Type().Name()
+	return snakeCasedName(name)
+}
+
+func snakeCasedName(name string) string {
+	newstr := make([]rune, 0)
+	for idx, chr := range name {
+		if isUpper := 'A' <= chr && chr <= 'Z'; isUpper {
+			if idx > 0 {
+				newstr = append(newstr, '_')
+			}
+			chr -= ('A' - 'a')
+		}
+		newstr = append(newstr, chr)
+	}
+
+	return string(newstr)
+}

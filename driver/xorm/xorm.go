@@ -1,11 +1,12 @@
 package xorm
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
+	"github.com/admpub/mapstruct"
 	. "github.com/coscms/xorm"
 	. "github.com/webx-top/dbx/driver"
 )
@@ -117,48 +118,65 @@ func (m *XORM) IsExists(err error) bool {
 	return err == nil || err != ErrNotExist
 }
 
-func (m *XORM) Delete(collection string, condition CondBuilder, args ...string) error {
+func (m *XORM) Delete(bean interface{}, condition CondBuilder, args ...string) error {
 	cond := condition.Build().(*Condition)
-	_, err := m.Table(collection).Where(cond.SQL, cond.Args...).Delete(nil)
+	_, err := m.Table(bean).Where(cond.SQL, cond.Args...).Delete(bean)
 	return err
 }
 
-func (m *XORM) Update(collection string, values H, condition CondBuilder, args ...string) error {
-	return m.Collection(collection, args...).Update(condition.Build(), bson.M(values))
+func (m *XORM) Update(bean interface{}, values H, condition CondBuilder, args ...string) error {
+	cond := condition.Build().(*Condition)
+	if err := mapstruct.Map2Struct(values, bean); err != nil {
+		return err
+	}
+	cols := []string{}
+	for key := range values {
+		cols = append(cols, key)
+	}
+	_, err := m.Table(bean).Where(cond.SQL, cond.Args...).MustCols(cols...).Update(bean)
+	return err
 }
 
-func (m *XORM) Insert(collection string, values H, args ...string) error {
-	return m.Collection(collection, args...).Insert(bson.M(values))
+func (m *XORM) Insert(bean interface{}, values H, args ...string) error {
+	if err := mapstruct.Map2Struct(values, bean); err != nil {
+		return err
+	}
+	_, err := m.Table(bean).Insert(bean)
+	return err
 }
 
-func (m *XORM) Upsert(collection string, values H, condition CondBuilder, args ...string) (int, error) {
-	info, err := m.Collection(collection, args...).Upsert(condition.Build(), bson.M(values))
+func (m *XORM) Upsert(bean interface{}, values H, condition CondBuilder, args ...string) (int, error) {
+	cond := condition.Build().(*Condition)
+	v := reflect.ValueOf(bean)
+	if !v.CanSet() {
+		v = v.Elem()
+	}
+	ve := reflect.New(v.Type())
+	newBean := ve.Interface()
+	has, err := m.Where(cond.SQL, cond.Args...).Get(newBean)
 	if err != nil {
 		return 0, err
 	}
-	return info.Updated, err
+	if err := mapstruct.Map2Struct(values, bean); err != nil {
+		return 0, err
+	}
+	var affected int64
+	if has {
+		affected, err = m.Engine.Where(cond.SQL, cond.Args...).Update(bean)
+	} else {
+		err = m.Engine.Insert(bean)
+	}
+	return int(affected), err
 }
 
-func (m *XORM) AddIndex(collection string, keyInfo interface{}, args ...string) error {
-	if key, ok := keyInfo.([]string); ok {
-		return m.Collection(collection, args...).EnsureIndexKey(key...)
-	}
-	if key, ok := keyInfo.(string); ok {
-		return m.Collection(collection, args...).EnsureIndexKey(key)
-	}
-	return nil
+func (m *XORM) AddIndex(bean interface{}, keyInfo interface{}, args ...string) error {
+	return m.Engine.CreateIndexes(bean)
 }
 
-func (m *XORM) DropIndex(collection string, keyInfo interface{}, args ...string) error {
-	if key, ok := keyInfo.([]string); ok {
-		return m.Collection(collection, args...).DropIndex(key...)
-	}
-	if key, ok := keyInfo.(string); ok {
-		return m.Collection(collection, args...).DropIndex(key)
-	}
-	return nil
+func (m *XORM) DropIndex(bean interface{}, keyInfo interface{}, args ...string) error {
+	return m.Engine.DropIndexes(bean)
 }
 
-func (m *XORM) DropTable(collection string, args ...string) error {
-	return m.Collection(collection, args...).DropCollection()
+func (m *XORM) DropTable(bean interface{}, args ...string) error {
+	return m.DropTables(bean)
 }
