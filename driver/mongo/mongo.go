@@ -161,6 +161,9 @@ func (m *Mongo) AddTable(collection string, args ...string) error {
 */
 
 func (m *Mongo) CollectionName(bean interface{}) string {
+	if v, ok := bean.(string); ok {
+		return v
+	}
 	v := reflect.ValueOf(bean)
 	if !v.CanSet() {
 		v = v.Elem()
