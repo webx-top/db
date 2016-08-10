@@ -51,9 +51,13 @@ func (h *XH) Build() interface{} {
 		if vs, ok := val.(map[string][]interface{}); ok {
 			isIN := false
 			for k, v := range vs {
-				isIN = k == `$in`
+				isIN = k == `$in` || k == `$nin`
 				if isIN {
-					c.SQL += t + key + ` IN (` + strings.Repeat(`?`, len(v)) + `)`
+					op := `in`
+					if k == `$nin` {
+						op = `NOT IN`
+					}
+					c.SQL += t + key + ` ` + op + ` (` + strings.Repeat(`?`, len(v)) + `)`
 					c.Args = append(c.Args, v...)
 					t = ` AND `
 				}
