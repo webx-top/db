@@ -11,6 +11,8 @@ import (
 	. "github.com/webx-top/dbx/driver"
 )
 
+var _ Driver = New()
+
 type Condition struct {
 	SQL  string
 	Args []interface{}
@@ -126,11 +128,11 @@ func (m *XORM) Delete(bean interface{}, condition CondBuilder, args ...string) e
 
 func (m *XORM) Update(bean interface{}, values H, condition CondBuilder, args ...string) error {
 	cond := condition.Build().(*Condition)
-	if err := mapstruct.Map2Struct(values, bean); err != nil {
+	if err := mapstruct.Map2Struct(values.Map(), bean); err != nil {
 		return err
 	}
 	cols := []string{}
-	for key := range values {
+	for key := range values.Map() {
 		cols = append(cols, key)
 	}
 	_, err := m.Table(bean).Where(cond.SQL, cond.Args...).MustCols(cols...).Update(bean)
@@ -138,7 +140,7 @@ func (m *XORM) Update(bean interface{}, values H, condition CondBuilder, args ..
 }
 
 func (m *XORM) Insert(bean interface{}, values H, args ...string) error {
-	if err := mapstruct.Map2Struct(values, bean); err != nil {
+	if err := mapstruct.Map2Struct(values.Map(), bean); err != nil {
 		return err
 	}
 	_, err := m.Table(bean).Insert(bean)
@@ -157,14 +159,14 @@ func (m *XORM) Upsert(bean interface{}, values H, condition CondBuilder, args ..
 	if err != nil {
 		return 0, err
 	}
-	if err := mapstruct.Map2Struct(values, bean); err != nil {
+	if err := mapstruct.Map2Struct(values.Map(), bean); err != nil {
 		return 0, err
 	}
 	var affected int64
 	if has {
 		affected, err = m.Engine.Where(cond.SQL, cond.Args...).Update(bean)
 	} else {
-		err = m.Engine.Insert(bean)
+		affected, err = m.Engine.Insert(bean)
 	}
 	return int(affected), err
 }

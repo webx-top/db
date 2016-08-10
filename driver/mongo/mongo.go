@@ -11,6 +11,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+var _ Driver = New()
+
 func New() *Mongo {
 	return &Mongo{}
 }
@@ -106,17 +108,17 @@ func (m *Mongo) Delete(bean interface{}, condition CondBuilder, args ...string) 
 
 func (m *Mongo) Update(bean interface{}, values H, condition CondBuilder, args ...string) error {
 	collection := m.CollectionName(bean)
-	return m.Collection(collection, args...).Update(condition.Build(), bson.M(values))
+	return m.Collection(collection, args...).Update(condition.Build(), bson.M(values.Map()))
 }
 
 func (m *Mongo) Insert(bean interface{}, values H, args ...string) error {
 	collection := m.CollectionName(bean)
-	return m.Collection(collection, args...).Insert(bson.M(values))
+	return m.Collection(collection, args...).Insert(bson.M(values.Map()))
 }
 
 func (m *Mongo) Upsert(bean interface{}, values H, condition CondBuilder, args ...string) (int, error) {
 	collection := m.CollectionName(bean)
-	info, err := m.Collection(collection, args...).Upsert(condition.Build(), bson.M(values))
+	info, err := m.Collection(collection, args...).Upsert(condition.Build(), bson.M(values.Map()))
 	if err != nil {
 		return 0, err
 	}

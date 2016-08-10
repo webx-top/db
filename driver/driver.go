@@ -13,10 +13,10 @@ type Driver interface {
 	One(Selecter, interface{}, ...string) error
 
 	//Write
-	Delete(string, CondBuilder, ...string) error
-	Update(string, H, CondBuilder, ...string) error
-	Insert(string, H, ...string) error
-	Upsert(string, H, CondBuilder, ...string) (int, error)
+	Delete(interface{}, CondBuilder, ...string) error
+	Update(interface{}, H, CondBuilder, ...string) error
+	Insert(interface{}, H, ...string) error
+	Upsert(interface{}, H, CondBuilder, ...string) (int, error)
 }
 
 type H struct {
