@@ -70,7 +70,7 @@ func (m *Mongo) All(sel Selecter, result interface{}, args ...string) error {
 	return sess.All(result)
 }
 
-func (m *Mongo) Count(sel Selecter, args ...string) (int, error) {
+func (m *Mongo) Count(sel Selecter, _ interface{}, args ...string) (int, error) {
 	skip, limit := sel.Limit()
 	sort := sel.Sort()
 	sess := m.Query(sel.Table(), sel.Condition().Build(), args...).Limit(limit).Skip(skip)
@@ -88,6 +88,10 @@ func (m *Mongo) One(sel Selecter, result interface{}, args ...string) error {
 		sess.Sort(sort...)
 	}
 	return sess.One(result)
+}
+
+func (m *Mongo) IsExists(err error) bool {
+	return err == nil || err != mgo.ErrNotFound
 }
 
 func (m *Mongo) Delete(collection string, condition CondBuilder, args ...string) error {
