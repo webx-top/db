@@ -1,6 +1,8 @@
 package xorm
 
 import (
+	"strings"
+
 	. "github.com/webx-top/dbx/driver"
 )
 
@@ -46,6 +48,22 @@ func (h *XH) Build() interface{} {
 			}
 			continue
 		}
+		if vs, ok := val.(map[string][]interface{}); ok {
+			isIN := false
+			for k, v := range vs {
+				isIN = k == `$in`
+				if isIN {
+					c.SQL += t + key + ` IN (` + strings.Repeat(`?`, len(v)) + `)`
+					c.Args = append(c.Args, v...)
+					t = ` AND `
+				}
+				val = v
+				break
+			}
+			if isIN {
+				continue
+			}
+		}
 		op := `=`
 		if vs, ok := val.(map[string]string); ok {
 			for k, v := range vs {
@@ -72,15 +90,15 @@ func (h *XH) Build() interface{} {
 func operatorFlag(ident string) string {
 	op := `=`
 	switch ident {
-	case "gt":
+	case "$gt":
 		op = `>`
-	case "lt":
+	case "$lt":
 		op = `<`
-	case "gte":
+	case "$gte":
 		op = `>=`
-	case "lte":
+	case "$lte":
 		op = `<=`
-	case "ne":
+	case "$ne":
 		op = `!=`
 	}
 	return op
