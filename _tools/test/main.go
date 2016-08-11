@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/webx-top/db/_tools/generator/model"
+	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/mysql"
 )
 
@@ -15,14 +16,16 @@ var settings = mysql.ConnectionURL{
 }
 
 func main() {
-	sess, err := mysql.Open(settings)
+	database, err := mysql.Open(settings)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer sess.Close()
+	defer database.Close()
+	db := factory.New()
+	db.AddDB(database)
 
 	var posts []model.Post
-	err = sess.Collection("webx_post").Find().All(&posts)
+	err = db.Find("webx_post").All(&posts)
 	if err != nil {
 		log.Fatal(err)
 	}
