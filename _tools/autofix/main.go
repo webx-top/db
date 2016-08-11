@@ -62,10 +62,10 @@ func main() {
 		fmt.Println(`Autofix ` + path + `.`)
 		return nil
 	})
+	defer time.Sleep(5 * time.Minute)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(`Autofix complete.`)
-	time.Sleep(5 * time.Minute)
 }
