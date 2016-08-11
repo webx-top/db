@@ -20,9 +20,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer database.Close()
 	db := factory.New()
 	db.AddDB(database)
+	defer db.CloseAll()
 
 	var posts []model.Post
 	err = db.Find("webx_post").All(&posts)
