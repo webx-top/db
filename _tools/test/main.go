@@ -14,13 +14,6 @@ var settings = mysql.ConnectionURL{
 	Password: "root",
 }
 
-type Book struct {
-	ID        int    `db:"id"`
-	Title     string `db:"title"`
-	AuthorID  int    `db:"author_id"`
-	SubjectID int    `db:"subject_id"`
-}
-
 func main() {
 	sess, err := mysql.Open(settings)
 	if err != nil {
