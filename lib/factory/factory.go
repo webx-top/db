@@ -118,6 +118,11 @@ func (f *Factory) SetCluster(index int, cluster *Cluster) *Factory {
 	return f
 }
 
+func (f *Factory) AddCluster(clusters ...*Cluster) *Factory {
+	f.databases = append(f.databases, clusters...)
+	return f
+}
+
 func (f *Factory) DB(index int, args ...bool) sqlbuilder.Database {
 	if len(f.databases) > index {
 		var isMaster bool
