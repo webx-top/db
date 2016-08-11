@@ -130,7 +130,7 @@ func (f *Factory) FindDB(index int, collection string, args ...interface{}) db.R
 func (f *Factory) CloseAll() {
 	for _, database := range f.databases {
 		if err := database.Close(); err != nil {
-			log.Println(err.Error)
+			log.Println(err.Error())
 		}
 	}
 }
