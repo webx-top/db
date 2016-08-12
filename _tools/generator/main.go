@@ -67,6 +67,8 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+	allFields := map[string]map[string]bool{}
+	hasPrefix := len(*prefix) > 0
 	for _, tableName := range tables {
 		rows, err := sess.Query("SHOW COLUMNS FROM `" + tableName + "`")
 		if err != nil {
@@ -108,10 +110,12 @@ func main() {
 		imports := ``
 		fieldBlock := ``
 		maxLen := strconv.Itoa(fieldMaxLength / 2)
+		fieldNames := map[string]bool{}
 		for key, field := range fieldsInfo {
 			if key > 0 {
 				fieldBlock += "\n"
 			}
+			fieldNames[field["Field"]] = true
 			fieldP := fmt.Sprintf(`%-`+maxLen+`s`, TableToStructName(field["Field"], ``))
 			typeP := fmt.Sprintf(`%-8s`, DataType(field["Type"]))
 			fieldBlock += "\t" + fieldP + "\t" + typeP + "\t`db:\"" + field["Field"] + "\"`"
@@ -128,7 +132,42 @@ func main() {
 		} else {
 			log.Println(`Generated struct:`, structName)
 		}
+
+		if hasPrefix {
+			allFields[strings.TrimPrefix(tableName, *prefix)] = fieldNames
+		} else {
+			allFields[tableName] = fieldNames
+		}
 	}
+
+	content := `package model
+type FieldValidator map[string]map[string]bool
+
+func (f FieldValidator) ValidField(table string,field string) bool {
+	if tb,ok := f[table]; ok {
+		return tb[field]
+	}
+	return false
+}
+
+func (f FieldValidator) ValidTable(table string) bool {
+	_,ok := f[table]
+	return ok
+}
+
+`
+	content += fmt.Sprintf(`var AllfieldsMap FieldValidator=%#v`+"\n", allFields)
+	saveAs := filepath.Join(*targetDir, `AllfieldsMap`) + `.go`
+	file, err := os.Create(saveAs)
+	if err == nil {
+		_, err = file.WriteString(content)
+	}
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println(`Generated AllfieldsMap.`)
+	}
+
 	log.Println(`End.`)
 }
 
