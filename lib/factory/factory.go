@@ -23,6 +23,7 @@ func New() *Factory {
 
 type Factory struct {
 	databases []*Cluster
+	cacher    Cacher
 }
 
 func (f *Factory) Debug() bool {
@@ -31,6 +32,11 @@ func (f *Factory) Debug() bool {
 
 func (f *Factory) SetDebug(on bool) *Factory {
 	db.Debug = on
+	return f
+}
+
+func (f *Factory) SetCacher(cc Cacher) *Factory {
+	f.cacher = cc
 	return f
 }
 
@@ -124,6 +130,17 @@ func (f *Factory) CloseAll() {
 
 // Read ==========================
 func (f *Factory) All(param *Param) error {
+	if param.Lifetime > 0 && f.cacher != nil {
+		data, err := f.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = f
+				return nil
+			}
+		}
+		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
+	}
 	if param.Middleware == nil {
 		return f.FindDBR(param.Index, param.Collection, param.Args...).All(param.Result)
 	}
@@ -131,19 +148,55 @@ func (f *Factory) All(param *Param) error {
 }
 
 func (f *Factory) PageList(param *Param) (func() int64, error) {
-	if param.Middleware == nil {
-		return func() int64 {
-			count, _ := f.FindDBR(param.Index, param.Collection, param.Args...).Count()
-			return int64(count)
-		}, f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()).All(param.Result)
+
+	if param.Lifetime > 0 && f.cacher != nil {
+		data, err := f.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = f
+				return func() int64 {
+					return param.Total
+				}, nil
+			}
+		}
+		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
 	}
-	return func() int64 {
-		count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
-		return int64(count)
-	}, param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())).All(param.Result)
+
+	if param.Middleware == nil {
+		param.CountFunc = func() int64 {
+			if param.Total <= 0 {
+				count, _ := f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+				param.Total = int64(count)
+			}
+			return param.Total
+		}
+		return param.CountFunc, f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()).All(param.Result)
+	}
+	param.CountFunc = func() int64 {
+		if param.Total <= 0 {
+			count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+			param.Total = int64(count)
+		}
+		return param.Total
+	}
+	return param.CountFunc, param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())).All(param.Result)
 }
 
 func (f *Factory) One(param *Param) error {
+
+	if param.Lifetime > 0 && f.cacher != nil {
+		data, err := f.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = f
+				return nil
+			}
+		}
+		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
+	}
+
 	if param.Middleware == nil {
 		return f.FindDBR(param.Index, param.Collection, param.Args...).One(param.Result)
 	}
@@ -151,6 +204,19 @@ func (f *Factory) One(param *Param) error {
 }
 
 func (f *Factory) Count(param *Param) (int64, error) {
+
+	if param.Lifetime > 0 && f.cacher != nil {
+		data, err := f.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = f
+				return param.Total, nil
+			}
+		}
+		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
+	}
+
 	var cnt uint64
 	var err error
 	if param.Middleware == nil {
@@ -158,8 +224,8 @@ func (f *Factory) Count(param *Param) (int64, error) {
 	} else {
 		cnt, err = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
 	}
-
-	return int64(cnt), err
+	param.Total = int64(cnt)
+	return param.Total, err
 }
 
 // Write ==========================

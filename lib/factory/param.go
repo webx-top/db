@@ -2,20 +2,31 @@
 package factory
 
 import (
+	"encoding/gob"
+	"fmt"
+	"time"
+
 	"github.com/webx-top/db"
 )
+
+func init() {
+	gob.Register(&Param{})
+}
 
 type Param struct {
 	factory    *Factory
 	Index      int
 	Collection string
 	Middleware func(db.Result) db.Result
+	CountFunc  func() int64
 	Result     interface{}
 	Args       []interface{}
 	SaveData   interface{}
 	Page       int
 	Size       int
 	Total      int64
+	Lifetime   time.Duration
+	cachedKey  string
 }
 
 func NewParam(factory *Factory) *Param {
@@ -28,6 +39,18 @@ func NewParam(factory *Factory) *Param {
 
 func (p *Param) SetIndex(index int) *Param {
 	p.Index = index
+	return p
+}
+
+func (p *Param) CachedKey() string {
+	if len(p.cachedKey) == 0 {
+		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Page, p.Size)
+	}
+	return p.cachedKey
+}
+
+func (p *Param) SetCachedKey(key string) *Param {
+	p.cachedKey = key
 	return p
 }
 
