@@ -20,12 +20,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db := factory.New()
-	db.AddDB(database)
+	db := factory.New().SetDebug(true)
+	db.AddDB(database).Cluster(0).SetPrefix(`webx_`)
 	defer db.CloseAll()
 
 	var posts []model.Post
-	err = db.Find("webx_post").All(&posts)
+	//err = db.Find("webx_post").All(&posts)
+	err = db.All("post", nil, &posts)
 	if err != nil {
 		log.Fatal(err)
 	}
