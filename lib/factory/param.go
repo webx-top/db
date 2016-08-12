@@ -33,6 +33,7 @@ func NewParam(factory *Factory) *Param {
 	p := &Param{
 		factory: factory,
 		Args:    make([]interface{}, 0),
+		Page:    1,
 	}
 	return p
 }
@@ -80,7 +81,11 @@ func (p *Param) SetSave(save interface{}) *Param {
 }
 
 func (p *Param) SetPage(n int) *Param {
-	p.Page = n
+	if n < 1 {
+		p.Page = 1
+	} else {
+		p.Page = n
+	}
 	return p
 }
 
