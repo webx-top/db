@@ -26,7 +26,16 @@ func main() {
 
 	var posts []model.Post
 	//err = db.Find("webx_post").All(&posts)
-	err = db.All("post", nil, &posts)
+	err = db.All(factory.NewParam(nil).SetCollection(`post`).SetResult(&posts))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, post := range posts {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	err = factory.NewParam(db).SetCollection(`post`).SetResult(&posts).All()
 	if err != nil {
 		log.Fatal(err)
 	}

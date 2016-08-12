@@ -1,3 +1,4 @@
+// added by swh@admpub.com
 package factory
 
 import (

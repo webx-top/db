@@ -123,40 +123,40 @@ func (f *Factory) CloseAll() {
 // ================================
 
 // Read ==========================
-
-func (f *Factory) All(collection string, fn func(db.Result) db.Result, result interface{}, args ...interface{}) error {
-	return f.AllFromDB(0, collection, fn, result, args...)
-}
-
-func (f *Factory) AllFromDB(index int, collection string, fn func(db.Result) db.Result, result interface{}, args ...interface{}) error {
-	if fn == nil {
-		return f.FindDBR(index, collection, args...).All(result)
+func (f *Factory) All(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDBR(param.Index, param.Collection, param.Args...).All(param.Result)
 	}
-	return fn(f.FindDBR(index, collection, args...)).All(result)
+	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).All(param.Result)
 }
 
-func (f *Factory) One(collection string, fn func(db.Result) db.Result, result interface{}, args ...interface{}) error {
-	return f.OneFromDB(0, collection, fn, result, args...)
-}
-
-func (f *Factory) OneFromDB(index int, collection string, fn func(db.Result) db.Result, result interface{}, args ...interface{}) error {
-	if fn == nil {
-		return f.FindDBR(index, collection, args...).One(result)
+func (f *Factory) PageList(param *Param) (func() int64, error) {
+	if param.Middleware == nil {
+		return func() int64 {
+			count, _ := f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+			return int64(count)
+		}, f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()).All(param.Result)
 	}
-	return fn(f.FindDBR(index, collection, args...)).One(result)
+	return func() int64 {
+		count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+		return int64(count)
+	}, param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())).All(param.Result)
 }
 
-func (f *Factory) Count(collection string, fn func(db.Result) db.Result, args ...interface{}) (int64, error) {
-	return f.CountFromDB(0, collection, fn, args...)
+func (f *Factory) One(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDBR(param.Index, param.Collection, param.Args...).One(param.Result)
+	}
+	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).One(param.Result)
 }
 
-func (f *Factory) CountFromDB(index int, collection string, fn func(db.Result) db.Result, args ...interface{}) (int64, error) {
+func (f *Factory) Count(param *Param) (int64, error) {
 	var cnt uint64
 	var err error
-	if fn == nil {
-		cnt, err = f.FindDBR(index, collection, args...).Count()
+	if param.Middleware == nil {
+		cnt, err = f.FindDBR(param.Index, param.Collection, param.Args...).Count()
 	} else {
-		cnt, err = fn(f.FindDBR(index, collection, args...)).Count()
+		cnt, err = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
 	}
 
 	return int64(cnt), err
@@ -164,32 +164,20 @@ func (f *Factory) CountFromDB(index int, collection string, fn func(db.Result) d
 
 // Write ==========================
 
-func (f *Factory) Insert(collection string, data interface{}) (interface{}, error) {
-	return f.InsertToDB(0, collection, data)
+func (f *Factory) Insert(param *Param) (interface{}, error) {
+	return f.Collection(param.Collection, param.Index, W).Insert(param.SaveData)
 }
 
-func (f *Factory) InsertToDB(index int, collection string, data interface{}) (interface{}, error) {
-	return f.Collection(collection, index, W).Insert(data)
-}
-
-func (f *Factory) Update(collection string, fn func(db.Result) db.Result, data interface{}, args ...interface{}) error {
-	return f.UpdateToDB(0, collection, fn, data, args...)
-}
-
-func (f *Factory) UpdateToDB(index int, collection string, fn func(db.Result) db.Result, data interface{}, args ...interface{}) error {
-	if fn == nil {
-		return f.FindDB(index, collection, args...).Update(data)
+func (f *Factory) Update(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDB(param.Index, param.Collection, param.Args...).Update(param.SaveData)
 	}
-	return fn(f.FindDB(index, collection, args...)).Update(data)
+	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Update(param.SaveData)
 }
 
-func (f *Factory) Delete(collection string, fn func(db.Result) db.Result, args ...interface{}) error {
-	return f.DeleteFromDB(0, collection, fn, args...)
-}
-
-func (f *Factory) DeleteFromDB(index int, collection string, fn func(db.Result) db.Result, args ...interface{}) error {
-	if fn == nil {
-		return f.FindDB(index, collection, args...).Delete()
+func (f *Factory) Delete(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDB(param.Index, param.Collection, param.Args...).Delete()
 	}
-	return fn(f.FindDB(index, collection, args...)).Delete()
+	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Delete()
 }
