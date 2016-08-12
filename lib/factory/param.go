@@ -66,7 +66,7 @@ func (p *Param) SetSize(size int) *Param {
 	return p
 }
 
-func (p *Param) SetTotao(total int64) *Param {
+func (p *Param) SetTotal(total int64) *Param {
 	p.Total = total
 	return p
 }
