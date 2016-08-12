@@ -2,12 +2,18 @@
 package factory
 
 import (
-	"log"
-	"math/rand"
+	"errors"
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
+
+const (
+	R = iota
+	W
+)
+
+var ErrNotFoundKey = errors.New(`not found the key`)
 
 func New() *Factory {
 	return &Factory{
@@ -15,63 +21,17 @@ func New() *Factory {
 	}
 }
 
-func NewCluster() *Cluster {
-	return &Cluster{
-		masters: []sqlbuilder.Database{},
-		slaves:  []sqlbuilder.Database{},
-	}
-}
-
-type Cluster struct {
-	masters []sqlbuilder.Database
-	slaves  []sqlbuilder.Database
-}
-
-func (c *Cluster) W() sqlbuilder.Database {
-	length := len(c.masters)
-	if length == 0 {
-		panic(`Not connected to any database`)
-	}
-	if length > 1 {
-		return c.masters[rand.Intn(length-1)]
-	}
-	return c.masters[0]
-}
-
-func (c *Cluster) R() sqlbuilder.Database {
-	length := len(c.slaves)
-	if length == 0 {
-		return c.W()
-	}
-	if length > 1 {
-		return c.slaves[rand.Intn(length-1)]
-	}
-	return c.slaves[0]
-}
-
-func (c *Cluster) AddW(databases ...sqlbuilder.Database) {
-	c.masters = append(c.masters, databases...)
-}
-
-func (c *Cluster) AddR(databases ...sqlbuilder.Database) {
-	c.slaves = append(c.slaves, databases...)
-}
-
-func (c *Cluster) CloseAll() {
-	for _, database := range c.masters {
-		if err := database.Close(); err != nil {
-			log.Println(err.Error())
-		}
-	}
-	for _, database := range c.slaves {
-		if err := database.Close(); err != nil {
-			log.Println(err.Error())
-		}
-	}
-}
-
 type Factory struct {
 	databases []*Cluster
+}
+
+func (f *Factory) Debug() bool {
+	return db.Debug
+}
+
+func (f *Factory) SetDebug(on bool) *Factory {
+	db.Debug = on
+	return f
 }
 
 func (f *Factory) AddDB(databases ...sqlbuilder.Database) *Factory {
@@ -96,21 +56,6 @@ func (f *Factory) AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
 	return f
 }
 
-func (f *Factory) SetDB(index int, database sqlbuilder.Database, args ...bool) *Factory {
-	if len(f.databases) > index {
-		var isMaster bool
-		if len(args) > 0 {
-			isMaster = args[0]
-		}
-		if isMaster {
-			f.databases[index].AddW(database)
-		} else {
-			f.databases[index].AddR(database)
-		}
-	}
-	return f
-}
-
 func (f *Factory) SetCluster(index int, cluster *Cluster) *Factory {
 	if len(f.databases) > index {
 		f.databases[index] = cluster
@@ -123,41 +68,116 @@ func (f *Factory) AddCluster(clusters ...*Cluster) *Factory {
 	return f
 }
 
-func (f *Factory) DB(index int, args ...bool) sqlbuilder.Database {
+func (f *Factory) Cluster(index int) *Cluster {
 	if len(f.databases) > index {
-		var isMaster bool
-		if len(args) > 0 {
-			isMaster = args[0]
-		}
-		if isMaster {
-			return f.databases[index].W()
-		}
-		return f.databases[index].R()
+		return f.databases[index]
 	}
 	if index == 0 {
 		panic(`Not connected to any database`)
 	}
-	return f.DB(0, args...)
+	return f.Cluster(0)
 }
 
 func (f *Factory) Collection(collection string, args ...int) db.Collection {
 	var index int
-	if len(args) > 0 {
+	switch len(args) {
+	case 2:
+		index = args[0]
+		if args[1] == R {
+			c := f.Cluster(index)
+			collection = c.Table(collection)
+			return c.R().Collection(collection)
+		}
+	case 1:
 		index = args[0]
 	}
-	return f.DB(index).Collection(collection)
+	c := f.Cluster(index)
+	collection = c.Table(collection)
+	return c.W().Collection(collection)
 }
 
 func (f *Factory) Find(collection string, args ...interface{}) db.Result {
 	return f.Collection(collection).Find(args...)
 }
 
+func (f *Factory) FindR(collection string, args ...interface{}) db.Result {
+	return f.Collection(collection, 0, R).Find(args...)
+}
+
 func (f *Factory) FindDB(index int, collection string, args ...interface{}) db.Result {
 	return f.Collection(collection, index).Find(args...)
+}
+
+func (f *Factory) FindDBR(index int, collection string, args ...interface{}) db.Result {
+	return f.Collection(collection, index, R).Find(args...)
 }
 
 func (f *Factory) CloseAll() {
 	for _, cluster := range f.databases {
 		cluster.CloseAll()
 	}
+}
+
+// ================================
+// API
+// ================================
+
+// Read ==========================
+func (f *Factory) All(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDBR(param.Index, param.Collection, param.Args...).All(param.Result)
+	}
+	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).All(param.Result)
+}
+
+func (f *Factory) PageList(param *Param) (func() int64, error) {
+	if param.Middleware == nil {
+		return func() int64 {
+			count, _ := f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+			return int64(count)
+		}, f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()).All(param.Result)
+	}
+	return func() int64 {
+		count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+		return int64(count)
+	}, param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())).All(param.Result)
+}
+
+func (f *Factory) One(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDBR(param.Index, param.Collection, param.Args...).One(param.Result)
+	}
+	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).One(param.Result)
+}
+
+func (f *Factory) Count(param *Param) (int64, error) {
+	var cnt uint64
+	var err error
+	if param.Middleware == nil {
+		cnt, err = f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+	} else {
+		cnt, err = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+	}
+
+	return int64(cnt), err
+}
+
+// Write ==========================
+
+func (f *Factory) Insert(param *Param) (interface{}, error) {
+	return f.Collection(param.Collection, param.Index, W).Insert(param.SaveData)
+}
+
+func (f *Factory) Update(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDB(param.Index, param.Collection, param.Args...).Update(param.SaveData)
+	}
+	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Update(param.SaveData)
+}
+
+func (f *Factory) Delete(param *Param) error {
+	if param.Middleware == nil {
+		return f.FindDB(param.Index, param.Collection, param.Args...).Delete()
+	}
+	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Delete()
 }
