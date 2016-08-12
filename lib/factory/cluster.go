@@ -79,14 +79,42 @@ func (c *Cluster) SetR(index int, database sqlbuilder.Database) error {
 }
 
 func (c *Cluster) CloseAll() {
+	c.CloseMasters()
+	c.CloseSlaves()
+}
+
+func (c *Cluster) CloseMasters() {
 	for _, database := range c.masters {
 		if err := database.Close(); err != nil {
 			log.Println(err.Error())
 		}
 	}
+}
+
+func (c *Cluster) CloseSlaves() {
 	for _, database := range c.slaves {
 		if err := database.Close(); err != nil {
 			log.Println(err.Error())
 		}
 	}
+}
+
+func (c *Cluster) CloseMaster(index int) bool {
+	if len(c.masters) > index {
+		if err := c.masters[index].Close(); err != nil {
+			log.Println(err.Error())
+		}
+		return true
+	}
+	return false
+}
+
+func (c *Cluster) CloseSlave(index int) bool {
+	if len(c.slaves) > index {
+		if err := c.slaves[index].Close(); err != nil {
+			log.Println(err.Error())
+		}
+		return true
+	}
+	return false
 }
