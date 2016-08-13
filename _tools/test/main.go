@@ -65,7 +65,7 @@ func main() {
 
 	log.Println(`查询方式4：使用LeftJoin关联查询`)
 	m := []*PostCollection{}
-	err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).Select().LeftJoin(`webx_user b`).On(`b.id=a.uid`).All(&m)
+	err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
 	if err != nil {
 		log.Fatal(err)
 	}

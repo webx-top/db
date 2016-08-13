@@ -14,6 +14,13 @@ func init() {
 	gob.Register(&Param{})
 }
 
+type Join struct {
+	Collection string
+	Alias      string
+	Condition  string
+	Type       string
+}
+
 type Param struct {
 	factory            *Factory
 	Index              int    //数据库对象元素所在的索引位置
@@ -24,6 +31,7 @@ type Param struct {
 	Result             interface{}   //查询后保存的结果
 	Args               []interface{} //Find方法的条件参数
 	Cols               []interface{} //使用Selector要查询的列
+	Joins              []*Join
 	SaveData           interface{}   //增加和更改数据时要保存到数据库中的数据
 	Page               int           //页码
 	Size               int           //每页数据量
@@ -38,6 +46,7 @@ func NewParam(args ...*Factory) *Param {
 		factory: DefaultFactory,
 		Args:    make([]interface{}, 0),
 		Cols:    make([]interface{}, 0),
+		Joins:   make([]*Join, 0),
 		Page:    1,
 		offset:  -1,
 	}
@@ -61,6 +70,21 @@ func (p *Param) CachedKey() string {
 
 func (p *Param) SetCachedKey(key string) *Param {
 	p.cachedKey = key
+	return p
+}
+
+func (p *Param) SetJoin(joins ...*Join) *Param {
+	p.Joins = joins
+	return p
+}
+
+func (p *Param) AddJoin(joinType string, collection string, alias string, condition string) *Param {
+	p.Joins = append(p.Joins, &Join{
+		Collection: collection,
+		Alias:      alias,
+		Condition:  condition,
+		Type:       joinType,
+	})
 	return p
 }
 
@@ -101,8 +125,18 @@ func (p *Param) SetArgs(args ...interface{}) *Param {
 	return p
 }
 
+func (p *Param) AddArgs(args ...interface{}) *Param {
+	p.Args = append(p.Args, args...)
+	return p
+}
+
 func (p *Param) SetCols(args ...interface{}) *Param {
 	p.Cols = args
+	return p
+}
+
+func (p *Param) AddCols(args ...interface{}) *Param {
+	p.Cols = append(p.Cols, args...)
 	return p
 }
 

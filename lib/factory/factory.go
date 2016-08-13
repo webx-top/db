@@ -3,6 +3,7 @@ package factory
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
@@ -159,6 +160,30 @@ func (f *Factory) Select(param *Param) sqlbuilder.Selector {
 	c := f.Cluster(param.Index)
 	collection := c.Table(param.Collection)
 	selector := c.R().Select(param.Cols...).From(collection)
+	if param.Joins == nil {
+		return selector
+	}
+	for _, join := range param.Joins {
+		coll := c.Table(join.Collection)
+		if len(join.Alias) > 0 {
+			coll += ` AS ` + join.Alias
+		}
+		switch strings.ToUpper(join.Type) {
+		case "LEFT":
+			selector = selector.LeftJoin(coll)
+		case "RIGHT":
+			selector = selector.RightJoin(coll)
+		case "CROSS":
+			selector = selector.CrossJoin(coll)
+		case "INNER":
+			selector = selector.FullJoin(coll)
+		default:
+			selector = selector.FullJoin(coll)
+		}
+		if len(join.Condition) > 0 {
+			selector = selector.On(join.Condition)
+		}
+	}
 	return selector
 }
 
