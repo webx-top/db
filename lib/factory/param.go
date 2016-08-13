@@ -27,13 +27,18 @@ type Param struct {
 	Total      int64
 	Lifetime   time.Duration
 	cachedKey  string
+	offset     int
 }
 
-func NewParam(factory *Factory) *Param {
+func NewParam(args ...*Factory) *Param {
 	p := &Param{
-		factory: factory,
+		factory: DefaultFactory,
 		Args:    make([]interface{}, 0),
 		Page:    1,
+		offset:  -1,
+	}
+	if len(args) > 0 {
+		p.factory = args[0]
 	}
 	return p
 }
@@ -89,6 +94,11 @@ func (p *Param) SetPage(n int) *Param {
 	return p
 }
 
+func (p *Param) SetOffset(offset int) *Param {
+	p.offset = offset
+	return p
+}
+
 func (p *Param) SetSize(size int) *Param {
 	p.Size = size
 	return p
@@ -100,6 +110,9 @@ func (p *Param) SetTotal(total int64) *Param {
 }
 
 func (p *Param) Offset() int {
+	if p.offset > -1 {
+		return p.offset
+	}
 	if p.Page < 1 {
 		p.Page = 1
 	}
@@ -112,8 +125,8 @@ func (p *Param) All() error {
 	return p.factory.All(p)
 }
 
-func (p *Param) PageList() (func() int64, error) {
-	return p.factory.PageList(p)
+func (p *Param) List() (func() int64, error) {
+	return p.factory.List(p)
 }
 
 func (p *Param) One() error {

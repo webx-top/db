@@ -13,7 +13,9 @@ const (
 	W
 )
 
-var ErrNotFoundKey = errors.New(`not found the key`)
+var (
+	ErrNotFoundKey = errors.New(`not found the key`)
+)
 
 func New() *Factory {
 	return &Factory{
@@ -84,6 +86,10 @@ func (f *Factory) Cluster(index int) *Cluster {
 	return f.Cluster(0)
 }
 
+func (f *Factory) GetCluster(index int) *Cluster {
+	return f.Cluster(index)
+}
+
 func (f *Factory) Collection(collection string, args ...int) db.Collection {
 	var index int
 	switch len(args) {
@@ -147,7 +153,7 @@ func (f *Factory) All(param *Param) error {
 	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).All(param.Result)
 }
 
-func (f *Factory) PageList(param *Param) (func() int64, error) {
+func (f *Factory) List(param *Param) (func() int64, error) {
 
 	if param.Lifetime > 0 && f.cacher != nil {
 		data, err := f.cacher.Get(param.CachedKey())
