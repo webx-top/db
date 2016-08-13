@@ -78,6 +78,19 @@ func CloseAll() {
 // ================================
 
 // Read ==========================
+
+func SelectAll(param *Param) error {
+	return DefaultFactory.SelectAll(param)
+}
+
+func SelectOne(param *Param) error {
+	return DefaultFactory.SelectOne(param)
+}
+
+func Select(param *Param) sqlbuilder.Selector {
+	return DefaultFactory.Select(param)
+}
+
 func All(param *Param) error {
 	return DefaultFactory.All(param)
 }

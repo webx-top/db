@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/webx-top/db"
+	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 func init() {
@@ -14,26 +15,29 @@ func init() {
 }
 
 type Param struct {
-	factory    *Factory
-	Index      int
-	Collection string
-	Middleware func(db.Result) db.Result
-	CountFunc  func() int64
-	Result     interface{}
-	Args       []interface{}
-	SaveData   interface{}
-	Page       int
-	Size       int
-	Total      int64
-	Lifetime   time.Duration
-	cachedKey  string
-	offset     int
+	factory            *Factory
+	Index              int    //数据库对象元素所在的索引位置
+	Collection         string //集合名或表名称
+	Middleware         func(db.Result) db.Result
+	SelectorMiddleware func(sqlbuilder.Selector) sqlbuilder.Selector
+	CountFunc          func() int64
+	Result             interface{}   //查询后保存的结果
+	Args               []interface{} //Find方法的条件参数
+	Cols               []interface{} //使用Selector要查询的列
+	SaveData           interface{}   //增加和更改数据时要保存到数据库中的数据
+	Page               int           //页码
+	Size               int           //每页数据量
+	Total              int64         //数据表中符合条件的数据行数
+	Lifetime           time.Duration //缓存生存时间
+	cachedKey          string
+	offset             int
 }
 
 func NewParam(args ...*Factory) *Param {
 	p := &Param{
 		factory: DefaultFactory,
 		Args:    make([]interface{}, 0),
+		Cols:    make([]interface{}, 0),
 		Page:    1,
 		offset:  -1,
 	}
@@ -70,6 +74,23 @@ func (p *Param) SetMiddleware(middleware func(db.Result) db.Result) *Param {
 	return p
 }
 
+func (p *Param) SetSelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Param {
+	p.SelectorMiddleware = middleware
+	return p
+}
+
+// SetMW is SetMiddleware's alias.
+func (p *Param) SetMW(middleware func(db.Result) db.Result) *Param {
+	p.SetMiddleware(middleware)
+	return p
+}
+
+// SetSelMW is SetSelectorMiddleware's alias.
+func (p *Param) SetSelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Param {
+	p.SetSelectorMiddleware(middleware)
+	return p
+}
+
 func (p *Param) SetResult(result interface{}) *Param {
 	p.Result = result
 	return p
@@ -77,6 +98,11 @@ func (p *Param) SetResult(result interface{}) *Param {
 
 func (p *Param) SetArgs(args ...interface{}) *Param {
 	p.Args = args
+	return p
+}
+
+func (p *Param) SetCols(args ...interface{}) *Param {
+	p.Cols = args
 	return p
 }
 
@@ -120,6 +146,18 @@ func (p *Param) Offset() int {
 }
 
 // Read ==========================
+
+func (p *Param) SelectAll() error {
+	return p.factory.SelectAll(p)
+}
+
+func (p *Param) SelectOne() error {
+	return p.factory.SelectOne(p)
+}
+
+func (p *Param) Select() sqlbuilder.Selector {
+	return p.factory.Select(p)
+}
 
 func (p *Param) All() error {
 	return p.factory.All(p)

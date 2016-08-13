@@ -135,6 +135,33 @@ func (f *Factory) CloseAll() {
 // ================================
 
 // Read ==========================
+
+func (f *Factory) SelectAll(param *Param) error {
+	selector := f.Select(param)
+	if param.Size > 0 {
+		selector = selector.Limit(param.Size).Offset(param.Offset())
+	}
+	if param.SelectorMiddleware != nil {
+		selector = param.SelectorMiddleware(selector)
+	}
+	return selector.All(param.Result)
+}
+
+func (f *Factory) SelectOne(param *Param) error {
+	selector := f.Select(param).Limit(1)
+	if param.SelectorMiddleware != nil {
+		selector = param.SelectorMiddleware(selector)
+	}
+	return selector.One(param.Result)
+}
+
+func (f *Factory) Select(param *Param) sqlbuilder.Selector {
+	c := f.Cluster(param.Index)
+	collection := c.Table(param.Collection)
+	selector := c.R().Select(param.Cols...).From(collection)
+	return selector
+}
+
 func (f *Factory) All(param *Param) error {
 	if param.Lifetime > 0 && f.cacher != nil {
 		data, err := f.cacher.Get(param.CachedKey())
