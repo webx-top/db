@@ -229,7 +229,9 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 	if param.Middleware == nil {
 		param.CountFunc = func() int64 {
 			if param.Total <= 0 {
-				count, _ := f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+				res := f.FindDBR(param.Index, param.Collection, param.Args...)
+				count, _ := res.Count()
+				res.Close()
 				param.Total = int64(count)
 			}
 			return param.Total
@@ -238,7 +240,9 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 	} else {
 		param.CountFunc = func() int64 {
 			if param.Total <= 0 {
-				count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+				res := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
+				count, _ := res.Count()
+				res.Close()
 				param.Total = int64(count)
 			}
 			return param.Total
@@ -295,8 +299,8 @@ func (f *Factory) Count(param *Param) (int64, error) {
 	} else {
 		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
-	defer res.Close()
 	cnt, err = res.Count()
+	res.Close()
 	param.Total = int64(cnt)
 	return param.Total, err
 }
