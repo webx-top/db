@@ -199,10 +199,14 @@ func (f *Factory) All(param *Param) error {
 		}
 		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
 	}
+	var res db.Result
 	if param.Middleware == nil {
-		return f.FindDBR(param.Index, param.Collection, param.Args...).All(param.Result)
+		res = f.FindDBR(param.Index, param.Collection, param.Args...)
+	} else {
+		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
-	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).All(param.Result)
+	defer res.Close()
+	return res.All(param.Result)
 }
 
 func (f *Factory) List(param *Param) (func() int64, error) {
@@ -221,6 +225,7 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
 	}
 
+	var res db.Result
 	if param.Middleware == nil {
 		param.CountFunc = func() int64 {
 			if param.Total <= 0 {
@@ -229,16 +234,19 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 			}
 			return param.Total
 		}
-		return param.CountFunc, f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()).All(param.Result)
-	}
-	param.CountFunc = func() int64 {
-		if param.Total <= 0 {
-			count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
-			param.Total = int64(count)
+		res = f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())
+	} else {
+		param.CountFunc = func() int64 {
+			if param.Total <= 0 {
+				count, _ := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+				param.Total = int64(count)
+			}
+			return param.Total
 		}
-		return param.Total
+		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()))
 	}
-	return param.CountFunc, param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset())).All(param.Result)
+	defer res.Close()
+	return param.CountFunc, res.All(param.Result)
 }
 
 func (f *Factory) One(param *Param) error {
@@ -255,10 +263,14 @@ func (f *Factory) One(param *Param) error {
 		defer f.cacher.Put(param.CachedKey(), param, param.Lifetime)
 	}
 
+	var res db.Result
 	if param.Middleware == nil {
-		return f.FindDBR(param.Index, param.Collection, param.Args...).One(param.Result)
+		res = f.FindDBR(param.Index, param.Collection, param.Args...)
+	} else {
+		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
-	return param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).One(param.Result)
+	defer res.Close()
+	return res.One(param.Result)
 }
 
 func (f *Factory) Count(param *Param) (int64, error) {
@@ -277,11 +289,14 @@ func (f *Factory) Count(param *Param) (int64, error) {
 
 	var cnt uint64
 	var err error
+	var res db.Result
 	if param.Middleware == nil {
-		cnt, err = f.FindDBR(param.Index, param.Collection, param.Args...).Count()
+		res = f.FindDBR(param.Index, param.Collection, param.Args...)
 	} else {
-		cnt, err = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...)).Count()
+		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
+	defer res.Close()
+	cnt, err = res.Count()
 	param.Total = int64(cnt)
 	return param.Total, err
 }
@@ -293,15 +308,23 @@ func (f *Factory) Insert(param *Param) (interface{}, error) {
 }
 
 func (f *Factory) Update(param *Param) error {
+	var res db.Result
 	if param.Middleware == nil {
-		return f.FindDB(param.Index, param.Collection, param.Args...).Update(param.SaveData)
+		res = f.FindDB(param.Index, param.Collection, param.Args...)
+	} else {
+		res = param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...))
 	}
-	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Update(param.SaveData)
+	defer res.Close()
+	return res.Update(param.SaveData)
 }
 
 func (f *Factory) Delete(param *Param) error {
+	var res db.Result
 	if param.Middleware == nil {
-		return f.FindDB(param.Index, param.Collection, param.Args...).Delete()
+		res = f.FindDB(param.Index, param.Collection, param.Args...)
+	} else {
+		res = param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...))
 	}
-	return param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...)).Delete()
+	defer res.Close()
+	return res.Delete()
 }
