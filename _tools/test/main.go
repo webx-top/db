@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/webx-top/db"
@@ -42,6 +43,8 @@ func main() {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 
+	fmt.Println(``)
+	fmt.Println(``)
 	log.Println(`查询方式2：使用Param查询`)
 	err = factory.NewParam().SetCollection(`post`).SetResult(&posts).All()
 	if err != nil {
@@ -52,8 +55,12 @@ func main() {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 
+	fmt.Println(``)
+	fmt.Println(``)
 	log.Println(`查询方式3：使用dbschema的List方法查询`)
-	post := &dbschema.Post{}
+
+	post := &dbschema.Post{} //<------------------ define post
+
 	posts, _, err = post.List(nil, 1, 100000)
 	if err != nil {
 		log.Fatal(err)
@@ -63,6 +70,8 @@ func main() {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 
+	fmt.Println(``)
+	fmt.Println(``)
 	log.Println(`查询方式4：使用LeftJoin关联查询`)
 	m := []*PostCollection{}
 	err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
@@ -72,5 +81,23 @@ func main() {
 
 	for _, post := range m {
 		log.Printf("%q (ID: %d)\n", post.Post.Title, post.Post.Id)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式5：使用Next查询大结果集`)
+	res := factory.Default().FindR("post")
+	defer res.Close() //操作结束后别忘了执行关闭操作
+	for res.Next(post) {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式6：使用Next查询大结果集`)
+	res = post.Param().Result()
+	defer res.Close() //操作结束后别忘了执行关闭操作
+	for res.Next(post) {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 }

@@ -131,6 +131,10 @@ func (f *Factory) CloseAll() {
 	}
 }
 
+func (f *Factory) Result(param *Param) db.Result {
+	return f.Collection(param.Collection, param.Index, param.ReadOrWrite).Find(param.Args...)
+}
+
 // ================================
 // API
 // ================================
@@ -145,7 +149,7 @@ func (f *Factory) SelectAll(param *Param) error {
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
 	}
-	return selector.All(param.Result)
+	return selector.All(param.ResultData)
 }
 
 func (f *Factory) SelectOne(param *Param) error {
@@ -153,7 +157,7 @@ func (f *Factory) SelectOne(param *Param) error {
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
 	}
-	return selector.One(param.Result)
+	return selector.One(param.ResultData)
 }
 
 func (f *Factory) Select(param *Param) sqlbuilder.Selector {
@@ -205,8 +209,7 @@ func (f *Factory) All(param *Param) error {
 	} else {
 		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
-	defer res.Close()
-	return res.All(param.Result)
+	return res.All(param.ResultData)
 }
 
 func (f *Factory) List(param *Param) (func() int64, error) {
@@ -231,7 +234,6 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 			if param.Total <= 0 {
 				res := f.FindDBR(param.Index, param.Collection, param.Args...)
 				count, _ := res.Count()
-				res.Close()
 				param.Total = int64(count)
 			}
 			return param.Total
@@ -242,15 +244,13 @@ func (f *Factory) List(param *Param) (func() int64, error) {
 			if param.Total <= 0 {
 				res := param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 				count, _ := res.Count()
-				res.Close()
 				param.Total = int64(count)
 			}
 			return param.Total
 		}
 		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...).Limit(param.Size).Offset(param.Offset()))
 	}
-	defer res.Close()
-	return param.CountFunc, res.All(param.Result)
+	return param.CountFunc, res.All(param.ResultData)
 }
 
 func (f *Factory) One(param *Param) error {
@@ -273,8 +273,7 @@ func (f *Factory) One(param *Param) error {
 	} else {
 		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
-	defer res.Close()
-	return res.One(param.Result)
+	return res.One(param.ResultData)
 }
 
 func (f *Factory) Count(param *Param) (int64, error) {
@@ -300,7 +299,6 @@ func (f *Factory) Count(param *Param) (int64, error) {
 		res = param.Middleware(f.FindDBR(param.Index, param.Collection, param.Args...))
 	}
 	cnt, err = res.Count()
-	res.Close()
 	param.Total = int64(cnt)
 	return param.Total, err
 }
@@ -318,7 +316,6 @@ func (f *Factory) Update(param *Param) error {
 	} else {
 		res = param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...))
 	}
-	defer res.Close()
 	return res.Update(param.SaveData)
 }
 
@@ -329,6 +326,5 @@ func (f *Factory) Delete(param *Param) error {
 	} else {
 		res = param.Middleware(f.FindDB(param.Index, param.Collection, param.Args...))
 	}
-	defer res.Close()
 	return res.Delete()
 }

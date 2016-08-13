@@ -73,6 +73,10 @@ func CloseAll() {
 	DefaultFactory.CloseAll()
 }
 
+func Result(param *Param) db.Result {
+	return DefaultFactory.Result(param)
+}
+
 // ================================
 // API
 // ================================

@@ -23,12 +23,13 @@ type Join struct {
 
 type Param struct {
 	factory            *Factory
-	Index              int    //数据库对象元素所在的索引位置
+	Index              int //数据库对象元素所在的索引位置
+	ReadOrWrite        int
 	Collection         string //集合名或表名称
 	Middleware         func(db.Result) db.Result
 	SelectorMiddleware func(sqlbuilder.Selector) sqlbuilder.Selector
 	CountFunc          func() int64
-	Result             interface{}   //查询后保存的结果
+	ResultData         interface{}   //查询后保存的结果
 	Args               []interface{} //Find方法的条件参数
 	Cols               []interface{} //使用Selector要查询的列
 	Joins              []*Join
@@ -78,6 +79,16 @@ func (p *Param) SetJoin(joins ...*Join) *Param {
 	return p
 }
 
+func (p *Param) SetRead() *Param {
+	p.ReadOrWrite = R
+	return p
+}
+
+func (p *Param) SetWrite() *Param {
+	p.ReadOrWrite = W
+	return p
+}
+
 func (p *Param) AddJoin(joinType string, collection string, alias string, condition string) *Param {
 	p.Joins = append(p.Joins, &Join{
 		Collection: collection,
@@ -116,7 +127,7 @@ func (p *Param) SetSelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selecto
 }
 
 func (p *Param) SetResult(result interface{}) *Param {
-	p.Result = result
+	p.ResultData = result
 	return p
 }
 
@@ -177,6 +188,10 @@ func (p *Param) Offset() int {
 		p.Page = 1
 	}
 	return (p.Page - 1) * p.Size
+}
+
+func (p *Param) Result() db.Result {
+	return p.factory.Result(p)
 }
 
 // Read ==========================
