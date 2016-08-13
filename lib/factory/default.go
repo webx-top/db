@@ -49,24 +49,12 @@ func GetCluster(index int) *Cluster {
 	return DefaultFactory.GetCluster(index)
 }
 
-func Collection(collection string, args ...int) db.Collection {
-	return DefaultFactory.Collection(collection, args...)
+func Tx(param *Param) error {
+	return DefaultFactory.Tx(param)
 }
 
-func Find(collection string, args ...interface{}) db.Result {
-	return DefaultFactory.Find(collection, args...)
-}
-
-func FindR(collection string, args ...interface{}) db.Result {
-	return DefaultFactory.FindR(collection, args...)
-}
-
-func FindDB(index int, collection string, args ...interface{}) db.Result {
-	return DefaultFactory.FindDB(index, collection, args...)
-}
-
-func FindDBR(index int, collection string, args ...interface{}) db.Result {
-	return DefaultFactory.FindDBR(index, collection, args...)
+func NewTx(args ...int) (*Transaction, error) {
+	return DefaultFactory.NewTx(args...)
 }
 
 func CloseAll() {

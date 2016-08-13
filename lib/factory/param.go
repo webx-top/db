@@ -28,6 +28,7 @@ type Param struct {
 	Collection         string //集合名或表名称
 	Middleware         func(db.Result) db.Result
 	SelectorMiddleware func(sqlbuilder.Selector) sqlbuilder.Selector
+	TxMiddleware       func(*Transaction) error
 	CountFunc          func() int64
 	ResultData         interface{}   //查询后保存的结果
 	Args               []interface{} //Find方法的条件参数
@@ -38,6 +39,7 @@ type Param struct {
 	Size               int           //每页数据量
 	Total              int64         //数据表中符合条件的数据行数
 	Lifetime           time.Duration //缓存生存时间
+	trans              *Transaction
 	cachedKey          string
 	offset             int
 }
@@ -79,6 +81,19 @@ func (p *Param) SetJoin(joins ...*Join) *Param {
 	return p
 }
 
+func (p *Param) SetTx(tx sqlbuilder.Tx) *Param {
+	p.trans = &Transaction{
+		Tx:      tx,
+		Factory: p.factory,
+	}
+	return p
+}
+
+func (p *Param) SetTrans(trans *Transaction) *Param {
+	p.trans = trans
+	return p
+}
+
 func (p *Param) SetRead() *Param {
 	p.ReadOrWrite = R
 	return p
@@ -117,6 +132,16 @@ func (p *Param) SetSelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbu
 // SetMW is SetMiddleware's alias.
 func (p *Param) SetMW(middleware func(db.Result) db.Result) *Param {
 	p.SetMiddleware(middleware)
+	return p
+}
+
+func (p *Param) SetTxMiddleware(middleware func(*Transaction) error) *Param {
+	p.TxMiddleware = middleware
+	return p
+}
+
+func (p *Param) SetTxMW(middleware func(*Transaction) error) *Param {
+	p.SetTxMiddleware(middleware)
 	return p
 }
 
@@ -180,6 +205,22 @@ func (p *Param) SetTotal(total int64) *Param {
 	return p
 }
 
+func (p *Param) Begin() *Param {
+	p.trans = p.MustTx()
+	return p
+}
+
+func (p *Param) End(err error) error {
+	if p.trans == nil || p.trans.Tx == nil {
+		return nil
+	}
+	defer p.SetTrans(nil)
+	if err == nil {
+		return p.trans.Commit()
+	}
+	return p.trans.Rollback()
+}
+
 func (p *Param) Offset() int {
 	if p.offset > -1 {
 		return p.offset
@@ -190,50 +231,78 @@ func (p *Param) Offset() int {
 	return (p.Page - 1) * p.Size
 }
 
+func (p *Param) NewTx() (*Transaction, error) {
+	return p.factory.NewTx(p.Index)
+}
+
+func (p *Param) Tx() (*Transaction, error) {
+	if p.trans != nil {
+		return p.trans, nil
+	}
+	var err error
+	p.trans, err = p.NewTx()
+	return p.trans, err
+}
+
+func (p *Param) MustTx() *Transaction {
+	trans, err := p.Tx()
+	if err != nil {
+		panic(err.Error())
+	}
+	return trans
+}
+
+func (p *Param) Trans() *Transaction {
+	if p.trans != nil {
+		return p.trans
+	}
+	return p.factory.Transaction
+}
+
 func (p *Param) Result() db.Result {
-	return p.factory.Result(p)
+	return p.Trans().Result(p)
 }
 
 // Read ==========================
 
 func (p *Param) SelectAll() error {
-	return p.factory.SelectAll(p)
+	return p.Trans().SelectAll(p)
 }
 
 func (p *Param) SelectOne() error {
-	return p.factory.SelectOne(p)
+	return p.Trans().SelectOne(p)
 }
 
 func (p *Param) Select() sqlbuilder.Selector {
-	return p.factory.Select(p)
+	return p.Trans().Select(p)
 }
 
 func (p *Param) All() error {
-	return p.factory.All(p)
+	return p.Trans().All(p)
 }
 
 func (p *Param) List() (func() int64, error) {
-	return p.factory.List(p)
+	return p.Trans().List(p)
 }
 
 func (p *Param) One() error {
-	return p.factory.One(p)
+	return p.Trans().One(p)
 }
 
 func (p *Param) Count() (int64, error) {
-	return p.factory.Count(p)
+	return p.Trans().Count(p)
 }
 
 // Write ==========================
 
 func (p *Param) Insert() (interface{}, error) {
-	return p.factory.Insert(p)
+	return p.Trans().Insert(p)
 }
 
 func (p *Param) Update() error {
-	return p.factory.Update(p)
+	return p.Trans().Update(p)
 }
 
 func (p *Param) Delete() error {
-	return p.factory.Delete(p)
+	return p.Trans().Delete(p)
 }

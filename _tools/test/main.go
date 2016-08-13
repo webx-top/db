@@ -86,7 +86,7 @@ func main() {
 	fmt.Println(``)
 	fmt.Println(``)
 	log.Println(`查询方式5：使用Next查询大结果集`)
-	res := factory.Default().FindR("post")
+	res := factory.NewParam().SetCollection(`post`).Result()
 	defer res.Close() //操作结束后别忘了执行关闭操作
 	for res.Next(post) {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
@@ -96,8 +96,36 @@ func main() {
 	fmt.Println(``)
 	log.Println(`查询方式6：使用Next查询大结果集`)
 	res = post.Param().Result()
-	defer res.Close() //操作结束后别忘了执行关闭操作
 	for res.Next(post) {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
+	res.Close() //操作结束后别忘了执行关闭操作
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式7：使用使用事务`)
+	param := post.Param().Begin()
+	res = param.Result()
+	for res.Next(post) {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	res.Close() //操作结束后别忘了执行关闭操作
+	err = param.SetSave(map[string]int{
+		"views": 818,
+	}).SetArgs("id", 1).Update()
+	//err = fmt.Errorf(`failured`)
+	param.End(err)
+
+	return
+
+	param = post.Param()
+	factory.Tx(param.SetTxMW(func(t *factory.Transaction) (err error) {
+		param = param.SetSave(map[string]int{
+			"views": 1,
+		}).SetArgs("id", 1)
+		err = t.Update(param)
+		//err=fmt.Errorf(`failured`)
+		return
+	}))
 }
