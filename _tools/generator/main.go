@@ -25,12 +25,18 @@ import (
 )
 
 type %[3]s struct {
+	trans	*factory.Transaction
+	
 %[4]s
 }
 
+func (this *%[3]s) SetTrans(trans *factory.Transaction) *%[3]s {
+	this.trans = trans
+	return this
+}
 
 func (this *%[3]s) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("%[5]s")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("%[5]s")
 }
 
 func (this *%[3]s) Get(mw func(db.Result) db.Result) error {

@@ -8,6 +8,8 @@ import (
 )
 
 type Post struct {
+	trans	*factory.Transaction
+	
 	Id              	int     	`db:"id,omitempty" comment:"ID"`
 	Title           	string  	`db:"title" comment:"标题"`
 	Description     	string  	`db:"description" comment:"简介"`
@@ -30,9 +32,13 @@ type Post struct {
 	Catid           	int     	`db:"catid" comment:"分类ID"`
 }
 
+func (this *Post) SetTrans(trans *factory.Transaction) *Post {
+	this.trans = trans
+	return this
+}
 
 func (this *Post) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("post")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("post")
 }
 
 func (this *Post) Get(mw func(db.Result) db.Result) error {

@@ -8,15 +8,21 @@ import (
 )
 
 type Config struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"主键ID"`
 	Key            	string  	`db:"key" comment:"配置项"`
 	Val            	string  	`db:"val" comment:"配置值"`
 	Updated        	int     	`db:"updated" comment:"更新时间"`
 }
 
+func (this *Config) SetTrans(trans *factory.Transaction) *Config {
+	this.trans = trans
+	return this
+}
 
 func (this *Config) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("config")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("config")
 }
 
 func (this *Config) Get(mw func(db.Result) db.Result) error {

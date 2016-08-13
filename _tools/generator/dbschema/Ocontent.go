@@ -8,6 +8,8 @@ import (
 )
 
 type Ocontent struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"ID"`
 	RcId           	int     	`db:"rc_id" comment:"关联ID"`
 	RcType         	string  	`db:"rc_type" comment:"关联类型"`
@@ -15,9 +17,13 @@ type Ocontent struct {
 	Etype          	string  	`db:"etype" comment:"编辑器类型"`
 }
 
+func (this *Ocontent) SetTrans(trans *factory.Transaction) *Ocontent {
+	this.trans = trans
+	return this
+}
 
 func (this *Ocontent) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("ocontent")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("ocontent")
 }
 
 func (this *Ocontent) Get(mw func(db.Result) db.Result) error {

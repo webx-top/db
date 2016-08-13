@@ -8,6 +8,8 @@ import (
 )
 
 type Comment struct {
+	trans	*factory.Transaction
+	
 	Id                     	int64   	`db:"id,omitempty" comment:"主键"`
 	Content                	string  	`db:"content" comment:"内容"`
 	Quote                  	string  	`db:"quote" comment:"引用内容"`
@@ -30,9 +32,13 @@ type Comment struct {
 	ForUid                 	int64   	`db:"for_uid" comment:"被评人id"`
 }
 
+func (this *Comment) SetTrans(trans *factory.Transaction) *Comment {
+	this.trans = trans
+	return this
+}
 
 func (this *Comment) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("comment")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("comment")
 }
 
 func (this *Comment) Get(mw func(db.Result) db.Result) error {

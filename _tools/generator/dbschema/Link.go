@@ -8,6 +8,8 @@ import (
 )
 
 type Link struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"主键ID"`
 	Name           	string  	`db:"name" comment:"名称"`
 	Url            	string  	`db:"url" comment:"网址"`
@@ -20,9 +22,13 @@ type Link struct {
 	Sort           	int     	`db:"sort" comment:"排序"`
 }
 
+func (this *Link) SetTrans(trans *factory.Transaction) *Link {
+	this.trans = trans
+	return this
+}
 
 func (this *Link) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("link")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("link")
 }
 
 func (this *Link) Get(mw func(db.Result) db.Result) error {

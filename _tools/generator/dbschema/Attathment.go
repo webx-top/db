@@ -8,6 +8,8 @@ import (
 )
 
 type Attathment struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"ID"`
 	Name           	string  	`db:"name" comment:"文件名"`
 	Path           	string  	`db:"path" comment:"保存路径"`
@@ -23,9 +25,13 @@ type Attathment struct {
 	Tags           	string  	`db:"tags" comment:"标签"`
 }
 
+func (this *Attathment) SetTrans(trans *factory.Transaction) *Attathment {
+	this.trans = trans
+	return this
+}
 
 func (this *Attathment) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("attathment")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("attathment")
 }
 
 func (this *Attathment) Get(mw func(db.Result) db.Result) error {

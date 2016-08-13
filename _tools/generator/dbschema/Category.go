@@ -8,6 +8,8 @@ import (
 )
 
 type Category struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"ID"`
 	Pid            	int     	`db:"pid" comment:"上级分类"`
 	Name           	string  	`db:"name" comment:"分类名称"`
@@ -19,9 +21,13 @@ type Category struct {
 	Tmpl           	string  	`db:"tmpl" comment:"模板"`
 }
 
+func (this *Category) SetTrans(trans *factory.Transaction) *Category {
+	this.trans = trans
+	return this
+}
 
 func (this *Category) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("category")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("category")
 }
 
 func (this *Category) Get(mw func(db.Result) db.Result) error {

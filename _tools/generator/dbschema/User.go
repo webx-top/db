@@ -8,6 +8,8 @@ import (
 )
 
 type User struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"UID"`
 	Uname          	string  	`db:"uname" comment:"用户名"`
 	Passwd         	string  	`db:"passwd" comment:"密码"`
@@ -22,9 +24,13 @@ type User struct {
 	Avatar         	string  	`db:"avatar" comment:"头像"`
 }
 
+func (this *User) SetTrans(trans *factory.Transaction) *User {
+	this.trans = trans
+	return this
+}
 
 func (this *User) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("user")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("user")
 }
 
 func (this *User) Get(mw func(db.Result) db.Result) error {

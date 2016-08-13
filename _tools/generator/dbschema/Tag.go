@@ -8,6 +8,8 @@ import (
 )
 
 type Tag struct {
+	trans	*factory.Transaction
+	
 	Id             	int     	`db:"id,omitempty" comment:"ID"`
 	Name           	string  	`db:"name" comment:"标签名"`
 	Uid            	int     	`db:"uid" comment:"创建者"`
@@ -16,9 +18,13 @@ type Tag struct {
 	RcType         	string  	`db:"rc_type" comment:"关联类型"`
 }
 
+func (this *Tag) SetTrans(trans *factory.Transaction) *Tag {
+	this.trans = trans
+	return this
+}
 
 func (this *Tag) Param() *factory.Param {
-	return factory.NewParam(Factory).SetCollection("tag")
+	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("tag")
 }
 
 func (this *Tag) Get(mw func(db.Result) db.Result) error {
