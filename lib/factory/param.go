@@ -209,12 +209,12 @@ func (p *Param) Trans() *Transaction {
 	return p.trans
 }
 
-func (p *Param) PassTransTo(param *Param) *Param {
+func (p *Param) TransTo(param *Param) *Param {
 	param.trans = p.trans
 	return p
 }
 
-func (p *Param) SetTransByParam(param *Param) *Param {
+func (p *Param) TransFrom(param *Param) *Param {
 	p.trans = param.trans
 	return p
 }
