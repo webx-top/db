@@ -34,7 +34,7 @@ func main() {
 	var posts []*dbschema.Post
 	//err = db.Find("webx_post").All(&posts)
 	log.Println(`查询方式1：使用Factory查询`)
-	err = factory.Default().All(factory.NewParam(nil).SetCollection(`post`).SetResult(&posts))
+	err = factory.All(factory.NewParam(nil).SetCollection(`post`).SetResult(&posts).SetPage(2).SetSize(10))
 	if err != nil {
 		log.Fatal(err)
 	}

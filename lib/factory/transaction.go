@@ -41,7 +41,7 @@ func (t *Transaction) C(param *Param) db.Collection {
 // Read ==========================
 
 func (t *Transaction) SelectAll(param *Param) error {
-	selector := t.Backend(param).Select(param)
+	selector := t.Select(param)
 	if param.Size > 0 {
 		selector = selector.Limit(param.Size).Offset(param.Offset())
 	}
@@ -52,7 +52,7 @@ func (t *Transaction) SelectAll(param *Param) error {
 }
 
 func (t *Transaction) SelectOne(param *Param) error {
-	selector := t.Backend(param).Select(param).Limit(1)
+	selector := t.Select(param).Limit(1)
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
 	}
@@ -101,6 +101,9 @@ func (t *Transaction) All(param *Param) error {
 		defer t.Factory.cacher.Put(param.CachedKey(), param, param.Lifetime)
 	}
 	res := t.Result(param)
+	if param.Size > 0 {
+		res = res.Limit(param.Size).Offset(param.Offset())
+	}
 	if param.Middleware != nil {
 		res = param.Middleware(res)
 	}

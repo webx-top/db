@@ -100,12 +100,12 @@ func (f *Factory) Tx(param *Param) error {
 		return nil
 	}
 	c := f.Cluster(param.Index)
+	trans := &Transaction{
+		Cluster: c,
+		Factory: f,
+	}
 	fn := func(tx sqlbuilder.Tx) error {
-		trans := &Transaction{
-			Tx:      tx,
-			Cluster: c,
-			Factory: f,
-		}
+		trans.Tx = tx
 		return param.TxMiddleware(trans)
 	}
 	return c.W().Tx(fn)
