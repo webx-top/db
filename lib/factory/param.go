@@ -205,6 +205,20 @@ func (p *Param) SetTotal(total int64) *Param {
 	return p
 }
 
+func (p *Param) Trans() *Transaction {
+	return p.trans
+}
+
+func (p *Param) PassTransTo(param *Param) *Param {
+	param.trans = p.trans
+	return p
+}
+
+func (p *Param) SetTransByParam(param *Param) *Param {
+	p.trans = param.trans
+	return p
+}
+
 func (p *Param) Begin() *Param {
 	p.trans = p.MustTx()
 	return p
@@ -252,7 +266,7 @@ func (p *Param) MustTx() *Transaction {
 	return trans
 }
 
-func (p *Param) Trans() *Transaction {
+func (p *Param) T() *Transaction {
 	if p.trans != nil {
 		return p.trans
 	}
@@ -260,49 +274,49 @@ func (p *Param) Trans() *Transaction {
 }
 
 func (p *Param) Result() db.Result {
-	return p.Trans().Result(p)
+	return p.T().Result(p)
 }
 
 // Read ==========================
 
 func (p *Param) SelectAll() error {
-	return p.Trans().SelectAll(p)
+	return p.T().SelectAll(p)
 }
 
 func (p *Param) SelectOne() error {
-	return p.Trans().SelectOne(p)
+	return p.T().SelectOne(p)
 }
 
 func (p *Param) Select() sqlbuilder.Selector {
-	return p.Trans().Select(p)
+	return p.T().Select(p)
 }
 
 func (p *Param) All() error {
-	return p.Trans().All(p)
+	return p.T().All(p)
 }
 
 func (p *Param) List() (func() int64, error) {
-	return p.Trans().List(p)
+	return p.T().List(p)
 }
 
 func (p *Param) One() error {
-	return p.Trans().One(p)
+	return p.T().One(p)
 }
 
 func (p *Param) Count() (int64, error) {
-	return p.Trans().Count(p)
+	return p.T().Count(p)
 }
 
 // Write ==========================
 
 func (p *Param) Insert() (interface{}, error) {
-	return p.Trans().Insert(p)
+	return p.T().Insert(p)
 }
 
 func (p *Param) Update() error {
-	return p.Trans().Update(p)
+	return p.T().Update(p)
 }
 
 func (p *Param) Delete() error {
-	return p.Trans().Delete(p)
+	return p.T().Delete(p)
 }
