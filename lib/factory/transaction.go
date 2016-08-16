@@ -43,7 +43,7 @@ func (t *Transaction) C(param *Param) db.Collection {
 func (t *Transaction) SelectAll(param *Param) error {
 	selector := t.Select(param)
 	if param.Size > 0 {
-		selector = selector.Limit(param.Size).Offset(param.Offset())
+		selector = selector.Limit(param.Size).Offset(param.GetOffset())
 	}
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
@@ -102,7 +102,7 @@ func (t *Transaction) All(param *Param) error {
 	}
 	res := t.Result(param)
 	if param.Size > 0 {
-		res = res.Limit(param.Size).Offset(param.Offset())
+		res = res.Limit(param.Size).Offset(param.GetOffset())
 	}
 	if param.Middleware != nil {
 		res = param.Middleware(res)
@@ -136,7 +136,7 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 			}
 			return param.Total
 		}
-		res = t.Result(param).Limit(param.Size).Offset(param.Offset())
+		res = t.Result(param).Limit(param.Size).Offset(param.GetOffset())
 	} else {
 		param.CountFunc = func() int64 {
 			if param.Total <= 0 {
@@ -146,7 +146,7 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 			}
 			return param.Total
 		}
-		res = param.Middleware(t.Result(param).Limit(param.Size).Offset(param.Offset()))
+		res = param.Middleware(t.Result(param).Limit(param.Size).Offset(param.GetOffset()))
 	}
 	return param.CountFunc, res.All(param.ResultData)
 }

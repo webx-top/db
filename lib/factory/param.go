@@ -34,14 +34,15 @@ type Param struct {
 	Args               []interface{} //Find方法的条件参数
 	Cols               []interface{} //使用Selector要查询的列
 	Joins              []*Join
-	SaveData           interface{}   //增加和更改数据时要保存到数据库中的数据
+	SaveData           interface{} //增加和更改数据时要保存到数据库中的数据
+	Offset             int
 	Page               int           //页码
 	Size               int           //每页数据量
 	Total              int64         //数据表中符合条件的数据行数
 	Lifetime           time.Duration //缓存生存时间
 	trans              *Transaction
 	cachedKey          string
-	offset             int
+	setter             *Setting
 }
 
 func NewParam(args ...*Factory) *Param {
@@ -51,12 +52,25 @@ func NewParam(args ...*Factory) *Param {
 		Cols:    make([]interface{}, 0),
 		Joins:   make([]*Join, 0),
 		Page:    1,
-		offset:  -1,
+		Offset:  -1,
 	}
+	p.init(args...)
+	return p
+}
+
+func (p *Param) init(args ...*Factory) *Param {
 	if len(args) > 0 {
 		p.factory = args[0]
 	}
+	p.setter = &Setting{Param: p}
 	return p
+}
+
+func (p *Param) Setter() *Setting {
+	if p.setter == nil {
+		p.setter = &Setting{Param: p}
+	}
+	return p.setter
 }
 
 func (p *Param) SetIndex(index int) *Param {
@@ -64,9 +78,14 @@ func (p *Param) SetIndex(index int) *Param {
 	return p
 }
 
+func (p *Param) SelectDB(index int) *Param {
+	p.Index = index
+	return p
+}
+
 func (p *Param) CachedKey() string {
 	if len(p.cachedKey) == 0 {
-		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Page, p.Size)
+		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size)
 	}
 	return p.cachedKey
 }
@@ -191,7 +210,7 @@ func (p *Param) SetPage(n int) *Param {
 }
 
 func (p *Param) SetOffset(offset int) *Param {
-	p.offset = offset
+	p.Offset = offset
 	return p
 }
 
@@ -235,9 +254,9 @@ func (p *Param) End(err error) error {
 	return p.trans.Rollback()
 }
 
-func (p *Param) Offset() int {
-	if p.offset > -1 {
-		return p.offset
+func (p *Param) GetOffset() int {
+	if p.Offset > -1 {
+		return p.Offset
 	}
 	if p.Page < 1 {
 		p.Page = 1
