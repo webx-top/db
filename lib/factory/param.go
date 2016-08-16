@@ -62,7 +62,7 @@ func (p *Param) init(args ...*Factory) *Param {
 	if len(args) > 0 {
 		p.factory = args[0]
 	}
-	p.setter = &Setting{Param: p}
+	//p.setter = &Setting{Param: p}
 	return p
 }
 
