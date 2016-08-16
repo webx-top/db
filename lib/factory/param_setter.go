@@ -137,6 +137,16 @@ func (s *Setting) Total(total int64) *Setting {
 	return s
 }
 
+func (s *Setting) TransTo(param *Param) *Setting {
+	s.Param.TransTo(param)
+	return s
+}
+
+func (s *Setting) TransFrom(param *Param) *Setting {
+	s.Param.TransFrom(param)
+	return s
+}
+
 func (s *Setting) Begin() *Setting {
 	s.Param.Begin()
 	return s
