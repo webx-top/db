@@ -60,7 +60,7 @@ func (s *Setting) Middleware(middleware func(db.Result) db.Result) *Setting {
 	return s
 }
 
-func (s *Setting) SetSelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Setting {
+func (s *Setting) SelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Setting {
 	s.Param.SetSelectorMiddleware(middleware)
 	return s
 }
