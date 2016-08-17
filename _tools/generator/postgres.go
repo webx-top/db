@@ -7,24 +7,6 @@ import (
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
-func getPostgreSQLTables(d sqlbuilder.Database) []string {
-	rows, err := d.Query(`"SELECT tablename FROM pg_tables where schemaname = '` + *schema + `'`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tables := []string{}
-	for rows.Next() {
-		var tableName string
-		err = rows.Scan(&tableName)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		tables = append(tables, tableName)
-	}
-	return tables
-}
-
 func getPostgreSQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[string]string) {
 	rows, err := d.Query(`SELECT column_name, data_type, is_nullable, column_default,
     CASE WHEN p.contype = 'p' THEN true ELSE false END AS primarykey,

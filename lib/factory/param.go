@@ -78,7 +78,7 @@ func (p *Param) SetIndex(index int) *Param {
 	return p
 }
 
-func (p *Param) SelectDB(index int) *Param {
+func (p *Param) SelectLink(index int) *Param {
 	p.Index = index
 	return p
 }

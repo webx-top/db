@@ -7,24 +7,6 @@ import (
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
-func getMySQLTables(d sqlbuilder.Database) []string {
-	rows, err := d.Query(`SHOW TABLES`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tables := []string{}
-	for rows.Next() {
-		var tableName string
-		err = rows.Scan(&tableName)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		tables = append(tables, tableName)
-	}
-	return tables
-}
-
 func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[string]string) {
 	rows, err := d.Query("SHOW FULL COLUMNS FROM `" + tableName + "`")
 	if err != nil {

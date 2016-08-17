@@ -118,7 +118,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer sess.Close()
-	tables := GetTables(*engine, sess)
+	tables, err := sess.Collections()
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf(`Found tables: %v`, tables)
 	err = os.MkdirAll(*targetDir, os.ModePerm)
 	if err != nil {
@@ -253,15 +256,6 @@ func camleCase(s string) string {
 		vals = append(vals, v)
 	}
 	return string(vals)
-}
-
-func GetTables(engine string, d sqlbuilder.Database) []string {
-	switch engine {
-	case "mymysql", "mysql":
-		fallthrough
-	default:
-		return getMySQLTables(d)
-	}
 }
 
 func GetTableInfo(engine string, d sqlbuilder.Database, tableName string) (int, []map[string]string) {
