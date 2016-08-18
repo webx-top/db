@@ -15,6 +15,11 @@ func (s *Setting) CachedKey(key string) *Setting {
 	return s
 }
 
+func (s *Setting) Link(index int) *Setting {
+	s.Param.SelectLink(index)
+	return s
+}
+
 func (s *Setting) Join(joins ...*Join) *Setting {
 	s.Param.SetJoin(joins...)
 	return s
@@ -88,7 +93,7 @@ func (s *Setting) SelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector
 }
 
 func (s *Setting) Recv(result interface{}) *Setting {
-	s.Param.SetResult(result)
+	s.Param.SetRecv(result)
 	return s
 }
 
@@ -112,8 +117,8 @@ func (s *Setting) AddCols(args ...interface{}) *Setting {
 	return s
 }
 
-func (s *Setting) SaveAs(save interface{}) *Setting {
-	s.Param.SetSave(save)
+func (s *Setting) Send(save interface{}) *Setting {
+	s.Param.SetSend(save)
 	return s
 }
 

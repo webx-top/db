@@ -36,18 +36,18 @@ func (this *Album) Param() *factory.Param {
 }
 
 func (this *Album) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetResult(this).SetMiddleware(mw).One()
+	return this.Param().SetRecv(this).SetMiddleware(mw).One()
 }
 
 func (this *Album) List(mw func(db.Result) db.Result, page, size int) ([]*Album, func() int64, error) {
 	r := []*Album{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetResult(&r).SetMiddleware(mw).List()
+	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
 	return r, counter, err
 }
 
 func (this *Album) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Album, func() int64, error) {
 	r := []*Album{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetResult(&r).SetMiddleware(mw).List()
+	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
 	return r, counter, err
 }
 
@@ -56,7 +56,7 @@ func (this *Album) Add(args ...*Album) (interface{}, error) {
 	if len(args)>0 {
 		data = args[0]
 	}
-	return this.Param().SetSave(data).Insert()
+	return this.Param().SetSend(data).Insert()
 }
 
 func (this *Album) Edit(mw func(db.Result) db.Result, args ...*Album) error {
@@ -64,7 +64,7 @@ func (this *Album) Edit(mw func(db.Result) db.Result, args ...*Album) error {
 	if len(args)>0 {
 		data = args[0]
 	}
-	return this.Param().SetSave(data).SetMiddleware(mw).Update()
+	return this.Param().SetSend(data).SetMiddleware(mw).Update()
 }
 
 func (this *Album) Delete(mw func(db.Result) db.Result) error {

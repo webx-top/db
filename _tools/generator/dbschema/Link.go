@@ -32,18 +32,18 @@ func (this *Link) Param() *factory.Param {
 }
 
 func (this *Link) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetResult(this).SetMiddleware(mw).One()
+	return this.Param().SetRecv(this).SetMiddleware(mw).One()
 }
 
 func (this *Link) List(mw func(db.Result) db.Result, page, size int) ([]*Link, func() int64, error) {
 	r := []*Link{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetResult(&r).SetMiddleware(mw).List()
+	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
 	return r, counter, err
 }
 
 func (this *Link) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Link, func() int64, error) {
 	r := []*Link{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetResult(&r).SetMiddleware(mw).List()
+	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
 	return r, counter, err
 }
 
@@ -52,7 +52,7 @@ func (this *Link) Add(args ...*Link) (interface{}, error) {
 	if len(args)>0 {
 		data = args[0]
 	}
-	return this.Param().SetSave(data).Insert()
+	return this.Param().SetSend(data).Insert()
 }
 
 func (this *Link) Edit(mw func(db.Result) db.Result, args ...*Link) error {
@@ -60,7 +60,7 @@ func (this *Link) Edit(mw func(db.Result) db.Result, args ...*Link) error {
 	if len(args)>0 {
 		data = args[0]
 	}
-	return this.Param().SetSave(data).SetMiddleware(mw).Update()
+	return this.Param().SetSend(data).SetMiddleware(mw).Update()
 }
 
 func (this *Link) Delete(mw func(db.Result) db.Result) error {

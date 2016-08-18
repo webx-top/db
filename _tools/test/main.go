@@ -34,7 +34,7 @@ func main() {
 	var posts []*dbschema.Post
 	//err = db.Find("webx_post").All(&posts)
 	log.Println(`查询方式1：使用Factory查询`)
-	err = factory.All(factory.NewParam(nil).SetCollection(`post`).SetResult(&posts).SetPage(2).SetSize(10))
+	err = factory.All(factory.NewParam(nil).SetCollection(`post`).SetRecv(&posts).SetPage(2).SetSize(10))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	fmt.Println(``)
 	fmt.Println(``)
 	log.Println(`查询方式2：使用Param查询`)
-	err = factory.NewParam().SetCollection(`post`).SetResult(&posts).All()
+	err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).All()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,17 +111,29 @@ func main() {
 	}
 
 	res.Close() //操作结束后别忘了执行关闭操作
-	err = param.SetSave(map[string]int{
+	err = param.SetSend(map[string]int{
 		"views": 818,
 	}).SetArgs("id", 1).Update()
 	//err = fmt.Errorf(`failured`)
 	param.End(err)
 
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式8：使用Param的Setter查询`)
+	err = factory.NewParam().Setter().Collection(`post`).Recv(&posts).All()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, post := range posts {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
 	return
 
 	param = post.Param()
 	factory.Tx(param.SetTxMW(func(t *factory.Transaction) (err error) {
-		param = param.SetSave(map[string]int{
+		param = param.SetSend(map[string]int{
 			"views": 1,
 		}).SetArgs("id", 1)
 		err = t.Update(param)

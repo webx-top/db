@@ -170,7 +170,7 @@ func (p *Param) SetSelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selecto
 	return p
 }
 
-func (p *Param) SetResult(result interface{}) *Param {
+func (p *Param) SetRecv(result interface{}) *Param {
 	p.ResultData = result
 	return p
 }
@@ -195,7 +195,7 @@ func (p *Param) AddCols(args ...interface{}) *Param {
 	return p
 }
 
-func (p *Param) SetSave(save interface{}) *Param {
+func (p *Param) SetSend(save interface{}) *Param {
 	p.SaveData = save
 	return p
 }

@@ -57,7 +57,7 @@ func main() {
 
 	var posts []*Post
 
-    err = factory.All(factory.NewParam().SetCollection(`post`).SetPage(1).SetSize(10).SetResult(&posts))
+    err = factory.All(factory.NewParam().SetCollection(`post`).SetPage(1).SetSize(10).SetRecv(&posts))
 	// 生成SQL：SELECT * FROM `webx_post` LIMIT 10
 
 	if err != nil {
@@ -74,12 +74,12 @@ func main() {
 
 ### 方法 1.
 ```
-err = factory.All(factory.NewParam().SetCollection(`post`).SetResult(&posts))
+err = factory.All(factory.NewParam().SetCollection(`post`).SetRecv(&posts))
 ```
 
 也可以附加更多条件（后面介绍的所有方法均支持这种方式）：
 ```
-    err = factory.NewParam().SetCollection(`post`).SetResult(&posts).SetArgs(db.Cond{`title LIKE`:`%test%`}).SetMiddleware(func(r db.Result)db.Result{
+    err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetArgs(db.Cond{`title LIKE`:`%test%`}).SetMiddleware(func(r db.Result)db.Result{
         return r.OrderBy(`-id`).Group(`group`)
     }).All()
     // 生成SQL：SELECT * FROM `webx_post` WHERE (`title` LIKE "%test%") GROUP BY `group` ORDER BY `id` DESC
@@ -87,7 +87,7 @@ err = factory.All(factory.NewParam().SetCollection(`post`).SetResult(&posts))
 
 ### 方法 2.
 ```
-err = factory.NewParam().SetCollection(`post`).SetResult(&posts).All()
+err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).All()
 
 ```
 
@@ -102,12 +102,12 @@ err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJo
 ### 方法 1.
 ```
 var countFn func()int64
-countFn, err = factory.List(factory.NewParam().SetCollection(`post`).SetResult(&posts).SetPage(1).SetSize(10))
+countFn, err = factory.List(factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetPage(1).SetSize(10))
 ```
 
 ### 方法 2.
 ```
-countFn, err = factory.NewParam().SetCollection(`post`).SetResult(&posts).SetPage(1).SetSize(10).List()
+countFn, err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetPage(1).SetSize(10).List()
 ```
 
 ## 查询一行数据 (使用One方法)
@@ -115,13 +115,13 @@ countFn, err = factory.NewParam().SetCollection(`post`).SetResult(&posts).SetPag
 ### 方法 1.
 ```
 var post Post
-err = factory.One(factory.NewParam().SetCollection(`post`).SetResult(&post))
+err = factory.One(factory.NewParam().SetCollection(`post`).SetRecv(&post))
 ```
 
 ### 方法 2.
 ```
 var post Post
-err = factory.NewParam().SetCollection(`post`).SetResult(&post).One()
+err = factory.NewParam().SetCollection(`post`).SetRecv(&post).One()
 ```
 
 ## 插入数据 (使用Insert方法)
@@ -132,7 +132,7 @@ var post Post
 post=Post{
     Title:`test title`,
 }
-err = factory.Insert(factory.NewParam().SetCollection(`post`).SetSave(&post))
+err = factory.Insert(factory.NewParam().SetCollection(`post`).SetSend(&post))
 ```
 
 ### 方法 2.
@@ -141,7 +141,7 @@ var post Post
 post=Post{
     Title:`test title`,
 }
-err = factory.NewParam().SetCollection(`post`).SetSave(&post).Insert()
+err = factory.NewParam().SetCollection(`post`).SetSend(&post).Insert()
 ```
 
 ## 更新数据 (使用Update方法)
@@ -152,7 +152,7 @@ var post Post
 post=Post{
     Title:`test title`,
 }
-err = factory.Update(factory.NewParam().SetCollection(`post`).SetSave(&post).SetArgs("id",1))
+err = factory.Update(factory.NewParam().SetCollection(`post`).SetSend(&post).SetArgs("id",1))
 ```
 
 ### 方法 2.
@@ -161,7 +161,7 @@ var post Post
 post=Post{
     Title:`test title`,
 }
-err = factory.NewParam().SetCollection(`post`).SetSave(&post).SetArgs("id",1).Update()
+err = factory.NewParam().SetCollection(`post`).SetSend(&post).SetArgs("id",1).Update()
 ```
 
 ## 删除数据 (使用Delete方法)
@@ -181,7 +181,7 @@ err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
 ### 方法 1.
 ```
 	param = factory.NewParam().SetCollection(`post`).SetTxMW(func(t *factory.Transaction) (err error) {
-		param := factory.NewParam().SetCollection(`post`).SetSave(map[string]int{
+		param := factory.NewParam().SetCollection(`post`).SetSend(map[string]int{
 			"views": 1,
 		}).SetArgs("id", 1)
 		err = t.Update(param)
@@ -195,16 +195,16 @@ err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
 ### 方法 2.
 ```
     param = factory.NewParam().Begin().SetCollection(`post`)
-    err:=param.SetSave(map[string]int{"views": 1}).SetArgs("id", 1).Update()
+    err:=param.SetSend(map[string]int{"views": 1}).SetArgs("id", 1).Update()
     if err!=nil {
         param.End(err)
         return
     }
-    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSave(map[string]int{"views": 2}).SetArgs("id", 1).Update()
+    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 2}).SetArgs("id", 1).Update()
     if err!=nil {
         param.End(err)
         return
     }
-    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSave(map[string]int{"views": 3}).SetArgs("id", 1).Update()
+    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 3}).SetArgs("id", 1).Update()
     param.End(err)
 ```
