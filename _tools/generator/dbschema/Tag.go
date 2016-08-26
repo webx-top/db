@@ -10,7 +10,7 @@ import (
 type Tag struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
 	Name           	string  	`db:"name" comment:"标签名"`
 	Uid            	int     	`db:"uid" comment:"创建者"`
 	Created        	int     	`db:"created" comment:"创建时间"`

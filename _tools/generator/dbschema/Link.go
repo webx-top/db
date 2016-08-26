@@ -10,7 +10,7 @@ import (
 type Link struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"主键ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"主键ID"`
 	Name           	string  	`db:"name" comment:"名称"`
 	Url            	string  	`db:"url" comment:"网址"`
 	Logo           	string  	`db:"logo" comment:"LOGO"`

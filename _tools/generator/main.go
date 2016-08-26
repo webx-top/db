@@ -88,6 +88,19 @@ var (
 	schema    *string
 )
 
+type FieldInformation struct {
+	DataType      string
+	Unsigned      bool
+	PrimaryKey    bool
+	AutoIncrement bool
+	Min           int
+	Max           int
+	MaxSize       int
+	Options       []string
+	DefaultValue  string
+	Comment       string
+}
+
 func main() {
 	user = flag.String(`u`, `root`, `-u user`)
 	pass = flag.String(`p`, `root`, `-p password`)
@@ -127,7 +140,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	allFields := map[string]map[string]bool{}
+	allFields := map[string]map[string]FieldInformation{}
 	hasPrefix := len(*prefix) > 0
 	for _, tableName := range tables {
 		fieldMaxLength, fieldsInfo := GetTableInfo(*engine, sess, tableName)
@@ -135,19 +148,67 @@ func main() {
 		imports := ``
 		fieldBlock := ``
 		maxLen := strconv.Itoa(fieldMaxLength / 2)
-		fieldNames := map[string]bool{}
+		fieldNames := map[string]FieldInformation{}
 		for key, field := range fieldsInfo {
 			if key > 0 {
 				fieldBlock += "\n"
 			}
-			fieldNames[field["Field"]] = true
+			fieldInfo := FieldInformation{Options: []string{}}
+			p := strings.Index(field["Type"], `(`)
+			if p > -1 {
+				fieldInfo.DataType = field["Type"][0:p]
+				pr := strings.Index(field["Type"], `)`)
+				if pr > -1 {
+					opts := field["Type"][p+1 : pr]
+					if len(opts) > 0 {
+						if opts[0] == '\'' {
+							for _, opt := range strings.Split(opts, `,`) {
+								fieldInfo.Options = append(fieldInfo.Options, strings.Trim(opt, `'`))
+							}
+						} else if strings.Contains(opts, `,`) {
+							opts := strings.Split(opts, `,`)
+							switch len(opts) {
+							case 2:
+								fieldInfo.Min, err = strconv.Atoi(opts[0])
+								if err != nil {
+									panic(err)
+								}
+								fieldInfo.Max, err = strconv.Atoi(opts[1])
+								if err != nil {
+									panic(err)
+								}
+							}
+						} else {
+							fieldInfo.MaxSize, err = strconv.Atoi(opts)
+							if err != nil {
+								panic(err)
+							}
+						}
+					}
+					if vs := strings.Split(field["Type"][pr:], ` `); len(vs) > 1 && vs[1] == `unsigned` {
+						fieldInfo.Unsigned = true
+					}
+				}
+			} else {
+				if vs := strings.Split(field["Type"], ` `); len(vs) > 1 && vs[1] == `unsigned` {
+					fieldInfo.Unsigned = true
+				}
+			}
 			fieldP := fmt.Sprintf(`%-`+maxLen+`s`, TableToStructName(field["Field"], ``))
 			typeP := fmt.Sprintf(`%-8s`, DataType(field["Type"]))
 			dbTag := field["Field"]
 			if field["Key"] == "PRI" && field["Extra"] == "auto_increment" {
-				dbTag += ",omitempty"
+				dbTag += ",omitempty,pk"
+				fieldInfo.PrimaryKey = true
+				fieldInfo.AutoIncrement = true
+			} else if field["Key"] == "PRI" {
+				fieldInfo.PrimaryKey = true
 			}
+			fieldInfo.Comment = field["Comment"]
+			fieldInfo.DefaultValue = field["Default"]
 			fieldBlock += "\t" + fieldP + "\t" + typeP + "\t`db:\"" + dbTag + "\" comment:\"" + field["Comment"] + "\"`"
+
+			fieldNames[field["Field"]] = fieldInfo
 		}
 		noPrefixTableName := tableName
 		if hasPrefix {
@@ -177,11 +238,25 @@ import (
 
 var Factory *factory.Factory = factory.DefaultFactory
 
-type FieldValidator map[string]map[string]bool
+type FieldInformation struct{
+	DataType string
+	Unsigned bool
+	PrimaryKey bool
+	AutoIncrement bool
+	Min int
+	Max int
+	MaxSize int
+	Options []string
+	DefaultValue string
+	Comment string
+}
+
+type FieldValidator map[string]map[string]*FieldInformation
 
 func (f FieldValidator) ValidField(table string, field string) bool {
 	if tb, ok := f[table]; ok {
-		return tb[field]
+		_,ok = tb[field]
+		return ok
 	}
 	return false
 }
@@ -192,7 +267,9 @@ func (f FieldValidator) ValidTable(table string) bool {
 }
 
 `
-	content += fmt.Sprintf(`var AllfieldsMap FieldValidator=%#v`+"\n", allFields)
+	dataContent := strings.Replace(fmt.Sprintf(`var AllfieldsMap FieldValidator=%#v`+"\n", allFields), `map[string]main.FieldInformation`, `map[string]*FieldInformation`, -1)
+	dataContent = strings.Replace(dataContent, `:main.FieldInformation`, `:&FieldInformation`, -1)
+	content += dataContent
 	saveAs := filepath.Join(*targetDir, `init`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {

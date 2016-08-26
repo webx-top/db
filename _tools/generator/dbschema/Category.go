@@ -10,7 +10,7 @@ import (
 type Category struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
 	Pid            	int     	`db:"pid" comment:"上级分类"`
 	Name           	string  	`db:"name" comment:"分类名称"`
 	Description    	string  	`db:"description" comment:"说明"`

@@ -10,7 +10,7 @@ import (
 type User struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"UID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"UID"`
 	Uname          	string  	`db:"uname" comment:"用户名"`
 	Passwd         	string  	`db:"passwd" comment:"密码"`
 	Salt           	string  	`db:"salt" comment:"盐值"`

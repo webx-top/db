@@ -10,7 +10,7 @@ import (
 type Ocontent struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
 	RcId           	int     	`db:"rc_id" comment:"关联ID"`
 	RcType         	string  	`db:"rc_type" comment:"关联类型"`
 	Content        	string  	`db:"content" comment:"博客原始内容"`

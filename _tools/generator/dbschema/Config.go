@@ -10,7 +10,7 @@ import (
 type Config struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"主键ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"主键ID"`
 	Key            	string  	`db:"key" comment:"配置项"`
 	Val            	string  	`db:"val" comment:"配置值"`
 	Updated        	int     	`db:"updated" comment:"更新时间"`

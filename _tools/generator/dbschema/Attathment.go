@@ -10,7 +10,7 @@ import (
 type Attathment struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty" comment:"ID"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
 	Name           	string  	`db:"name" comment:"文件名"`
 	Path           	string  	`db:"path" comment:"保存路径"`
 	Extension      	string  	`db:"extension" comment:"扩展名"`

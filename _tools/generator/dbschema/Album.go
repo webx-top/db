@@ -10,7 +10,7 @@ import (
 type Album struct {
 	trans	*factory.Transaction
 	
-	Id              	int     	`db:"id,omitempty" comment:"ID"`
+	Id              	int     	`db:"id,omitempty,pk" comment:"ID"`
 	Title           	string  	`db:"title" comment:"标题"`
 	Description     	string  	`db:"description" comment:"简介"`
 	Content         	string  	`db:"content" comment:"正文"`

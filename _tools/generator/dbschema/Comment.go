@@ -10,7 +10,7 @@ import (
 type Comment struct {
 	trans	*factory.Transaction
 	
-	Id                     	int64   	`db:"id,omitempty" comment:"主键"`
+	Id                     	int64   	`db:"id,omitempty,pk" comment:"主键"`
 	Content                	string  	`db:"content" comment:"内容"`
 	Quote                  	string  	`db:"quote" comment:"引用内容"`
 	Etype                  	string  	`db:"etype" comment:"编辑器类型"`
