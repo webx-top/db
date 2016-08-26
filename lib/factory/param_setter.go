@@ -70,7 +70,7 @@ func (s *Setting) SelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbui
 	return s
 }
 
-// SetMW is SetMiddleware's alias.
+// MW is an alias of Middleware.
 func (s *Setting) MW(middleware func(db.Result) db.Result) *Setting {
 	s.Param.SetMW(middleware)
 	return s
@@ -86,7 +86,7 @@ func (s *Setting) TxMW(middleware func(*Transaction) error) *Setting {
 	return s
 }
 
-// SetSelMW is SetSelectorMiddleware's alias.
+// SelMW is an alias of SelectorMiddleware.
 func (s *Setting) SelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Setting {
 	s.Param.SetSelMW(middleware)
 	return s

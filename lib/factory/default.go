@@ -35,6 +35,16 @@ func AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
 	return DefaultFactory
 }
 
+func AddDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+	DefaultFactory.AddDBToCluster(index, databases...)
+	return DefaultFactory
+}
+
+func AddSlaveDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+	DefaultFactory.AddSlaveDBToCluster(index, databases...)
+	return DefaultFactory
+}
+
 func SetCluster(index int, cluster *Cluster) *Factory {
 	DefaultFactory.SetCluster(index, cluster)
 	return DefaultFactory

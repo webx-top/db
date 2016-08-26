@@ -9,7 +9,9 @@ import (
 )
 
 const (
+	// R : read mode
 	R = iota
+	// W : write mode
 	W
 )
 
@@ -61,6 +63,28 @@ func (f *Factory) AddDB(databases ...sqlbuilder.Database) *Factory {
 func (f *Factory) AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
 	if len(f.databases) > 0 {
 		f.databases[0].AddR(databases...)
+	} else {
+		c := NewCluster()
+		c.AddR(databases...)
+		f.databases = append(f.databases, c)
+	}
+	return f
+}
+
+func (f *Factory) AddDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+	if len(f.databases) > index {
+		f.databases[index].AddW(databases...)
+	} else {
+		c := NewCluster()
+		c.AddW(databases...)
+		f.databases = append(f.databases, c)
+	}
+	return f
+}
+
+func (f *Factory) AddSlaveDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+	if len(f.databases) > index {
+		f.databases[index].AddR(databases...)
 	} else {
 		c := NewCluster()
 		c.AddR(databases...)
