@@ -22,7 +22,7 @@ func (this *Config) SetTrans(trans *factory.Transaction) *Config {
 }
 
 func (this *Config) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("config")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("config")
 }
 
 func (this *Config) Get(mw func(db.Result) db.Result) error {

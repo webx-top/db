@@ -32,7 +32,7 @@ func (this *Album) SetTrans(trans *factory.Transaction) *Album {
 }
 
 func (this *Album) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("album")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("album")
 }
 
 func (this *Album) Get(mw func(db.Result) db.Result) error {

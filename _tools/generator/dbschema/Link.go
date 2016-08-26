@@ -28,7 +28,7 @@ func (this *Link) SetTrans(trans *factory.Transaction) *Link {
 }
 
 func (this *Link) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("link")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("link")
 }
 
 func (this *Link) Get(mw func(db.Result) db.Result) error {

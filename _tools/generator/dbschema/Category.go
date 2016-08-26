@@ -27,7 +27,7 @@ func (this *Category) SetTrans(trans *factory.Transaction) *Category {
 }
 
 func (this *Category) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("category")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("category")
 }
 
 func (this *Category) Get(mw func(db.Result) db.Result) error {

@@ -23,7 +23,7 @@ func (this *Ocontent) SetTrans(trans *factory.Transaction) *Ocontent {
 }
 
 func (this *Ocontent) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("ocontent")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("ocontent")
 }
 
 func (this *Ocontent) Get(mw func(db.Result) db.Result) error {

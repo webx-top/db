@@ -38,7 +38,7 @@ func (this *Post) SetTrans(trans *factory.Transaction) *Post {
 }
 
 func (this *Post) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("post")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("post")
 }
 
 func (this *Post) Get(mw func(db.Result) db.Result) error {

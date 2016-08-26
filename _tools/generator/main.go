@@ -35,7 +35,7 @@ func (this *%[3]s) SetTrans(trans *factory.Transaction) *%[3]s {
 }
 
 func (this *%[3]s) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("%[5]s")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("%[5]s")
 }
 
 func (this *%[3]s) Get(mw func(db.Result) db.Result) error {
@@ -155,8 +155,9 @@ func main() {
 			}
 			fieldInfo := FieldInformation{Options: []string{}}
 			p := strings.Index(field["Type"], `(`)
+			fieldInfo.DataType = DataType(field["Type"])
 			if p > -1 {
-				fieldInfo.DataType = field["Type"][0:p]
+				//fieldInfo.DataType = field["Type"][0:p]
 				pr := strings.Index(field["Type"], `)`)
 				if pr > -1 {
 					opts := field["Type"][p+1 : pr]
@@ -195,7 +196,7 @@ func main() {
 				}
 			}
 			fieldP := fmt.Sprintf(`%-`+maxLen+`s`, TableToStructName(field["Field"], ``))
-			typeP := fmt.Sprintf(`%-8s`, DataType(field["Type"]))
+			typeP := fmt.Sprintf(`%-8s`, fieldInfo.DataType)
 			dbTag := field["Field"]
 			if field["Key"] == "PRI" && field["Extra"] == "auto_increment" {
 				dbTag += ",omitempty,pk"
@@ -230,13 +231,7 @@ func main() {
 		allFields[noPrefixTableName] = fieldNames
 	}
 
-	content := `package ` + *pkgName + `
-
-import (
-	"github.com/webx-top/db/lib/factory"
-)
-
-var Factory *factory.Factory = factory.DefaultFactory
+	content := `package information
 
 type FieldInformation struct{
 	DataType string
@@ -267,10 +262,12 @@ func (f FieldValidator) ValidTable(table string) bool {
 }
 
 `
-	dataContent := strings.Replace(fmt.Sprintf(`var AllfieldsMap FieldValidator=%#v`+"\n", allFields), `map[string]main.FieldInformation`, `map[string]*FieldInformation`, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`var Fields FieldValidator=%#v`+"\n", allFields), `map[string]main.FieldInformation`, `map[string]*FieldInformation`, -1)
 	dataContent = strings.Replace(dataContent, `:main.FieldInformation`, `:&FieldInformation`, -1)
 	content += dataContent
-	saveAs := filepath.Join(*targetDir, `init`) + `.go`
+	saveDir := filepath.Join(*targetDir, `information`)
+	os.MkdirAll(saveDir, os.ModePerm)
+	saveAs := filepath.Join(saveDir, `infomation`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {
 		_, err = file.WriteString(content)

@@ -24,7 +24,7 @@ func (this *Tag) SetTrans(trans *factory.Transaction) *Tag {
 }
 
 func (this *Tag) Param() *factory.Param {
-	return factory.NewParam(Factory).SetTrans(this.trans).SetCollection("tag")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("tag")
 }
 
 func (this *Tag) Get(mw func(db.Result) db.Result) error {
