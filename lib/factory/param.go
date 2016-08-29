@@ -304,6 +304,10 @@ func (p *Param) Result() db.Result {
 	return p.T().Result(p)
 }
 
+func (p *Param) CheckCached() bool {
+	return p.T().CheckCached(p)
+}
+
 // Read ==========================
 
 func (p *Param) SelectAll() error {
