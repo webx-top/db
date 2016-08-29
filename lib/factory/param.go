@@ -45,7 +45,7 @@ type Param struct {
 	setter             *Setting
 }
 
-func NewParam(args ...*Factory) *Param {
+func NewParam(args ...interface{}) *Param {
 	p := &Param{
 		factory: DefaultFactory,
 		Args:    make([]interface{}, 0),
@@ -58,9 +58,18 @@ func NewParam(args ...*Factory) *Param {
 	return p
 }
 
-func (p *Param) init(args ...*Factory) *Param {
+func (p *Param) init(args ...interface{}) *Param {
 	if len(args) > 0 {
-		p.factory = args[0]
+		for _, v := range args {
+			if factory, ok := v.(*Factory); ok {
+				p.factory = factory
+				continue
+			}
+			if param, ok := v.(*Param); ok {
+				p.TransFrom(param)
+				continue
+			}
+		}
 	}
 	//p.setter = &Setting{Param: p}
 	return p
