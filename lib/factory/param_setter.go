@@ -2,6 +2,8 @@
 package factory
 
 import (
+	"time"
+
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
@@ -12,6 +14,11 @@ type Setting struct {
 
 func (s *Setting) CachedKey(key string) *Setting {
 	s.Param.SetCachedKey(key)
+	return s
+}
+
+func (s *Setting) Cache(maxAge time.Duration, key ...string) *Setting {
+	s.Param.SetCache(maxAge, key...)
 	return s
 }
 

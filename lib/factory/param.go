@@ -39,7 +39,7 @@ type Param struct {
 	Page               int           //页码
 	Size               int           //每页数据量
 	Total              int64         //数据表中符合条件的数据行数
-	Lifetime           time.Duration //缓存生存时间
+	MaxAge             time.Duration //缓存有效时间（单位：秒），为0时代表临时关闭缓存，为-1时代表删除缓存
 	trans              *Transaction
 	cachedKey          string
 	setter             *Setting
@@ -88,6 +88,14 @@ func (p *Param) CachedKey() string {
 		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size)
 	}
 	return p.cachedKey
+}
+
+func (p *Param) SetCache(maxAge time.Duration, key ...string) *Param {
+	p.MaxAge = maxAge
+	if len(key) > 0 {
+		p.cachedKey = key[0]
+	}
+	return p
 }
 
 func (p *Param) SetCachedKey(key string) *Param {

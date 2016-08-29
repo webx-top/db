@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"log"
 	"strings"
 
 	"github.com/webx-top/db"
@@ -88,8 +89,24 @@ func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
 	return selector
 }
 
-func (t *Transaction) All(param *Param) error {
-	if param.Lifetime > 0 && t.Factory.cacher != nil {
+func (t *Transaction) CheckCached(param *Param) bool {
+	if t.Factory.cacher != nil {
+		if param.MaxAge > 0 {
+			return true
+		}
+		if param.MaxAge < 0 {
+			err := t.Factory.cacher.Del(param.CachedKey())
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
+
+	return false
+}
+
+func (t *Transaction) Cached(param *Param, fn func(*Param) error) error {
+	if t.CheckCached(param) {
 		data, err := t.Factory.cacher.Get(param.CachedKey())
 		if err == nil && data != nil {
 			if v, ok := data.(*Param); ok {
@@ -98,8 +115,26 @@ func (t *Transaction) All(param *Param) error {
 				return nil
 			}
 		}
-		defer t.Factory.cacher.Put(param.CachedKey(), param, param.Lifetime)
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
 	}
+
+	return fn(param)
+}
+
+func (t *Transaction) All(param *Param) error {
+
+	if t.CheckCached(param) {
+		data, err := t.Factory.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = t.Factory
+				return nil
+			}
+		}
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
+	}
+
 	res := t.Result(param)
 	if param.Size > 0 {
 		res = res.Limit(param.Size).Offset(param.GetOffset())
@@ -112,7 +147,7 @@ func (t *Transaction) All(param *Param) error {
 
 func (t *Transaction) List(param *Param) (func() int64, error) {
 
-	if param.Lifetime > 0 && t.Factory.cacher != nil {
+	if t.CheckCached(param) {
 		data, err := t.Factory.cacher.Get(param.CachedKey())
 		if err == nil && data != nil {
 			if v, ok := data.(*Param); ok {
@@ -123,7 +158,7 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 				}, nil
 			}
 		}
-		defer t.Factory.cacher.Put(param.CachedKey(), param, param.Lifetime)
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
 	}
 
 	var res db.Result
@@ -153,7 +188,7 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 
 func (t *Transaction) One(param *Param) error {
 
-	if param.Lifetime > 0 && t.Factory.cacher != nil {
+	if t.CheckCached(param) {
 		data, err := t.Factory.cacher.Get(param.CachedKey())
 		if err == nil && data != nil {
 			if v, ok := data.(*Param); ok {
@@ -162,7 +197,7 @@ func (t *Transaction) One(param *Param) error {
 				return nil
 			}
 		}
-		defer t.Factory.cacher.Put(param.CachedKey(), param, param.Lifetime)
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
 	}
 
 	res := t.Result(param)
@@ -174,7 +209,7 @@ func (t *Transaction) One(param *Param) error {
 
 func (t *Transaction) Count(param *Param) (int64, error) {
 
-	if param.Lifetime > 0 && t.Factory.cacher != nil {
+	if t.CheckCached(param) {
 		data, err := t.Factory.cacher.Get(param.CachedKey())
 		if err == nil && data != nil {
 			if v, ok := data.(*Param); ok {
@@ -183,7 +218,7 @@ func (t *Transaction) Count(param *Param) (int64, error) {
 				return param.Total, nil
 			}
 		}
-		defer t.Factory.cacher.Put(param.CachedKey(), param, param.Lifetime)
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
 	}
 
 	var cnt uint64
