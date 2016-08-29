@@ -10,15 +10,15 @@ import (
 type Category struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
-	Pid            	int     	`db:"pid" comment:"上级分类"`
-	Name           	string  	`db:"name" comment:"分类名称"`
-	Description    	string  	`db:"description" comment:"说明"`
-	Haschild       	string  	`db:"haschild" comment:"是否有子分类"`
-	Updated        	int     	`db:"updated" comment:"更新时间"`
-	RcType         	string  	`db:"rc_type" comment:"关联类型"`
-	Sort           	int     	`db:"sort" comment:"排序"`
-	Tmpl           	string  	`db:"tmpl" comment:"模板"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID" json:"id" xml:"id"`
+	Pid            	int     	`db:"pid" comment:"上级分类" json:"pid" xml:"pid"`
+	Name           	string  	`db:"name" comment:"分类名称" json:"name" xml:"name"`
+	Description    	string  	`db:"description" comment:"说明" json:"description" xml:"description"`
+	Haschild       	string  	`db:"haschild" comment:"是否有子分类" json:"haschild" xml:"haschild"`
+	Updated        	int     	`db:"updated" comment:"更新时间" json:"updated" xml:"updated"`
+	RcType         	string  	`db:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
+	Sort           	int     	`db:"sort" comment:"排序" json:"sort" xml:"sort"`
+	Tmpl           	string  	`db:"tmpl" comment:"模板" json:"tmpl" xml:"tmpl"`
 }
 
 func (this *Category) SetTrans(trans *factory.Transaction) *Category {

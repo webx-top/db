@@ -10,10 +10,10 @@ import (
 type Config struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" comment:"主键ID"`
-	Key            	string  	`db:"key" comment:"配置项"`
-	Val            	string  	`db:"val" comment:"配置值"`
-	Updated        	int     	`db:"updated" comment:"更新时间"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"主键ID" json:"id" xml:"id"`
+	Key            	string  	`db:"key" comment:"配置项" json:"key" xml:"key"`
+	Val            	string  	`db:"val" comment:"配置值" json:"val" xml:"val"`
+	Updated        	int     	`db:"updated" comment:"更新时间" json:"updated" xml:"updated"`
 }
 
 func (this *Config) SetTrans(trans *factory.Transaction) *Config {

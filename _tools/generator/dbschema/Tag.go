@@ -10,12 +10,12 @@ import (
 type Tag struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" comment:"ID"`
-	Name           	string  	`db:"name" comment:"标签名"`
-	Uid            	int     	`db:"uid" comment:"创建者"`
-	Created        	int     	`db:"created" comment:"创建时间"`
-	Times          	int     	`db:"times" comment:"使用次数"`
-	RcType         	string  	`db:"rc_type" comment:"关联类型"`
+	Id             	int     	`db:"id,omitempty,pk" comment:"ID" json:"id" xml:"id"`
+	Name           	string  	`db:"name" comment:"标签名" json:"name" xml:"name"`
+	Uid            	int     	`db:"uid" comment:"创建者" json:"uid" xml:"uid"`
+	Created        	int     	`db:"created" comment:"创建时间" json:"created" xml:"created"`
+	Times          	int     	`db:"times" comment:"使用次数" json:"times" xml:"times"`
+	RcType         	string  	`db:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
 }
 
 func (this *Tag) SetTrans(trans *factory.Transaction) *Tag {

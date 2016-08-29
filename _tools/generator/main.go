@@ -207,7 +207,8 @@ func main() {
 			}
 			fieldInfo.Comment = field["Comment"]
 			fieldInfo.DefaultValue = field["Default"]
-			fieldBlock += "\t" + fieldP + "\t" + typeP + "\t`db:\"" + dbTag + "\" comment:\"" + field["Comment"] + "\"`"
+			fieldBlock += "\t" + fieldP + "\t" + typeP + "\t"
+			fieldBlock += "`db:\"" + dbTag + "\" comment:\"" + field["Comment"] + "\" json:\"" + field["Field"] + "\" xml:\"" + field["Field"] + "\"`"
 
 			fieldNames[field["Field"]] = fieldInfo
 		}

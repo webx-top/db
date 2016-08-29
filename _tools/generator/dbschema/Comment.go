@@ -10,26 +10,26 @@ import (
 type Comment struct {
 	trans	*factory.Transaction
 	
-	Id                     	int64   	`db:"id,omitempty,pk" comment:"主键"`
-	Content                	string  	`db:"content" comment:"内容"`
-	Quote                  	string  	`db:"quote" comment:"引用内容"`
-	Etype                  	string  	`db:"etype" comment:"编辑器类型"`
-	RootId                 	int64   	`db:"root_id" comment:""`
-	RId                    	int64   	`db:"r_id" comment:"关联本表的id"`
-	RType                  	string  	`db:"r_type" comment:"关联类型（reply-回复，append-追加）"`
-	RelatedTimes           	int     	`db:"related_times" comment:"本身被回复次数"`
-	RootTimes              	int     	`db:"root_times" comment:"根节点下的所有回复次数"`
-	Uid                    	int64   	`db:"uid" comment:"发布者id"`
-	Uname                  	string  	`db:"uname" comment:"发布者用户名"`
-	Up                     	int64   	`db:"up" comment:"被顶次数"`
-	Down                   	int64   	`db:"down" comment:"被踩次数"`
-	Created                	int     	`db:"created" comment:"创建时间"`
-	Updated                	int     	`db:"updated" comment:"更新时间"`
-	Status                 	int     	`db:"status" comment:"状态"`
-	RcId                   	int64   	`db:"rc_id" comment:"关联内容ID"`
-	RcType                 	string  	`db:"rc_type" comment:"关联内容类型"`
-	ForUname               	string  	`db:"for_uname" comment:"被评人用户名"`
-	ForUid                 	int64   	`db:"for_uid" comment:"被评人id"`
+	Id                     	int64   	`db:"id,omitempty,pk" comment:"主键" json:"id" xml:"id"`
+	Content                	string  	`db:"content" comment:"内容" json:"content" xml:"content"`
+	Quote                  	string  	`db:"quote" comment:"引用内容" json:"quote" xml:"quote"`
+	Etype                  	string  	`db:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
+	RootId                 	int64   	`db:"root_id" comment:"" json:"root_id" xml:"root_id"`
+	RId                    	int64   	`db:"r_id" comment:"关联本表的id" json:"r_id" xml:"r_id"`
+	RType                  	string  	`db:"r_type" comment:"关联类型（reply-回复，append-追加）" json:"r_type" xml:"r_type"`
+	RelatedTimes           	int     	`db:"related_times" comment:"本身被回复次数" json:"related_times" xml:"related_times"`
+	RootTimes              	int     	`db:"root_times" comment:"根节点下的所有回复次数" json:"root_times" xml:"root_times"`
+	Uid                    	int64   	`db:"uid" comment:"发布者id" json:"uid" xml:"uid"`
+	Uname                  	string  	`db:"uname" comment:"发布者用户名" json:"uname" xml:"uname"`
+	Up                     	int64   	`db:"up" comment:"被顶次数" json:"up" xml:"up"`
+	Down                   	int64   	`db:"down" comment:"被踩次数" json:"down" xml:"down"`
+	Created                	int     	`db:"created" comment:"创建时间" json:"created" xml:"created"`
+	Updated                	int     	`db:"updated" comment:"更新时间" json:"updated" xml:"updated"`
+	Status                 	int     	`db:"status" comment:"状态" json:"status" xml:"status"`
+	RcId                   	int64   	`db:"rc_id" comment:"关联内容ID" json:"rc_id" xml:"rc_id"`
+	RcType                 	string  	`db:"rc_type" comment:"关联内容类型" json:"rc_type" xml:"rc_type"`
+	ForUname               	string  	`db:"for_uname" comment:"被评人用户名" json:"for_uname" xml:"for_uname"`
+	ForUid                 	int64   	`db:"for_uid" comment:"被评人id" json:"for_uid" xml:"for_uid"`
 }
 
 func (this *Comment) SetTrans(trans *factory.Transaction) *Comment {

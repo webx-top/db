@@ -10,26 +10,26 @@ import (
 type Post struct {
 	trans	*factory.Transaction
 	
-	Id              	int     	`db:"id,omitempty,pk" comment:"ID"`
-	Title           	string  	`db:"title" comment:"标题"`
-	Description     	string  	`db:"description" comment:"简介"`
-	Content         	string  	`db:"content" comment:"内容"`
-	Etype           	string  	`db:"etype" comment:"编辑器类型"`
-	Created         	int     	`db:"created" comment:"创建时间"`
-	Updated         	int     	`db:"updated" comment:"修改时间"`
-	Display         	string  	`db:"display" comment:"显示"`
-	Uid             	int     	`db:"uid" comment:"UID"`
-	Uname           	string  	`db:"uname" comment:"作者名"`
-	Passwd          	string  	`db:"passwd" comment:"访问密码"`
-	Views           	int     	`db:"views" comment:"被浏览次数"`
-	Comments        	int     	`db:"comments" comment:"被评论次数"`
-	Likes           	int     	`db:"likes" comment:"被喜欢次数"`
-	Deleted         	int     	`db:"deleted" comment:"被删除时间"`
-	Year            	int     	`db:"year" comment:"归档年份"`
-	Month           	string  	`db:"month" comment:"归档月份"`
-	AllowComment    	string  	`db:"allow_comment" comment:"是否允许评论"`
-	Tags            	string  	`db:"tags" comment:"标签"`
-	Catid           	int     	`db:"catid" comment:"分类ID"`
+	Id              	int     	`db:"id,omitempty,pk" comment:"ID" json:"id" xml:"id"`
+	Title           	string  	`db:"title" comment:"标题" json:"title" xml:"title"`
+	Description     	string  	`db:"description" comment:"简介" json:"description" xml:"description"`
+	Content         	string  	`db:"content" comment:"内容" json:"content" xml:"content"`
+	Etype           	string  	`db:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
+	Created         	int     	`db:"created" comment:"创建时间" json:"created" xml:"created"`
+	Updated         	int     	`db:"updated" comment:"修改时间" json:"updated" xml:"updated"`
+	Display         	string  	`db:"display" comment:"显示" json:"display" xml:"display"`
+	Uid             	int     	`db:"uid" comment:"UID" json:"uid" xml:"uid"`
+	Uname           	string  	`db:"uname" comment:"作者名" json:"uname" xml:"uname"`
+	Passwd          	string  	`db:"passwd" comment:"访问密码" json:"passwd" xml:"passwd"`
+	Views           	int     	`db:"views" comment:"被浏览次数" json:"views" xml:"views"`
+	Comments        	int     	`db:"comments" comment:"被评论次数" json:"comments" xml:"comments"`
+	Likes           	int     	`db:"likes" comment:"被喜欢次数" json:"likes" xml:"likes"`
+	Deleted         	int     	`db:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
+	Year            	int     	`db:"year" comment:"归档年份" json:"year" xml:"year"`
+	Month           	string  	`db:"month" comment:"归档月份" json:"month" xml:"month"`
+	AllowComment    	string  	`db:"allow_comment" comment:"是否允许评论" json:"allow_comment" xml:"allow_comment"`
+	Tags            	string  	`db:"tags" comment:"标签" json:"tags" xml:"tags"`
+	Catid           	int     	`db:"catid" comment:"分类ID" json:"catid" xml:"catid"`
 }
 
 func (this *Post) SetTrans(trans *factory.Transaction) *Post {
