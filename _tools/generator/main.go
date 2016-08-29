@@ -88,7 +88,7 @@ var (
 	schema    *string
 )
 
-type FieldInformation struct {
+type FieldInfo struct {
 	DataType      string
 	Unsigned      bool
 	PrimaryKey    bool
@@ -140,7 +140,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	allFields := map[string]map[string]FieldInformation{}
+	allFields := map[string]map[string]FieldInfo{}
 	hasPrefix := len(*prefix) > 0
 	for _, tableName := range tables {
 		fieldMaxLength, fieldsInfo := GetTableInfo(*engine, sess, tableName)
@@ -148,12 +148,12 @@ func main() {
 		imports := ``
 		fieldBlock := ``
 		maxLen := strconv.Itoa(fieldMaxLength / 2)
-		fieldNames := map[string]FieldInformation{}
+		fieldNames := map[string]FieldInfo{}
 		for key, field := range fieldsInfo {
 			if key > 0 {
 				fieldBlock += "\n"
 			}
-			fieldInfo := FieldInformation{Options: []string{}}
+			fieldInfo := FieldInfo{Options: []string{}}
 			p := strings.Index(field["Type"], `(`)
 			fieldInfo.DataType = DataType(field["Type"])
 			if p > -1 {
@@ -232,9 +232,9 @@ func main() {
 		allFields[noPrefixTableName] = fieldNames
 	}
 
-	content := `package information
+	content := `package info
 
-type FieldInformation struct{
+type FieldInfo struct{
 	DataType string
 	Unsigned bool
 	PrimaryKey bool
@@ -247,7 +247,7 @@ type FieldInformation struct{
 	Comment string
 }
 
-type FieldValidator map[string]map[string]*FieldInformation
+type FieldValidator map[string]map[string]*FieldInfo
 
 func (f FieldValidator) ValidField(table string, field string) bool {
 	if tb, ok := f[table]; ok {
@@ -263,12 +263,12 @@ func (f FieldValidator) ValidTable(table string) bool {
 }
 
 `
-	dataContent := strings.Replace(fmt.Sprintf(`var Fields FieldValidator=%#v`+"\n", allFields), `map[string]main.FieldInformation`, `map[string]*FieldInformation`, -1)
-	dataContent = strings.Replace(dataContent, `:main.FieldInformation`, `:&FieldInformation`, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`var Fields FieldValidator=%#v`+"\n", allFields), `map[string]main.FieldInfo`, `map[string]*FieldInfo`, -1)
+	dataContent = strings.Replace(dataContent, `:main.FieldInfo`, `:&FieldInfo`, -1)
 	content += dataContent
-	saveDir := filepath.Join(*targetDir, `information`)
+	saveDir := filepath.Join(*targetDir, `info`)
 	os.MkdirAll(saveDir, os.ModePerm)
-	saveAs := filepath.Join(saveDir, `infomation`) + `.go`
+	saveAs := filepath.Join(saveDir, `info`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {
 		_, err = file.WriteString(content)
