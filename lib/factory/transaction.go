@@ -76,6 +76,9 @@ func (t *Transaction) SelectList(param *Param) (func() int64, error) {
 }
 
 func (t *Transaction) SelectCount(param *Param) (int64, error) {
+	if param.Total > 0 {
+		return param.Total, nil
+	}
 	counter := struct {
 		Count int64 `db:"_t"`
 	}{}
@@ -91,6 +94,7 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 		}
 		return 0, err
 	}
+	param.Total = counter.Count
 	return counter.Count, nil
 }
 
