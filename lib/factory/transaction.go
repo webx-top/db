@@ -60,8 +60,41 @@ func (t *Transaction) SelectOne(param *Param) error {
 	return selector.One(param.ResultData)
 }
 
-func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
-	selector := t.Backend(param).Select(param.Cols...).From(t.Table(param.Collection))
+func (t *Transaction) SelectList(param *Param) (func() int64, error) {
+	selector := t.Select(param).Limit(param.Size).Offset(param.GetOffset())
+	if param.SelectorMiddleware != nil {
+		selector = param.SelectorMiddleware(selector)
+	}
+	countFn := func() int64 {
+		cnt, err := t.SelectCount(param)
+		if err != nil {
+			log.Println(err)
+		}
+		return cnt
+	}
+	return countFn, t.joinSelect(param, selector).All(param.ResultData)
+}
+
+func (t *Transaction) SelectCount(param *Param) (int64, error) {
+	counter := struct {
+		Count int64 `db:"_t"`
+	}{}
+	selector := t.Backend(param).Select(db.Raw("count(1) AS _t")).From(t.Table(param.Collection))
+	selector = t.joinSelect(param, selector)
+	if param.SelectorMiddleware != nil {
+		selector = param.SelectorMiddleware(selector)
+	}
+	selector = selector.Limit(1).OrderBy()
+	if err := selector.Iterator().One(&counter); err != nil {
+		if err == db.ErrNoMoreRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return counter.Count, nil
+}
+
+func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sqlbuilder.Selector {
 	if param.Joins == nil {
 		return selector
 	}
@@ -87,6 +120,11 @@ func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
 		}
 	}
 	return selector
+}
+
+func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
+	selector := t.Backend(param).Select(param.Cols...).From(t.Table(param.Collection))
+	return t.joinSelect(param, selector)
 }
 
 func (t *Transaction) CheckCached(param *Param) bool {

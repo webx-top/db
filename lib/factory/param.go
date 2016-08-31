@@ -94,7 +94,7 @@ func (p *Param) SelectLink(index int) *Param {
 
 func (p *Param) CachedKey() string {
 	if len(p.cachedKey) == 0 {
-		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size)
+		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size, p.Joins)
 	}
 	return p.cachedKey
 }
@@ -325,6 +325,14 @@ func (p *Param) SelectAll() error {
 
 func (p *Param) SelectOne() error {
 	return p.T().SelectOne(p)
+}
+
+func (p *Param) SelectCount() (int64, error) {
+	return p.T().SelectCount(p)
+}
+
+func (p *Param) SelectList() (func() int64, error) {
+	return p.T().SelectList(p)
 }
 
 func (p *Param) Select() sqlbuilder.Selector {

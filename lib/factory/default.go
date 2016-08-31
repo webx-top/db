@@ -89,6 +89,14 @@ func SelectOne(param *Param) error {
 	return DefaultFactory.SelectOne(param)
 }
 
+func SelectCount(param *Param) (int64, error) {
+	return DefaultFactory.SelectCount(param)
+}
+
+func SelectList(param *Param) (func() int64, error) {
+	return DefaultFactory.SelectList(param)
+}
+
 func Select(param *Param) sqlbuilder.Selector {
 	return DefaultFactory.Select(param)
 }
