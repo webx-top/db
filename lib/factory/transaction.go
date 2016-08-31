@@ -84,7 +84,7 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
 	}
-	selector = selector.Limit(1).OrderBy()
+	selector = selector.Offset(0).Limit(1).OrderBy()
 	if err := selector.Iterator().One(&counter); err != nil {
 		if err == db.ErrNoMoreRows {
 			return 0, nil
