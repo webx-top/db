@@ -103,12 +103,12 @@ type FieldInfo struct {
 
 func main() {
 	user = flag.String(`u`, `root`, `-u user`)
-	pass = flag.String(`p`, `root`, `-p password`)
+	pass = flag.String(`p`, ``, `-p password`)
 	host = flag.String(`h`, `localhost`, `-p host`)
 	engine = flag.String(`e`, `mysql`, `-e engine`)
 	database = flag.String(`d`, `blog`, `-d database`)
 	targetDir = flag.String(`o`, `dbschema`, `-o targetDir`)
-	prefix = flag.String(`pre`, `webx_`, `-pre prefix`)
+	prefix = flag.String(`pre`, ``, `-pre prefix`)
 	pkgName = flag.String(`pkg`, `dbschema`, `-pkg packageName`)
 	schema = flag.String(`schema`, `public`, `-schema schemaName`)
 	flag.Parse()

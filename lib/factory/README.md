@@ -208,3 +208,42 @@ err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
     err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 3}).SetArgs("id", 1).Update()
     param.End(err)
 ```
+
+# 自动生成数据表的结构体(struct)
+进入目录`github.com/webx-top/db/_tools/generator`执行命令
+```
+go build -o generator.exe
+generator.exe -u <数据库用户名> -p <数据库密码> -p <数据库主机名> -e <数据库类型> -d <数据库名> -o <文件保存目录> -pre <数据表前缀> -pkg <生成的包名>
+```
+
+支持的参数：
+
+* -u <数据库用户名> 默认为`root`
+* -p <数据库密码> 默认为空
+* -p <数据库主机名> 默认为`localhost`
+* -e <数据库类型> 默认为`mysql`
+* -d <数据库名> 默认为`blog`
+* -o <文件保存目录> 默认为`dbschema`
+* -pre <数据表前缀> 默认为空
+* -pkg <生成的包名> 默认为`dbschema`
+
+本命令会自动生成各个表的结构体和所有表的相关信息(存放于子文件夹info内)
+
+生成的文件范例：[blog结构体文件](https://github.com/webx-top/db/tree/master/_tools/generator/dbschema)
+
+每一个生成的结构体中都自带了以下常用方法便于我们使用：
+
+* 设置事务 `SetTrans(trans *factory.Transaction) *结构体名`
+* 参数对象 `Param() *factory.Param` 
+* 查询一行 `Get(mw func(db.Result) db.Result) error`
+* 分页查询 `List(mw func(db.Result) db.Result, page, size int) ([]*结构体名, func() int64, error)`
+* 根据偏移量查询 `ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*结构体名, func() int64, error)`
+* 添加数据 `Add(args ...*结构体名) (interface{}, error)`
+* 修改数据 `Edit(mw func(db.Result) db.Result, args ...*结构体名) error`
+* 删除数据 `Delete(mw func(db.Result) db.Result) error`
+
+我们还可以根据生成的数据表信息来验证表或字段的类型和合法性，我们可以使用生成的文件夹内的子包`info`中的代码来处理，比如：
+
+* 验证表是否存在 `info.Fields.ValidTable(tableName)`
+* 验证表中的字段是否存在 `info.Fields.ValidField(tableName,fieldName)`
+* 获取某个表中某个字段的信息  `info.Fields[tableName][fieldName]`
