@@ -67,19 +67,19 @@ func (s *Setting) C(collection string) *Setting {
 	return s
 }
 
-func (s *Setting) Middleware(middleware func(db.Result) db.Result) *Setting {
-	s.Param.SetMiddleware(middleware)
+func (s *Setting) Middleware(middleware func(db.Result) db.Result, name ...string) *Setting {
+	s.Param.SetMiddleware(middleware, name...)
 	return s
 }
 
-func (s *Setting) SelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Setting {
-	s.Param.SetSelectorMiddleware(middleware)
+func (s *Setting) SelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector, name ...string) *Setting {
+	s.Param.SetSelectorMiddleware(middleware, name...)
 	return s
 }
 
 // MW is an alias of Middleware.
-func (s *Setting) MW(middleware func(db.Result) db.Result) *Setting {
-	s.Param.SetMW(middleware)
+func (s *Setting) MW(middleware func(db.Result) db.Result, name ...string) *Setting {
+	s.Param.SetMW(middleware, name...)
 	return s
 }
 
@@ -94,8 +94,8 @@ func (s *Setting) TxMW(middleware func(*Transaction) error) *Setting {
 }
 
 // SelMW is an alias of SelectorMiddleware.
-func (s *Setting) SelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Setting {
-	s.Param.SetSelMW(middleware)
+func (s *Setting) SelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector, name ...string) *Setting {
+	s.Param.SetSelMW(middleware, name...)
 	return s
 }
 

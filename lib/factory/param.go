@@ -22,27 +22,29 @@ type Join struct {
 }
 
 type Param struct {
-	factory            *Factory
-	Index              int //数据库对象元素所在的索引位置
-	ReadOrWrite        int
-	Collection         string //集合名或表名称
-	Middleware         func(db.Result) db.Result
-	SelectorMiddleware func(sqlbuilder.Selector) sqlbuilder.Selector
-	TxMiddleware       func(*Transaction) error
-	CountFunc          func() int64
-	ResultData         interface{}   //查询后保存的结果
-	Args               []interface{} //Find方法的条件参数
-	Cols               []interface{} //使用Selector要查询的列
-	Joins              []*Join
-	SaveData           interface{} //增加和更改数据时要保存到数据库中的数据
-	Offset             int
-	Page               int           //页码
-	Size               int           //每页数据量
-	Total              int64         //数据表中符合条件的数据行数
-	MaxAge             time.Duration //缓存有效时间（单位：秒），为0时代表临时关闭缓存，为-1时代表删除缓存
-	trans              *Transaction
-	cachedKey          string
-	setter             *Setting
+	factory                *Factory
+	Index                  int //数据库对象元素所在的索引位置
+	ReadOrWrite            int
+	Collection             string //集合名或表名称
+	Middleware             func(db.Result) db.Result
+	MiddlewareName         string
+	SelectorMiddleware     func(sqlbuilder.Selector) sqlbuilder.Selector
+	SelectorMiddlewareName string
+	TxMiddleware           func(*Transaction) error
+	CountFunc              func() int64
+	ResultData             interface{}   //查询后保存的结果
+	Args                   []interface{} //Find方法的条件参数
+	Cols                   []interface{} //使用Selector要查询的列
+	Joins                  []*Join
+	SaveData               interface{} //增加和更改数据时要保存到数据库中的数据
+	Offset                 int
+	Page                   int           //页码
+	Size                   int           //每页数据量
+	Total                  int64         //数据表中符合条件的数据行数
+	MaxAge                 time.Duration //缓存有效时间（单位：秒），为0时代表临时关闭缓存，为-1时代表删除缓存
+	trans                  *Transaction
+	cachedKey              string
+	setter                 *Setting
 }
 
 func NewParam(args ...interface{}) *Param {
@@ -94,7 +96,7 @@ func (p *Param) SelectLink(index int) *Param {
 
 func (p *Param) CachedKey() string {
 	if len(p.cachedKey) == 0 {
-		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size, p.Joins, p.Middleware, p.SelectorMiddleware)
+		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Cols, p.Args, p.Offset, p.Page, p.Size, p.Joins, p.MiddlewareName, p.SelectorMiddlewareName)
 	}
 	return p.cachedKey
 }
@@ -155,19 +157,25 @@ func (p *Param) SetCollection(collection string) *Param {
 	return p
 }
 
-func (p *Param) SetMiddleware(middleware func(db.Result) db.Result) *Param {
+func (p *Param) SetMiddleware(middleware func(db.Result) db.Result, name ...string) *Param {
 	p.Middleware = middleware
+	if len(name) > 0 {
+		p.MiddlewareName = name[0]
+	}
 	return p
 }
 
-func (p *Param) SetSelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Param {
+func (p *Param) SetSelectorMiddleware(middleware func(sqlbuilder.Selector) sqlbuilder.Selector, name ...string) *Param {
 	p.SelectorMiddleware = middleware
+	if len(name) > 0 {
+		p.SelectorMiddlewareName = name[0]
+	}
 	return p
 }
 
 // SetMW is SetMiddleware's alias.
-func (p *Param) SetMW(middleware func(db.Result) db.Result) *Param {
-	p.SetMiddleware(middleware)
+func (p *Param) SetMW(middleware func(db.Result) db.Result, name ...string) *Param {
+	p.SetMiddleware(middleware, name...)
 	return p
 }
 
@@ -182,8 +190,8 @@ func (p *Param) SetTxMW(middleware func(*Transaction) error) *Param {
 }
 
 // SetSelMW is SetSelectorMiddleware's alias.
-func (p *Param) SetSelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector) *Param {
-	p.SetSelectorMiddleware(middleware)
+func (p *Param) SetSelMW(middleware func(sqlbuilder.Selector) sqlbuilder.Selector, name ...string) *Param {
+	p.SetSelectorMiddleware(middleware, name...)
 	return p
 }
 
