@@ -42,6 +42,19 @@ func (t *Transaction) C(param *Param) db.Collection {
 // Read ==========================
 
 func (t *Transaction) SelectAll(param *Param) error {
+
+	if t.CheckCached(param) {
+		data, err := t.Factory.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = t.Factory
+				return nil
+			}
+		}
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
+	}
+
 	selector := t.Select(param)
 	if param.Size > 0 {
 		selector = selector.Limit(param.Size).Offset(param.GetOffset())
@@ -53,6 +66,19 @@ func (t *Transaction) SelectAll(param *Param) error {
 }
 
 func (t *Transaction) SelectOne(param *Param) error {
+
+	if t.CheckCached(param) {
+		data, err := t.Factory.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = t.Factory
+				return nil
+			}
+		}
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
+	}
+
 	selector := t.Select(param).Limit(1)
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
@@ -61,6 +87,21 @@ func (t *Transaction) SelectOne(param *Param) error {
 }
 
 func (t *Transaction) SelectList(param *Param) (func() int64, error) {
+
+	if t.CheckCached(param) {
+		data, err := t.Factory.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = t.Factory
+				return func() int64 {
+					return param.Total
+				}, nil
+			}
+		}
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
+	}
+
 	selector := t.Select(param).Limit(param.Size).Offset(param.GetOffset())
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
@@ -79,6 +120,19 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 	if param.Total > 0 {
 		return param.Total, nil
 	}
+
+	if t.CheckCached(param) {
+		data, err := t.Factory.cacher.Get(param.CachedKey())
+		if err == nil && data != nil {
+			if v, ok := data.(*Param); ok {
+				param = v
+				param.factory = t.Factory
+				return param.Total, nil
+			}
+		}
+		defer t.Factory.cacher.Put(param.CachedKey(), param, param.MaxAge)
+	}
+
 	counter := struct {
 		Count int64 `db:"_t"`
 	}{}

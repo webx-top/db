@@ -94,7 +94,7 @@ func (p *Param) SelectLink(index int) *Param {
 
 func (p *Param) CachedKey() string {
 	if len(p.cachedKey) == 0 {
-		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size, p.Joins)
+		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v-%v-%v`, p.Index, p.Collection, p.Args, p.Offset, p.Page, p.Size, p.Joins, p.Middleware, p.SelectorMiddleware)
 	}
 	return p.cachedKey
 }
