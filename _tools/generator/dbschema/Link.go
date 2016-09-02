@@ -10,16 +10,16 @@ import (
 type Link struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" comment:"主键ID" json:"id" xml:"id"`
-	Name           	string  	`db:"name" comment:"名称" json:"name" xml:"name"`
-	Url            	string  	`db:"url" comment:"网址" json:"url" xml:"url"`
-	Logo           	string  	`db:"logo" comment:"LOGO" json:"logo" xml:"logo"`
-	Show           	string  	`db:"show" comment:"是否显示" json:"show" xml:"show"`
-	Verified       	int     	`db:"verified" comment:"验证时间" json:"verified" xml:"verified"`
-	Created        	int     	`db:"created" comment:"创建时间" json:"created" xml:"created"`
-	Updated        	int     	`db:"updated" comment:"更新时间" json:"updated" xml:"updated"`
-	Catid          	int     	`db:"catid" comment:"分类" json:"catid" xml:"catid"`
-	Sort           	int     	`db:"sort" comment:"排序" json:"sort" xml:"sort"`
+	Id             	int     	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键ID" json:"id" xml:"id"`
+	Name           	string  	`db:"name" bson:"name" comment:"名称" json:"name" xml:"name"`
+	Url            	string  	`db:"url" bson:"url" comment:"网址" json:"url" xml:"url"`
+	Logo           	string  	`db:"logo" bson:"logo" comment:"LOGO" json:"logo" xml:"logo"`
+	Show           	string  	`db:"show" bson:"show" comment:"是否显示" json:"show" xml:"show"`
+	Verified       	int     	`db:"verified" bson:"verified" comment:"验证时间" json:"verified" xml:"verified"`
+	Created        	int     	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
+	Updated        	int     	`db:"updated" bson:"updated" comment:"更新时间" json:"updated" xml:"updated"`
+	Catid          	int     	`db:"catid" bson:"catid" comment:"分类" json:"catid" xml:"catid"`
+	Sort           	int     	`db:"sort" bson:"sort" comment:"排序" json:"sort" xml:"sort"`
 }
 
 func (this *Link) SetTrans(trans *factory.Transaction) *Link {

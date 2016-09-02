@@ -10,11 +10,11 @@ import (
 type Ocontent struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" comment:"ID" json:"id" xml:"id"`
-	RcId           	int     	`db:"rc_id" comment:"关联ID" json:"rc_id" xml:"rc_id"`
-	RcType         	string  	`db:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
-	Content        	string  	`db:"content" comment:"博客原始内容" json:"content" xml:"content"`
-	Etype          	string  	`db:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
+	Id             	int     	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
+	RcId           	int     	`db:"rc_id" bson:"rc_id" comment:"关联ID" json:"rc_id" xml:"rc_id"`
+	RcType         	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
+	Content        	string  	`db:"content" bson:"content" comment:"博客原始内容" json:"content" xml:"content"`
+	Etype          	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
 }
 
 func (this *Ocontent) SetTrans(trans *factory.Transaction) *Ocontent {

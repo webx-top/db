@@ -198,8 +198,10 @@ func main() {
 			fieldP := fmt.Sprintf(`%-`+maxLen+`s`, TableToStructName(field["Field"], ``))
 			typeP := fmt.Sprintf(`%-8s`, fieldInfo.DataType)
 			dbTag := field["Field"]
+			bsonTag := field["Field"]
 			if field["Key"] == "PRI" && field["Extra"] == "auto_increment" {
 				dbTag += ",omitempty,pk"
+				bsonTag += ",omitempty"
 				fieldInfo.PrimaryKey = true
 				fieldInfo.AutoIncrement = true
 			} else if field["Key"] == "PRI" {
@@ -208,7 +210,7 @@ func main() {
 			fieldInfo.Comment = field["Comment"]
 			fieldInfo.DefaultValue = field["Default"]
 			fieldBlock += "\t" + fieldP + "\t" + typeP + "\t"
-			fieldBlock += "`db:\"" + dbTag + "\" comment:\"" + field["Comment"] + "\" json:\"" + field["Field"] + "\" xml:\"" + field["Field"] + "\"`"
+			fieldBlock += "`db:\"" + dbTag + "\" bson:\"" + bsonTag + "\" comment:\"" + field["Comment"] + "\" json:\"" + field["Field"] + "\" xml:\"" + field["Field"] + "\"`"
 
 			fieldNames[field["Field"]] = fieldInfo
 		}
@@ -276,7 +278,7 @@ func (f FieldValidator) ValidTable(table string) bool {
 	if err != nil {
 		log.Println(err)
 	} else {
-		log.Println(`Generated init.go`)
+		log.Println(`Generated info/info.go`)
 	}
 
 	log.Println(`End.`)
