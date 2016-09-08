@@ -17,6 +17,7 @@ type FieldInfo struct {
 
 	//以下为Golang中的信息
 	GoType string `json:"goType" xml:"goType" bson:"goType"` //Golang数据类型
+	GoName string `json:"goName" xml:"goName" bson:"goName"` //Golang字段名
 }
 
 type FieldValidator map[string]map[string]*FieldInfo

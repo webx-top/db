@@ -121,7 +121,8 @@ func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.
 	}
 
 	fieldInfo.GoType = DataType(&fieldInfo)
-	fieldP := fmt.Sprintf(`%-*s`, maxLength, TableToStructName(fieldInfo.Name, ``))
+	fieldInfo.GoName = TableToStructName(fieldInfo.Name, ``)
+	fieldP := fmt.Sprintf(`%-*s`, maxLength, fieldInfo.GoName)
 	typeP := fmt.Sprintf(`%-8s`, fieldInfo.GoType)
 	dbTag := fieldInfo.Name
 	bsonTag := fieldInfo.Name

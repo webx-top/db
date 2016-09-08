@@ -18,7 +18,7 @@ FROM pg_attribute f
     LEFT JOIN pg_constraint p ON p.conrelid = c.oid AND f.attnum = ANY (p.conkey)
     LEFT JOIN pg_class AS g ON p.confrelid = g.oid
     LEFT JOIN INFORMATION_SCHEMA.COLUMNS s ON s.column_name=f.attname AND c.relname=s.table_name
-WHERE c.relkind = 'r'::char AND c.relname = '` + tableName + `' AND s.table_schema = '` + *schema + `' AND f.attnum > 0 ORDER BY f.attnum`)
+WHERE c.relkind = 'r'::char AND c.relname = '` + tableName + `' AND s.table_schema = '` + cfg.Schema + `' AND f.attnum > 0 ORDER BY f.attnum`)
 	if err != nil {
 		log.Println(err)
 		panic(err.Error())

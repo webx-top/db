@@ -233,13 +233,14 @@ generator.exe -u <数据库用户名> -p <数据库密码> -p <数据库主机�
 
 每一个生成的结构体中都自带了以下常用方法便于我们使用：
 
-* 设置事务 `SetTrans(trans *factory.Transaction) *结构体名`
+* 获取事务 `Trans() *factory.Transaction`
+* 设置事务 `Use(trans *factory.Transaction) *结构体名`
 * 参数对象 `Param() *factory.Param` 
 * 查询一行 `Get(mw func(db.Result) db.Result) error`
 * 分页查询 `List(mw func(db.Result) db.Result, page, size int) ([]*结构体名, func() int64, error)`
 * 根据偏移量查询 `ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*结构体名, func() int64, error)`
-* 添加数据 `Add(args ...*结构体名) (interface{}, error)`
-* 修改数据 `Edit(mw func(db.Result) db.Result, args ...*结构体名) error`
+* 添加数据 `Add() (interface{}, error)`
+* 修改数据 `Edit(mw func(db.Result) db.Result) error`
 * 删除数据 `Delete(mw func(db.Result) db.Result) error`
 
 我们还可以根据生成的数据表信息来验证表或字段的类型和合法性，比如：

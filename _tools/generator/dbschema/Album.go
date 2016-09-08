@@ -5,6 +5,7 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	
+	"time"
 )
 
 type Album struct {
@@ -26,7 +27,11 @@ type Album struct {
 	Catid           	uint    	`db:"catid" bson:"catid" comment:"分类ID" json:"catid" xml:"catid"`
 }
 
-func (this *Album) SetTrans(trans *factory.Transaction) *Album {
+func (this *Album) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Album) Use(trans *factory.Transaction) *Album {
 	this.trans = trans
 	return this
 }
@@ -51,23 +56,18 @@ func (this *Album) ListByOffset(mw func(db.Result) db.Result, offset, size int) 
 	return r, counter, err
 }
 
-func (this *Album) Add(args ...*Album) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Album) Add() (interface{}, error) {
+	this.Created = uint(time.Now().Unix())
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Album) Edit(mw func(db.Result) db.Result, args ...*Album) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Album) Edit(mw func(db.Result) db.Result) error {
+	this.Updated = uint(time.Now().Unix())
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Album) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 

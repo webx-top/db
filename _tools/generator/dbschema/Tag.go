@@ -5,6 +5,7 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	
+	"time"
 )
 
 type Tag struct {
@@ -18,7 +19,11 @@ type Tag struct {
 	RcType         	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
 }
 
-func (this *Tag) SetTrans(trans *factory.Transaction) *Tag {
+func (this *Tag) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Tag) Use(trans *factory.Transaction) *Tag {
 	this.trans = trans
 	return this
 }
@@ -43,23 +48,18 @@ func (this *Tag) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([
 	return r, counter, err
 }
 
-func (this *Tag) Add(args ...*Tag) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Tag) Add() (interface{}, error) {
+	this.Created = uint(time.Now().Unix())
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Tag) Edit(mw func(db.Result) db.Result, args ...*Tag) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Tag) Edit(mw func(db.Result) db.Result) error {
+	
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Tag) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 

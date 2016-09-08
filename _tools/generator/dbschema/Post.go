@@ -5,6 +5,7 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	
+	"time"
 )
 
 type Post struct {
@@ -32,7 +33,11 @@ type Post struct {
 	Catid           	uint    	`db:"catid" bson:"catid" comment:"分类ID" json:"catid" xml:"catid"`
 }
 
-func (this *Post) SetTrans(trans *factory.Transaction) *Post {
+func (this *Post) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Post) Use(trans *factory.Transaction) *Post {
 	this.trans = trans
 	return this
 }
@@ -57,23 +62,18 @@ func (this *Post) ListByOffset(mw func(db.Result) db.Result, offset, size int) (
 	return r, counter, err
 }
 
-func (this *Post) Add(args ...*Post) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Post) Add() (interface{}, error) {
+	this.Created = uint(time.Now().Unix())
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Post) Edit(mw func(db.Result) db.Result, args ...*Post) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Post) Edit(mw func(db.Result) db.Result) error {
+	this.Updated = uint(time.Now().Unix())
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Post) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 

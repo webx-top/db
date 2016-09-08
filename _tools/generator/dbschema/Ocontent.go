@@ -17,7 +17,11 @@ type Ocontent struct {
 	Etype          	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
 }
 
-func (this *Ocontent) SetTrans(trans *factory.Transaction) *Ocontent {
+func (this *Ocontent) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Ocontent) Use(trans *factory.Transaction) *Ocontent {
 	this.trans = trans
 	return this
 }
@@ -42,23 +46,18 @@ func (this *Ocontent) ListByOffset(mw func(db.Result) db.Result, offset, size in
 	return r, counter, err
 }
 
-func (this *Ocontent) Add(args ...*Ocontent) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Ocontent) Add() (interface{}, error) {
+	
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Ocontent) Edit(mw func(db.Result) db.Result, args ...*Ocontent) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Ocontent) Edit(mw func(db.Result) db.Result) error {
+	
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Ocontent) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	
+	"time"
 )
 
 type Comment struct {
@@ -32,7 +33,11 @@ type Comment struct {
 	ForUid                 	uint64  	`db:"for_uid" bson:"for_uid" comment:"被评人id" json:"for_uid" xml:"for_uid"`
 }
 
-func (this *Comment) SetTrans(trans *factory.Transaction) *Comment {
+func (this *Comment) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Comment) Use(trans *factory.Transaction) *Comment {
 	this.trans = trans
 	return this
 }
@@ -57,23 +62,18 @@ func (this *Comment) ListByOffset(mw func(db.Result) db.Result, offset, size int
 	return r, counter, err
 }
 
-func (this *Comment) Add(args ...*Comment) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Comment) Add() (interface{}, error) {
+	this.Created = uint(time.Now().Unix())
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Comment) Edit(mw func(db.Result) db.Result, args ...*Comment) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Comment) Edit(mw func(db.Result) db.Result) error {
+	this.Updated = uint(time.Now().Unix())
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Comment) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 

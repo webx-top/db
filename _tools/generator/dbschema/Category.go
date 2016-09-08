@@ -5,6 +5,7 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	
+	"time"
 )
 
 type Category struct {
@@ -21,7 +22,11 @@ type Category struct {
 	Tmpl           	string  	`db:"tmpl" bson:"tmpl" comment:"模板" json:"tmpl" xml:"tmpl"`
 }
 
-func (this *Category) SetTrans(trans *factory.Transaction) *Category {
+func (this *Category) Trans() *factory.Transaction {
+	return this.trans
+}
+
+func (this *Category) Use(trans *factory.Transaction) *Category {
 	this.trans = trans
 	return this
 }
@@ -46,23 +51,18 @@ func (this *Category) ListByOffset(mw func(db.Result) db.Result, offset, size in
 	return r, counter, err
 }
 
-func (this *Category) Add(args ...*Category) (interface{}, error) {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).Insert()
+func (this *Category) Add() (interface{}, error) {
+	
+	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Category) Edit(mw func(db.Result) db.Result, args ...*Category) error {
-	var data = this
-	if len(args)>0 {
-		data = args[0]
-	}
-	return this.Param().SetSend(data).SetMiddleware(mw).Update()
+func (this *Category) Edit(mw func(db.Result) db.Result) error {
+	this.Updated = uint(time.Now().Unix())
+	return this.Param().SetSend(this).SetMiddleware(mw).Update()
 }
 
 func (this *Category) Delete(mw func(db.Result) db.Result) error {
+	
 	return this.Param().SetMiddleware(mw).Delete()
 }
 
