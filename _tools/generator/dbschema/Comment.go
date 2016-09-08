@@ -10,26 +10,26 @@ import (
 type Comment struct {
 	trans	*factory.Transaction
 	
-	Id                     	int64   	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键" json:"id" xml:"id"`
+	Id                     	uint64  	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键" json:"id" xml:"id"`
 	Content                	string  	`db:"content" bson:"content" comment:"内容" json:"content" xml:"content"`
 	Quote                  	string  	`db:"quote" bson:"quote" comment:"引用内容" json:"quote" xml:"quote"`
 	Etype                  	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
-	RootId                 	int64   	`db:"root_id" bson:"root_id" comment:"" json:"root_id" xml:"root_id"`
-	RId                    	int64   	`db:"r_id" bson:"r_id" comment:"关联本表的id" json:"r_id" xml:"r_id"`
+	RootId                 	uint64  	`db:"root_id" bson:"root_id" comment:"" json:"root_id" xml:"root_id"`
+	RId                    	uint64  	`db:"r_id" bson:"r_id" comment:"关联本表的id" json:"r_id" xml:"r_id"`
 	RType                  	string  	`db:"r_type" bson:"r_type" comment:"关联类型（reply-回复，append-追加）" json:"r_type" xml:"r_type"`
-	RelatedTimes           	int     	`db:"related_times" bson:"related_times" comment:"本身被回复次数" json:"related_times" xml:"related_times"`
-	RootTimes              	int     	`db:"root_times" bson:"root_times" comment:"根节点下的所有回复次数" json:"root_times" xml:"root_times"`
-	Uid                    	int64   	`db:"uid" bson:"uid" comment:"发布者id" json:"uid" xml:"uid"`
+	RelatedTimes           	uint    	`db:"related_times" bson:"related_times" comment:"本身被回复次数" json:"related_times" xml:"related_times"`
+	RootTimes              	uint    	`db:"root_times" bson:"root_times" comment:"根节点下的所有回复次数" json:"root_times" xml:"root_times"`
+	Uid                    	uint64  	`db:"uid" bson:"uid" comment:"发布者id" json:"uid" xml:"uid"`
 	Uname                  	string  	`db:"uname" bson:"uname" comment:"发布者用户名" json:"uname" xml:"uname"`
-	Up                     	int64   	`db:"up" bson:"up" comment:"被顶次数" json:"up" xml:"up"`
-	Down                   	int64   	`db:"down" bson:"down" comment:"被踩次数" json:"down" xml:"down"`
-	Created                	int     	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
-	Updated                	int     	`db:"updated" bson:"updated" comment:"更新时间" json:"updated" xml:"updated"`
+	Up                     	uint64  	`db:"up" bson:"up" comment:"被顶次数" json:"up" xml:"up"`
+	Down                   	uint64  	`db:"down" bson:"down" comment:"被踩次数" json:"down" xml:"down"`
+	Created                	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
+	Updated                	uint    	`db:"updated" bson:"updated" comment:"更新时间" json:"updated" xml:"updated"`
 	Status                 	int     	`db:"status" bson:"status" comment:"状态" json:"status" xml:"status"`
-	RcId                   	int64   	`db:"rc_id" bson:"rc_id" comment:"关联内容ID" json:"rc_id" xml:"rc_id"`
+	RcId                   	uint64  	`db:"rc_id" bson:"rc_id" comment:"关联内容ID" json:"rc_id" xml:"rc_id"`
 	RcType                 	string  	`db:"rc_type" bson:"rc_type" comment:"关联内容类型" json:"rc_type" xml:"rc_type"`
 	ForUname               	string  	`db:"for_uname" bson:"for_uname" comment:"被评人用户名" json:"for_uname" xml:"for_uname"`
-	ForUid                 	int64   	`db:"for_uid" bson:"for_uid" comment:"被评人id" json:"for_uid" xml:"for_uid"`
+	ForUid                 	uint64  	`db:"for_uid" bson:"for_uid" comment:"被评人id" json:"for_uid" xml:"for_uid"`
 }
 
 func (this *Comment) SetTrans(trans *factory.Transaction) *Comment {

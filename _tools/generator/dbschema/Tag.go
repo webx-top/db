@@ -10,11 +10,11 @@ import (
 type Tag struct {
 	trans	*factory.Transaction
 	
-	Id             	int     	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
+	Id             	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Name           	string  	`db:"name" bson:"name" comment:"标签名" json:"name" xml:"name"`
-	Uid            	int     	`db:"uid" bson:"uid" comment:"创建者" json:"uid" xml:"uid"`
-	Created        	int     	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
-	Times          	int     	`db:"times" bson:"times" comment:"使用次数" json:"times" xml:"times"`
+	Uid            	uint    	`db:"uid" bson:"uid" comment:"创建者" json:"uid" xml:"uid"`
+	Created        	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
+	Times          	uint    	`db:"times" bson:"times" comment:"使用次数" json:"times" xml:"times"`
 	RcType         	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
 }
 
