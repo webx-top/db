@@ -227,7 +227,7 @@ generator.exe -u <数据库用户名> -p <数据库密码> -p <数据库主机�
 * -pre <数据表前缀> 默认为空
 * -pkg <生成的包名> 默认为`dbschema`
 
-本命令会自动生成各个表的结构体和所有表的相关信息(存放于子文件夹info内)
+本命令会自动生成各个表的结构体和所有表的相关信息
 
 生成的文件范例：[blog结构体文件](https://github.com/webx-top/db/tree/master/_tools/generator/dbschema)
 
@@ -242,8 +242,8 @@ generator.exe -u <数据库用户名> -p <数据库密码> -p <数据库主机�
 * 修改数据 `Edit(mw func(db.Result) db.Result, args ...*结构体名) error`
 * 删除数据 `Delete(mw func(db.Result) db.Result) error`
 
-我们还可以根据生成的数据表信息来验证表或字段的类型和合法性，我们可以使用生成的文件夹内的子包`info`中的代码来处理，比如：
+我们还可以根据生成的数据表信息来验证表或字段的类型和合法性，比如：
 
-* 验证表是否存在 `info.Fields.ValidTable(tableName)`
-* 验证表中的字段是否存在 `info.Fields.ValidField(tableName,fieldName)`
-* 获取某个表中某个字段的信息  `info.Fields[tableName][fieldName]`
+* 验证表是否存在 `factory.ValidTable(tableName)`
+* 验证表中的字段是否存在 `factory.ValidField(tableName,fieldName)`
+* 获取某个表中某个字段的信息  `factory.Fields[tableName][fieldName]`
