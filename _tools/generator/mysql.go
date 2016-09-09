@@ -132,6 +132,7 @@ func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.
 		fieldInfo.PrimaryKey = true
 		fieldInfo.AutoIncrement = true
 	} else if field["Key"] == "PRI" {
+		dbTag += ",pk"
 		fieldInfo.PrimaryKey = true
 	}
 	fieldInfo.Comment = field["Comment"]

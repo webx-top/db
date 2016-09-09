@@ -104,10 +104,10 @@ type config struct {
 }
 
 type AutoTimeFields struct {
-	//update操作时，自动某个字段设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
+	//update操作时，某个字段自动设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
 	Update map[string]string `json:"update"`
 
-	//insert操作时，自动某个字段设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
+	//insert操作时，某个字段自动设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
 	Insert map[string]string `json:"insert"`
 }
 
