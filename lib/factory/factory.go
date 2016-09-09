@@ -49,6 +49,10 @@ func (f *Factory) SetCacher(cc Cacher) *Factory {
 	return f
 }
 
+func (f *Factory) Cacher() Cacher {
+	return f.cacher
+}
+
 func (f *Factory) AddDB(databases ...sqlbuilder.Database) *Factory {
 	if len(f.databases) > 0 {
 		f.databases[0].AddW(databases...)
