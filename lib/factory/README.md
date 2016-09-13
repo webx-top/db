@@ -213,14 +213,14 @@ err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
 进入目录`github.com/webx-top/db/_tools/generator`执行命令
 ```
 go build -o generator.exe
-generator.exe -u <数据库用户名> -p <数据库密码> -p <数据库主机名> -e <数据库类型> -d <数据库名> -o <文件保存目录> -pre <数据表前缀> -pkg <生成的包名>
+generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机名> -e <数据库类型> -d <数据库名> -o <文件保存目录> -pre <数据表前缀> -pkg <生成的包名>
 ```
 
 支持的参数：
 
 * -u <数据库用户名> 默认为`root`
 * -p <数据库密码> 默认为空
-* -p <数据库主机名> 默认为`localhost`
+* -h <数据库主机名> 默认为`localhost`
 * -e <数据库类型> 默认为`mysql`
 * -d <数据库名> 默认为`blog`
 * -o <文件保存目录> 默认为`dbschema`
