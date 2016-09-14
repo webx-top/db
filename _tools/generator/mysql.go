@@ -48,11 +48,9 @@ func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[stri
 			"Privileges": colPrivileges.String,
 			"Comment":    colComment.String,
 		}
-		for _, v := range result {
-			sz := len(v)
-			if sz > fieldMaxLength {
-				fieldMaxLength = sz
-			}
+		sz := len(colField.String)
+		if sz > fieldMaxLength {
+			fieldMaxLength = sz
 		}
 		fieldsInfo = append(fieldsInfo, result)
 		//log.Printf(`%#v`+"\n", remap)
@@ -65,9 +63,8 @@ func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, ma
 	fieldMaxLength, fieldsInfo := getMySQLTableInfo(db, tableName)
 	goFields := []string{}
 	fields := map[string]factory.FieldInfo{}
-	maxLen := fieldMaxLength / 2
 	for _, field := range fieldsInfo {
-		goField, fieldInfo := getMySQLFieldInfo(field, maxLen)
+		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength)
 		goFields = append(goFields, goField)
 		fields[fieldInfo.Name] = fieldInfo
 	}

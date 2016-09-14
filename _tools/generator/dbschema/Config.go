@@ -11,10 +11,10 @@ import (
 type Config struct {
 	trans	*factory.Transaction
 	
-	Id             	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键ID" json:"id" xml:"id"`
-	Key            	string  	`db:"key" bson:"key" comment:"配置项" json:"key" xml:"key"`
-	Val            	string  	`db:"val" bson:"val" comment:"配置值" json:"val" xml:"val"`
-	Updated        	uint    	`db:"updated" bson:"updated" comment:"更新时间" json:"updated" xml:"updated"`
+	Id     	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键ID" json:"id" xml:"id"`
+	Key    	string  	`db:"key" bson:"key" comment:"配置项" json:"key" xml:"key"`
+	Val    	string  	`db:"val" bson:"val" comment:"配置值" json:"val" xml:"val"`
+	Updated	uint    	`db:"updated" bson:"updated" comment:"更新时间" json:"updated" xml:"updated"`
 }
 
 func (this *Config) Trans() *factory.Transaction {

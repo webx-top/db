@@ -11,19 +11,19 @@ import (
 type Attathment struct {
 	trans	*factory.Transaction
 	
-	Id             	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
-	Name           	string  	`db:"name" bson:"name" comment:"文件名" json:"name" xml:"name"`
-	Path           	string  	`db:"path" bson:"path" comment:"保存路径" json:"path" xml:"path"`
-	Extension      	string  	`db:"extension" bson:"extension" comment:"扩展名" json:"extension" xml:"extension"`
-	Type           	string  	`db:"type" bson:"type" comment:"文件类型" json:"type" xml:"type"`
-	Size           	uint64  	`db:"size" bson:"size" comment:"文件尺寸" json:"size" xml:"size"`
-	Uid            	uint    	`db:"uid" bson:"uid" comment:"UID" json:"uid" xml:"uid"`
-	Deleted        	uint    	`db:"deleted" bson:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
-	Created        	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
-	Audited        	uint    	`db:"audited" bson:"audited" comment:"审核时间" json:"audited" xml:"audited"`
-	RcId           	uint    	`db:"rc_id" bson:"rc_id" comment:"关联id" json:"rc_id" xml:"rc_id"`
-	RcType         	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
-	Tags           	string  	`db:"tags" bson:"tags" comment:"标签" json:"tags" xml:"tags"`
+	Id       	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
+	Name     	string  	`db:"name" bson:"name" comment:"文件名" json:"name" xml:"name"`
+	Path     	string  	`db:"path" bson:"path" comment:"保存路径" json:"path" xml:"path"`
+	Extension	string  	`db:"extension" bson:"extension" comment:"扩展名" json:"extension" xml:"extension"`
+	Type     	string  	`db:"type" bson:"type" comment:"文件类型" json:"type" xml:"type"`
+	Size     	uint64  	`db:"size" bson:"size" comment:"文件尺寸" json:"size" xml:"size"`
+	Uid      	uint    	`db:"uid" bson:"uid" comment:"UID" json:"uid" xml:"uid"`
+	Deleted  	uint    	`db:"deleted" bson:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
+	Created  	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
+	Audited  	uint    	`db:"audited" bson:"audited" comment:"审核时间" json:"audited" xml:"audited"`
+	RcId     	uint    	`db:"rc_id" bson:"rc_id" comment:"关联id" json:"rc_id" xml:"rc_id"`
+	RcType   	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
+	Tags     	string  	`db:"tags" bson:"tags" comment:"标签" json:"tags" xml:"tags"`
 }
 
 func (this *Attathment) Trans() *factory.Transaction {

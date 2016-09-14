@@ -11,26 +11,26 @@ import (
 type Post struct {
 	trans	*factory.Transaction
 	
-	Id              	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
-	Title           	string  	`db:"title" bson:"title" comment:"标题" json:"title" xml:"title"`
-	Description     	string  	`db:"description" bson:"description" comment:"简介" json:"description" xml:"description"`
-	Content         	string  	`db:"content" bson:"content" comment:"内容" json:"content" xml:"content"`
-	Etype           	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
-	Created         	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
-	Updated         	uint    	`db:"updated" bson:"updated" comment:"修改时间" json:"updated" xml:"updated"`
-	Display         	string  	`db:"display" bson:"display" comment:"显示" json:"display" xml:"display"`
-	Uid             	uint    	`db:"uid" bson:"uid" comment:"UID" json:"uid" xml:"uid"`
-	Uname           	string  	`db:"uname" bson:"uname" comment:"作者名" json:"uname" xml:"uname"`
-	Passwd          	string  	`db:"passwd" bson:"passwd" comment:"访问密码" json:"passwd" xml:"passwd"`
-	Views           	uint    	`db:"views" bson:"views" comment:"被浏览次数" json:"views" xml:"views"`
-	Comments        	uint    	`db:"comments" bson:"comments" comment:"被评论次数" json:"comments" xml:"comments"`
-	Likes           	uint    	`db:"likes" bson:"likes" comment:"被喜欢次数" json:"likes" xml:"likes"`
-	Deleted         	uint    	`db:"deleted" bson:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
-	Year            	uint    	`db:"year" bson:"year" comment:"归档年份" json:"year" xml:"year"`
-	Month           	string  	`db:"month" bson:"month" comment:"归档月份" json:"month" xml:"month"`
-	AllowComment    	string  	`db:"allow_comment" bson:"allow_comment" comment:"是否允许评论" json:"allow_comment" xml:"allow_comment"`
-	Tags            	string  	`db:"tags" bson:"tags" comment:"标签" json:"tags" xml:"tags"`
-	Catid           	uint    	`db:"catid" bson:"catid" comment:"分类ID" json:"catid" xml:"catid"`
+	Id           	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
+	Title        	string  	`db:"title" bson:"title" comment:"标题" json:"title" xml:"title"`
+	Description  	string  	`db:"description" bson:"description" comment:"简介" json:"description" xml:"description"`
+	Content      	string  	`db:"content" bson:"content" comment:"内容" json:"content" xml:"content"`
+	Etype        	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
+	Created      	uint    	`db:"created" bson:"created" comment:"创建时间" json:"created" xml:"created"`
+	Updated      	uint    	`db:"updated" bson:"updated" comment:"修改时间" json:"updated" xml:"updated"`
+	Display      	string  	`db:"display" bson:"display" comment:"显示" json:"display" xml:"display"`
+	Uid          	uint    	`db:"uid" bson:"uid" comment:"UID" json:"uid" xml:"uid"`
+	Uname        	string  	`db:"uname" bson:"uname" comment:"作者名" json:"uname" xml:"uname"`
+	Passwd       	string  	`db:"passwd" bson:"passwd" comment:"访问密码" json:"passwd" xml:"passwd"`
+	Views        	uint    	`db:"views" bson:"views" comment:"被浏览次数" json:"views" xml:"views"`
+	Comments     	uint    	`db:"comments" bson:"comments" comment:"被评论次数" json:"comments" xml:"comments"`
+	Likes        	uint    	`db:"likes" bson:"likes" comment:"被喜欢次数" json:"likes" xml:"likes"`
+	Deleted      	uint    	`db:"deleted" bson:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
+	Year         	uint    	`db:"year" bson:"year" comment:"归档年份" json:"year" xml:"year"`
+	Month        	string  	`db:"month" bson:"month" comment:"归档月份" json:"month" xml:"month"`
+	AllowComment 	string  	`db:"allow_comment" bson:"allow_comment" comment:"是否允许评论" json:"allow_comment" xml:"allow_comment"`
+	Tags         	string  	`db:"tags" bson:"tags" comment:"标签" json:"tags" xml:"tags"`
+	Catid        	uint    	`db:"catid" bson:"catid" comment:"分类ID" json:"catid" xml:"catid"`
 }
 
 func (this *Post) Trans() *factory.Transaction {
