@@ -234,11 +234,13 @@ generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机�
 每一个生成的结构体中都自带了以下常用方法便于我们使用：
 
 * 获取事务 `Trans() *factory.Transaction`
-* 设置事务 `Use(trans *factory.Transaction) *结构体名`
+* 设置事务 `Use(trans *factory.Transaction) factory.Model`
 * 参数对象 `Param() *factory.Param` 
+* 复制列表数据结果集 `Objects() []*结构体名` 
+* 新建列表数据结果集 `NewObjects() *[]*结构体名` 
 * 查询一行 `Get(mw func(db.Result) db.Result) error`
-* 分页查询 `List(mw func(db.Result) db.Result, page, size int) ([]*结构体名, func() int64, error)`
-* 根据偏移量查询 `ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*结构体名, func() int64, error)`
+* 分页查询 `List(recv interface{}, mw func(db.Result) db.Result, page, size int) (func() int64, error)`
+* 根据偏移量查询 `ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int) (func() int64, error)`
 * 添加数据 `Add() (interface{}, error)`
 * 修改数据 `Edit(mw func(db.Result) db.Result) error`
 * 删除数据 `Delete(mw func(db.Result) db.Result) error`

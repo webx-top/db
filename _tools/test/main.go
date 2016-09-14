@@ -61,12 +61,29 @@ func main() {
 
 	post := &dbschema.Post{} //<------------------ define post
 
-	posts, _, err = post.List(nil, 1, 100000)
+	_, err = post.List(nil, nil, 1, 100000)
+	if err != nil {
+		log.Fatal(err)
+	}
+	objects := post.Objects()
+	for _, post := range objects {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式3.1：使用dbschema的List方法查询`)
+	_, err = post.List(nil, nil, 1, 100000, db.Cond{`id >`: 1})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, post := range posts {
+	for _, post := range post.Objects() {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	log.Println(`-----old----------------`)
+	for _, post := range objects {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 
@@ -126,6 +143,22 @@ func main() {
 	}
 
 	for _, post := range posts {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式9：使用Param的Model查询`)
+	recv := post.NewObjects()
+	_, err = post.Param().Model().List(recv, nil, 1, 999, db.And(
+		db.Cond{`id >`: 1},
+		db.Cond{`id <`: 10},
+	))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, post := range *recv {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 

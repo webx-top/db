@@ -10,6 +10,7 @@ import (
 
 type Category struct {
 	trans	*factory.Transaction
+	objects []*Category
 	
 	Id         	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Pid        	uint    	`db:"pid" bson:"pid" comment:"上级分类" json:"pid" xml:"pid"`
@@ -26,29 +27,43 @@ func (this *Category) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Category) Use(trans *factory.Transaction) *Category {
+func (this *Category) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Category) Objects() []*Category {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Category) NewObjects() *[]*Category {
+	this.objects=[]*Category{}
+	return &this.objects
+}
+
 func (this *Category) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("category")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("category").SetModel(this)
 }
 
-func (this *Category) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Category) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Category) List(mw func(db.Result) db.Result, page, size int) ([]*Category, func() int64, error) {
-	r := []*Category{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Category) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Category) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Category, func() int64, error) {
-	r := []*Category{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Category) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Category) Add() (interface{}, error) {
@@ -56,12 +71,12 @@ func (this *Category) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Category) Edit(mw func(db.Result) db.Result) error {
+func (this *Category) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	this.Updated = uint(time.Now().Unix())
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Category) Delete(mw func(db.Result) db.Result) error {
+func (this *Category) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

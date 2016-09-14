@@ -21,6 +21,18 @@ type Join struct {
 	Type       string
 }
 
+type Model interface {
+	Trans() *Transaction
+	Use(trans *Transaction) Model
+	Param() *Param
+	Get(mw func(db.Result) db.Result, args ...interface{}) error
+	List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error)
+	ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error)
+	Add() (interface{}, error)
+	Edit(mw func(db.Result) db.Result, args ...interface{}) error
+	Delete(mw func(db.Result) db.Result, args ...interface{}) error
+}
+
 type Param struct {
 	factory                *Factory
 	Index                  int //数据库对象元素所在的索引位置
@@ -45,6 +57,7 @@ type Param struct {
 	trans                  *Transaction
 	cachedKey              string
 	setter                 *Setting
+	model                  Model
 }
 
 func NewParam(args ...interface{}) *Param {
@@ -87,6 +100,15 @@ func (p *Param) Setter() *Setting {
 func (p *Param) SetIndex(index int) *Param {
 	p.Index = index
 	return p
+}
+
+func (p *Param) SetModel(model Model) *Param {
+	p.model = model
+	return p
+}
+
+func (p *Param) Model() Model {
+	return p.model
 }
 
 func (p *Param) SelectLink(index int) *Param {

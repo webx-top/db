@@ -10,6 +10,7 @@ import (
 
 type Album struct {
 	trans	*factory.Transaction
+	objects []*Album
 	
 	Id           	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Title        	string  	`db:"title" bson:"title" comment:"标题" json:"title" xml:"title"`
@@ -31,29 +32,43 @@ func (this *Album) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Album) Use(trans *factory.Transaction) *Album {
+func (this *Album) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Album) Objects() []*Album {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Album) NewObjects() *[]*Album {
+	this.objects=[]*Album{}
+	return &this.objects
+}
+
 func (this *Album) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("album")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("album").SetModel(this)
 }
 
-func (this *Album) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Album) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Album) List(mw func(db.Result) db.Result, page, size int) ([]*Album, func() int64, error) {
-	r := []*Album{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Album) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Album) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Album, func() int64, error) {
-	r := []*Album{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Album) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Album) Add() (interface{}, error) {
@@ -61,12 +76,12 @@ func (this *Album) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Album) Edit(mw func(db.Result) db.Result) error {
+func (this *Album) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	this.Updated = uint(time.Now().Unix())
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Album) Delete(mw func(db.Result) db.Result) error {
+func (this *Album) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

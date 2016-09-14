@@ -10,6 +10,7 @@ import (
 
 type Tag struct {
 	trans	*factory.Transaction
+	objects []*Tag
 	
 	Id     	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Name   	string  	`db:"name" bson:"name" comment:"标签名" json:"name" xml:"name"`
@@ -23,29 +24,43 @@ func (this *Tag) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Tag) Use(trans *factory.Transaction) *Tag {
+func (this *Tag) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Tag) Objects() []*Tag {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Tag) NewObjects() *[]*Tag {
+	this.objects=[]*Tag{}
+	return &this.objects
+}
+
 func (this *Tag) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("tag")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("tag").SetModel(this)
 }
 
-func (this *Tag) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Tag) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Tag) List(mw func(db.Result) db.Result, page, size int) ([]*Tag, func() int64, error) {
-	r := []*Tag{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Tag) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Tag) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Tag, func() int64, error) {
-	r := []*Tag{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Tag) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Tag) Add() (interface{}, error) {
@@ -53,12 +68,12 @@ func (this *Tag) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Tag) Edit(mw func(db.Result) db.Result) error {
+func (this *Tag) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Tag) Delete(mw func(db.Result) db.Result) error {
+func (this *Tag) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

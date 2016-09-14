@@ -10,6 +10,7 @@ import (
 
 type Attathment struct {
 	trans	*factory.Transaction
+	objects []*Attathment
 	
 	Id       	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Name     	string  	`db:"name" bson:"name" comment:"文件名" json:"name" xml:"name"`
@@ -30,29 +31,43 @@ func (this *Attathment) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Attathment) Use(trans *factory.Transaction) *Attathment {
+func (this *Attathment) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Attathment) Objects() []*Attathment {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Attathment) NewObjects() *[]*Attathment {
+	this.objects=[]*Attathment{}
+	return &this.objects
+}
+
 func (this *Attathment) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("attathment")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("attathment").SetModel(this)
 }
 
-func (this *Attathment) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Attathment) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Attathment) List(mw func(db.Result) db.Result, page, size int) ([]*Attathment, func() int64, error) {
-	r := []*Attathment{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Attathment) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Attathment) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Attathment, func() int64, error) {
-	r := []*Attathment{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Attathment) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Attathment) Add() (interface{}, error) {
@@ -60,12 +75,12 @@ func (this *Attathment) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Attathment) Edit(mw func(db.Result) db.Result) error {
+func (this *Attathment) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Attathment) Delete(mw func(db.Result) db.Result) error {
+func (this *Attathment) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

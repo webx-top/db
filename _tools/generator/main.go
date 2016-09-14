@@ -40,6 +40,7 @@ import (
 
 type {{structName}} struct {
 	trans	*factory.Transaction
+	objects []*{{structName}}
 	
 {{attributes}}
 }
@@ -48,29 +49,43 @@ func (this *{{structName}}) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *{{structName}}) Use(trans *factory.Transaction) *{{structName}} {
+func (this *{{structName}}) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *{{structName}}) Objects() []*{{structName}} {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *{{structName}}) NewObjects() *[]*{{structName}} {
+	this.objects=[]*{{structName}}{}
+	return &this.objects
+}
+
 func (this *{{structName}}) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("{{tableName}}")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("{{tableName}}").SetModel(this)
 }
 
-func (this *{{structName}}) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *{{structName}}) List(mw func(db.Result) db.Result, page, size int) ([]*{{structName}}, func() int64, error) {
-	r := []*{{structName}}{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *{{structName}}) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *{{structName}}) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*{{structName}}, func() int64, error) {
-	r := []*{{structName}}{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *{{structName}}) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *{{structName}}) Add() (interface{}, error) {
@@ -78,12 +93,12 @@ func (this *{{structName}}) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *{{structName}}) Edit(mw func(db.Result) db.Result) error {
+func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeUpdate}}
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *{{structName}}) Delete(mw func(db.Result) db.Result) error {
+func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeDelete}}
 	return this.Param().SetMiddleware(mw).Delete()
 }

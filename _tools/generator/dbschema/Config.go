@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	trans	*factory.Transaction
+	objects []*Config
 	
 	Id     	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"主键ID" json:"id" xml:"id"`
 	Key    	string  	`db:"key" bson:"key" comment:"配置项" json:"key" xml:"key"`
@@ -21,29 +22,43 @@ func (this *Config) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Config) Use(trans *factory.Transaction) *Config {
+func (this *Config) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Config) Objects() []*Config {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Config) NewObjects() *[]*Config {
+	this.objects=[]*Config{}
+	return &this.objects
+}
+
 func (this *Config) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("config")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("config").SetModel(this)
 }
 
-func (this *Config) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Config) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Config) List(mw func(db.Result) db.Result, page, size int) ([]*Config, func() int64, error) {
-	r := []*Config{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Config) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Config) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Config, func() int64, error) {
-	r := []*Config{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Config) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Config) Add() (interface{}, error) {
@@ -51,12 +66,12 @@ func (this *Config) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Config) Edit(mw func(db.Result) db.Result) error {
+func (this *Config) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	this.Updated = uint(time.Now().Unix())
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Config) Delete(mw func(db.Result) db.Result) error {
+func (this *Config) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

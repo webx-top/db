@@ -10,6 +10,7 @@ import (
 
 type Post struct {
 	trans	*factory.Transaction
+	objects []*Post
 	
 	Id           	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	Title        	string  	`db:"title" bson:"title" comment:"标题" json:"title" xml:"title"`
@@ -37,29 +38,43 @@ func (this *Post) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Post) Use(trans *factory.Transaction) *Post {
+func (this *Post) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Post) Objects() []*Post {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Post) NewObjects() *[]*Post {
+	this.objects=[]*Post{}
+	return &this.objects
+}
+
 func (this *Post) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("post")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("post").SetModel(this)
 }
 
-func (this *Post) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Post) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Post) List(mw func(db.Result) db.Result, page, size int) ([]*Post, func() int64, error) {
-	r := []*Post{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Post) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Post) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Post, func() int64, error) {
-	r := []*Post{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Post) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Post) Add() (interface{}, error) {
@@ -67,12 +82,12 @@ func (this *Post) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Post) Edit(mw func(db.Result) db.Result) error {
+func (this *Post) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	this.Updated = uint(time.Now().Unix())
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Post) Delete(mw func(db.Result) db.Result) error {
+func (this *Post) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }

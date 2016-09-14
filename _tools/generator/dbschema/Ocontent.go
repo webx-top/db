@@ -9,6 +9,7 @@ import (
 
 type Ocontent struct {
 	trans	*factory.Transaction
+	objects []*Ocontent
 	
 	Id     	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
 	RcId   	uint    	`db:"rc_id" bson:"rc_id" comment:"关联ID" json:"rc_id" xml:"rc_id"`
@@ -21,29 +22,43 @@ func (this *Ocontent) Trans() *factory.Transaction {
 	return this.trans
 }
 
-func (this *Ocontent) Use(trans *factory.Transaction) *Ocontent {
+func (this *Ocontent) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
 }
 
+func (this *Ocontent) Objects() []*Ocontent {
+	if this.objects==nil {
+		return nil
+	}
+	return this.objects[:]
+}
+
+func (this *Ocontent) NewObjects() *[]*Ocontent {
+	this.objects=[]*Ocontent{}
+	return &this.objects
+}
+
 func (this *Ocontent) Param() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("ocontent")
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("ocontent").SetModel(this)
 }
 
-func (this *Ocontent) Get(mw func(db.Result) db.Result) error {
-	return this.Param().SetRecv(this).SetMiddleware(mw).One()
+func (this *Ocontent) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Ocontent) List(mw func(db.Result) db.Result, page, size int) ([]*Ocontent, func() int64, error) {
-	r := []*Ocontent{}
-	counter, err := this.Param().SetPage(page).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Ocontent) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Ocontent) ListByOffset(mw func(db.Result) db.Result, offset, size int) ([]*Ocontent, func() int64, error) {
-	r := []*Ocontent{}
-	counter, err := this.Param().SetOffset(offset).SetSize(size).SetRecv(&r).SetMiddleware(mw).List()
-	return r, counter, err
+func (this *Ocontent) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+	if recv == nil {
+		recv = this.NewObjects()
+	}
+	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *Ocontent) Add() (interface{}, error) {
@@ -51,12 +66,12 @@ func (this *Ocontent) Add() (interface{}, error) {
 	return this.Param().SetSend(this).Insert()
 }
 
-func (this *Ocontent) Edit(mw func(db.Result) db.Result) error {
+func (this *Ocontent) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	
-	return this.Param().SetSend(this).SetMiddleware(mw).Update()
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Ocontent) Delete(mw func(db.Result) db.Result) error {
+func (this *Ocontent) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetMiddleware(mw).Delete()
 }
