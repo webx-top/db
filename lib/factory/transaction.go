@@ -14,7 +14,7 @@ type Transaction struct {
 	*Factory
 }
 
-func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
+func (t *Transaction) Database(param *Param) db.Database {
 	if t.Tx != nil {
 		return t.Tx
 	}
@@ -27,12 +27,16 @@ func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
 	return t.Cluster.W()
 }
 
+func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
+	return t.Database(param).(sqlbuilder.Backend)
+}
+
 func (t *Transaction) Result(param *Param) db.Result {
 	return t.C(param).Find(param.Args...)
 }
 
 func (t *Transaction) C(param *Param) db.Collection {
-	return t.Backend(param).Collection(t.Cluster.Table(param.Collection))
+	return t.Database(param).Collection(t.Cluster.Table(param.Collection))
 }
 
 // ================================

@@ -25,22 +25,22 @@ func SetCacher(cc Cacher) *Factory {
 	return DefaultFactory
 }
 
-func AddDB(databases ...sqlbuilder.Database) *Factory {
+func AddDB(databases ...db.Database) *Factory {
 	DefaultFactory.AddDB(databases...)
 	return DefaultFactory
 }
 
-func AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
+func AddSlaveDB(databases ...db.Database) *Factory {
 	DefaultFactory.AddSlaveDB(databases...)
 	return DefaultFactory
 }
 
-func AddDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+func AddDBToCluster(index int, databases ...db.Database) *Factory {
 	DefaultFactory.AddDBToCluster(index, databases...)
 	return DefaultFactory
 }
 
-func AddSlaveDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+func AddSlaveDBToCluster(index int, databases ...db.Database) *Factory {
 	DefaultFactory.AddSlaveDBToCluster(index, databases...)
 	return DefaultFactory
 }

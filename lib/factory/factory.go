@@ -17,6 +17,7 @@ const (
 
 var (
 	ErrNotFoundKey = errors.New(`not found the key`)
+	ErrNotSupport  = errors.New(`not support`)
 )
 
 func New() *Factory {
@@ -53,7 +54,7 @@ func (f *Factory) Cacher() Cacher {
 	return f.cacher
 }
 
-func (f *Factory) AddDB(databases ...sqlbuilder.Database) *Factory {
+func (f *Factory) AddDB(databases ...db.Database) *Factory {
 	if len(f.databases) > 0 {
 		f.databases[0].AddW(databases...)
 	} else {
@@ -64,7 +65,7 @@ func (f *Factory) AddDB(databases ...sqlbuilder.Database) *Factory {
 	return f
 }
 
-func (f *Factory) AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
+func (f *Factory) AddSlaveDB(databases ...db.Database) *Factory {
 	if len(f.databases) > 0 {
 		f.databases[0].AddR(databases...)
 	} else {
@@ -75,7 +76,7 @@ func (f *Factory) AddSlaveDB(databases ...sqlbuilder.Database) *Factory {
 	return f
 }
 
-func (f *Factory) AddDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+func (f *Factory) AddDBToCluster(index int, databases ...db.Database) *Factory {
 	if len(f.databases) > index {
 		f.databases[index].AddW(databases...)
 	} else {
@@ -86,7 +87,7 @@ func (f *Factory) AddDBToCluster(index int, databases ...sqlbuilder.Database) *F
 	return f
 }
 
-func (f *Factory) AddSlaveDBToCluster(index int, databases ...sqlbuilder.Database) *Factory {
+func (f *Factory) AddSlaveDBToCluster(index int, databases ...db.Database) *Factory {
 	if len(f.databases) > index {
 		f.databases[index].AddR(databases...)
 	} else {
@@ -136,7 +137,10 @@ func (f *Factory) Tx(param *Param) error {
 		trans.Tx = tx
 		return param.TxMiddleware(trans)
 	}
-	return c.W().Tx(fn)
+	if rdb, ok := c.W().(sqlbuilder.Database); ok {
+		return rdb.Tx(fn)
+	}
+	return ErrNotSupport
 }
 
 func (f *Factory) NewTx(args ...int) (trans *Transaction, err error) {
@@ -149,7 +153,11 @@ func (f *Factory) NewTx(args ...int) (trans *Transaction, err error) {
 		Cluster: c,
 		Factory: f,
 	}
-	trans.Tx, err = c.W().NewTx()
+	if rdb, ok := c.W().(sqlbuilder.Database); ok {
+		trans.Tx, err = rdb.NewTx()
+	} else {
+		err = ErrNotSupport
+	}
 	return
 }
 

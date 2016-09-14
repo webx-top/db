@@ -5,26 +5,26 @@ import (
 	"log"
 	"math/rand"
 
-	"github.com/webx-top/db/lib/sqlbuilder"
+	"github.com/webx-top/db"
 )
 
 // NewCluster : database cluster
 func NewCluster() *Cluster {
 	return &Cluster{
-		masters: []sqlbuilder.Database{},
-		slaves:  []sqlbuilder.Database{},
+		masters: []db.Database{},
+		slaves:  []db.Database{},
 	}
 }
 
 // Cluster : database cluster
 type Cluster struct {
-	masters []sqlbuilder.Database
-	slaves  []sqlbuilder.Database
+	masters []db.Database
+	slaves  []db.Database
 	prefix  string
 }
 
 // W : write
-func (c *Cluster) W() sqlbuilder.Database {
+func (c *Cluster) W() db.Database {
 	length := len(c.masters)
 	if length == 0 {
 		panic(`Not connected to any database`)
@@ -51,7 +51,7 @@ func (c *Cluster) SetPrefix(prefix string) {
 }
 
 // R : read-only
-func (c *Cluster) R() sqlbuilder.Database {
+func (c *Cluster) R() db.Database {
 	length := len(c.slaves)
 	if length == 0 {
 		return c.W()
@@ -63,17 +63,17 @@ func (c *Cluster) R() sqlbuilder.Database {
 }
 
 // AddW : added writable database
-func (c *Cluster) AddW(databases ...sqlbuilder.Database) {
+func (c *Cluster) AddW(databases ...db.Database) {
 	c.masters = append(c.masters, databases...)
 }
 
 // AddR : added read-only database
-func (c *Cluster) AddR(databases ...sqlbuilder.Database) {
+func (c *Cluster) AddR(databases ...db.Database) {
 	c.slaves = append(c.slaves, databases...)
 }
 
 // SetW : set writable database
-func (c *Cluster) SetW(index int, database sqlbuilder.Database) error {
+func (c *Cluster) SetW(index int, database db.Database) error {
 	if len(c.masters) > index {
 		c.masters[index] = database
 		return nil
@@ -82,7 +82,7 @@ func (c *Cluster) SetW(index int, database sqlbuilder.Database) error {
 }
 
 // SetR : set read-only database
-func (c *Cluster) SetR(index int, database sqlbuilder.Database) error {
+func (c *Cluster) SetR(index int, database db.Database) error {
 	if len(c.masters) > index {
 		c.slaves[index] = database
 		return nil
