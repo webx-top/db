@@ -55,14 +55,14 @@ func (this *{{structName}}) Use(trans *factory.Transaction) factory.Model {
 }
 
 func (this *{{structName}}) Objects() []*{{structName}} {
-	if this.objects==nil {
+	if this.objects == nil {
 		return nil
 	}
 	return this.objects[:]
 }
 
 func (this *{{structName}}) NewObjects() *[]*{{structName}} {
-	this.objects=[]*{{structName}}{}
+	this.objects = []*{{structName}}{}
 	return &this.objects
 }
 
