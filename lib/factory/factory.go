@@ -99,8 +99,11 @@ func (f *Factory) AddSlaveDBToCluster(index int, databases ...db.Database) *Fact
 }
 
 func (f *Factory) SetCluster(index int, cluster *Cluster) *Factory {
-	if len(f.databases) > index {
+	size := len(f.databases)
+	if size > index {
 		f.databases[index] = cluster
+	} else if size == index {
+		f.AddCluster(cluster)
 	}
 	return f
 }
@@ -165,4 +168,6 @@ func (f *Factory) CloseAll() {
 	for _, cluster := range f.databases {
 		cluster.CloseAll()
 	}
+	f.databases = f.databases[0:0]
+	f.Transaction = &Transaction{Factory: f}
 }

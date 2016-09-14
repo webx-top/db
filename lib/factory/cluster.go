@@ -63,13 +63,15 @@ func (c *Cluster) R() db.Database {
 }
 
 // AddW : added writable database
-func (c *Cluster) AddW(databases ...db.Database) {
+func (c *Cluster) AddW(databases ...db.Database) *Cluster {
 	c.masters = append(c.masters, databases...)
+	return c
 }
 
 // AddR : added read-only database
-func (c *Cluster) AddR(databases ...db.Database) {
+func (c *Cluster) AddR(databases ...db.Database) *Cluster {
 	c.slaves = append(c.slaves, databases...)
+	return c
 }
 
 // SetW : set writable database
