@@ -145,7 +145,6 @@ func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.
 				p := strings.Index(fieldInfo.Comment[1:], "`")
 				if p > -1 {
 					for _, t := range strings.Split(fieldInfo.Comment[1:p+1], `,`) {
-						fmt.Println(t)
 						switch t {
 						case `omitempty`:
 							dbTag += ",omitempty"
