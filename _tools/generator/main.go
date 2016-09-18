@@ -309,28 +309,30 @@ func TableToStructName(tableName string, prefix string) string {
 }
 
 func DataType(fieldInfo *factory.FieldInfo) string {
-	switch {
-	case strings.HasPrefix(fieldInfo.DataType, `int`):
+	switch fieldInfo.DataType {
+	case `int`, `tinyint`, `smallint`, `mediumint`:
 		if fieldInfo.Unsigned {
 			return `uint`
 		}
 		return `int`
-	case strings.HasPrefix(fieldInfo.DataType, `bigint`):
+	case `bigint`:
 		if fieldInfo.Unsigned {
 			return `uint64`
 		}
 		return `int64`
-	case strings.HasPrefix(fieldInfo.DataType, `decimal`):
+	case `decimal`, `double`:
 		return `float64`
-	case strings.HasPrefix(fieldInfo.DataType, `float`):
+	case `float`:
 		return `float32`
-	case strings.HasPrefix(fieldInfo.DataType, `double`):
-		return `float64`
+	case `bit`, `binary`, `varbinary`, `tinyblob`, `blob`, `mediumblob`, `longblob`: //二进制
+		return `byte[]`
+	case `geometry`, `point`, `linestring`, `polygon`, `multipoint`, `multilinestring`, `multipolygon`, `geometrycollection`: //几何图形
+		return `byte[]`
 
 	//postgreSQL
-	case strings.HasPrefix(fieldInfo.DataType, `boolean`):
+	case `boolean`:
 		return `bool`
-	case strings.HasPrefix(fieldInfo.DataType, `oid`):
+	case `oid`:
 		if fieldInfo.Unsigned {
 			return `uint64`
 		}

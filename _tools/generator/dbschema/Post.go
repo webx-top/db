@@ -28,7 +28,7 @@ type Post struct {
 	Likes        	uint    	`db:"likes" bson:"likes" comment:"被喜欢次数" json:"likes" xml:"likes"`
 	Deleted      	uint    	`db:"deleted" bson:"deleted" comment:"被删除时间" json:"deleted" xml:"deleted"`
 	Year         	uint    	`db:"year" bson:"year" comment:"归档年份" json:"year" xml:"year"`
-	Month        	string  	`db:"month" bson:"month" comment:"归档月份" json:"month" xml:"month"`
+	Month        	uint    	`db:"month" bson:"month" comment:"归档月份" json:"month" xml:"month"`
 	AllowComment 	string  	`db:"allow_comment" bson:"allow_comment" comment:"是否允许评论" json:"allow_comment" xml:"allow_comment"`
 	Tags         	string  	`db:"tags" bson:"tags" comment:"标签" json:"tags" xml:"tags"`
 	Catid        	uint    	`db:"catid" bson:"catid" comment:"分类ID" json:"catid" xml:"catid"`
