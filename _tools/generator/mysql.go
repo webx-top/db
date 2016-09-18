@@ -123,17 +123,43 @@ func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.
 	typeP := fmt.Sprintf(`%-8s`, fieldInfo.GoType)
 	dbTag := fieldInfo.Name
 	bsonTag := fieldInfo.Name
+	fieldInfo.Comment = field["Comment"]
+	fieldInfo.DefaultValue = field["Default"]
 	if field["Key"] == "PRI" && field["Extra"] == "auto_increment" {
 		dbTag += ",omitempty,pk"
 		bsonTag += ",omitempty"
 		fieldInfo.PrimaryKey = true
 		fieldInfo.AutoIncrement = true
-	} else if field["Key"] == "PRI" {
-		dbTag += ",pk"
-		fieldInfo.PrimaryKey = true
+	} else {
+		if field["Key"] == "PRI" {
+			dbTag += ",pk"
+			fieldInfo.PrimaryKey = true
+		}
+		if len(fieldInfo.Comment) > 0 {
+			//支持注释内容为：`omitempty`我是注释内容
+			if fieldInfo.Comment == "`omitempty`" {
+				dbTag += ",omitempty"
+				bsonTag += ",omitempty"
+				fieldInfo.Comment = ""
+			} else if strings.HasPrefix(fieldInfo.Comment, "`") {
+				p := strings.Index(fieldInfo.Comment[1:], "`")
+				if p > -1 {
+					for _, t := range strings.Split(fieldInfo.Comment[1:p+1], `,`) {
+						fmt.Println(t)
+						switch t {
+						case `omitempty`:
+							dbTag += ",omitempty"
+							bsonTag += ",omitempty"
+						case `pk`:
+							dbTag += ",pk"
+							fieldInfo.PrimaryKey = true
+						}
+					}
+					fieldInfo.Comment = fieldInfo.Comment[p+2:]
+				}
+			}
+		}
 	}
-	fieldInfo.Comment = field["Comment"]
-	fieldInfo.DefaultValue = field["Default"]
-	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, field["Comment"], fieldInfo.Name, fieldInfo.Name)
+	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, fieldInfo.Name, fieldInfo.Name)
 	return fieldBlock, fieldInfo
 }
