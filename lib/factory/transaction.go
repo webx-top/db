@@ -28,7 +28,11 @@ func (t *Transaction) Database(param *Param) db.Database {
 }
 
 func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
-	return t.Database(param).(sqlbuilder.Backend)
+	if bkd, ok := t.Database(param).(sqlbuilder.Backend); ok {
+		return bkd
+	}
+	panic(db.ErrUnsupported.Error())
+	return nil
 }
 
 func (t *Transaction) Result(param *Param) db.Result {

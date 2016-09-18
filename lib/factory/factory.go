@@ -17,7 +17,6 @@ const (
 
 var (
 	ErrNotFoundKey = errors.New(`not found the key`)
-	ErrNotSupport  = errors.New(`not support`)
 )
 
 func New() *Factory {
@@ -143,7 +142,7 @@ func (f *Factory) Tx(param *Param) error {
 	if rdb, ok := c.W().(sqlbuilder.Database); ok {
 		return rdb.Tx(fn)
 	}
-	return ErrNotSupport
+	return db.ErrUnsupported
 }
 
 func (f *Factory) NewTx(args ...int) (trans *Transaction, err error) {
@@ -159,7 +158,7 @@ func (f *Factory) NewTx(args ...int) (trans *Transaction, err error) {
 	if rdb, ok := c.W().(sqlbuilder.Database); ok {
 		trans.Tx, err = rdb.NewTx()
 	} else {
-		err = ErrNotSupport
+		err = db.ErrUnsupported
 	}
 	return
 }
