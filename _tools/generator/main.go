@@ -120,10 +120,10 @@ type config struct {
 
 type AutoTimeFields struct {
 	//update操作时，某个字段自动设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
-	Update map[string]string `json:"update"`
+	Update map[string][]string `json:"update"`
 
 	//insert操作时，某个字段自动设置为当前时间（map的键和值分别为表名称和字段名称。当表名称设置为“*”时，代表所有表中的这个字段）
-	Insert map[string]string `json:"insert"`
+	Insert map[string][]string `json:"insert"`
 }
 
 func main() {
@@ -137,7 +137,7 @@ func main() {
 	prefix := flag.String(`pre`, ``, `-pre prefix`)
 	packageName := flag.String(`pkg`, `dbschema`, `-pkg packageName`)
 	schema := flag.String(`schema`, `public`, `-schema schemaName`)
-	autoTime := flag.String(`autoTime`, `{"update":{"*":"updated"},"insert":{"*":"created"}}`, `-autoTime <json-data>`)
+	autoTime := flag.String(`autoTime`, `{"update":{"*":["updated"]},"insert":{"*":["created"]}}`, `-autoTime <json-data>`)
 	flag.Parse()
 
 	cfg.Username = *username
@@ -176,9 +176,68 @@ func main() {
 	}
 	if cfg.AutoTimeFields == nil && len(*autoTime) > 0 {
 		cfg.AutoTimeFields = &AutoTimeFields{}
-		err = json.Unmarshal([]byte(*autoTime), cfg.AutoTimeFields)
-		if err != nil {
-			log.Fatal(err)
+
+		// JSON
+		if (*autoTime)[0] == '{' {
+			err = json.Unmarshal([]byte(*autoTime), cfg.AutoTimeFields)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else { // update(*:updated)/insert(*:created) 括号内的格式：<表1>:<字段1>,<字段2>,<...字段N>;<表2>:<字段1>,<字段2>,<...字段N>
+			cfg.AutoTimeFields.Update = make(map[string][]string)
+			cfg.AutoTimeFields.Insert = make(map[string][]string)
+			for _, par := range strings.Split(*autoTime, `/`) {
+				par = strings.TrimSpace(par)
+				switch {
+				case strings.HasPrefix(par, `update(`):
+					par = strings.TrimPrefix(par, `update(`)
+					par = strings.TrimSuffix(par, `)`)
+					for _, item := range strings.Split(par, `;`) {
+						t := strings.SplitN(item, `:`, 2)
+						if len(t) > 1 {
+							t[0] = strings.TrimSpace(t[0])
+							t[1] = strings.TrimSpace(t[1])
+							if len(t[0]) == 0 || len(t[1]) == 0 {
+								continue
+							}
+							if _, ok := cfg.AutoTimeFields.Update[t[0]]; !ok {
+								cfg.AutoTimeFields.Update[t[0]] = []string{}
+							}
+							for _, field := range strings.Split(t[1], `,`) {
+								field = strings.TrimSpace(field)
+								if len(field) == 0 {
+									continue
+								}
+								cfg.AutoTimeFields.Update[t[0]] = append(cfg.AutoTimeFields.Update[t[0]], field)
+							}
+						}
+					}
+
+				case strings.HasPrefix(par, `insert(`):
+					par = strings.TrimPrefix(par, `insert(`)
+					par = strings.TrimSuffix(par, `)`)
+					for _, item := range strings.Split(par, `;`) {
+						t := strings.SplitN(item, `:`, 2)
+						if len(t) > 1 {
+							t[0] = strings.TrimSpace(t[0])
+							t[1] = strings.TrimSpace(t[1])
+							if len(t[0]) == 0 || len(t[1]) == 0 {
+								continue
+							}
+							if _, ok := cfg.AutoTimeFields.Insert[t[0]]; !ok {
+								cfg.AutoTimeFields.Insert[t[0]] = []string{}
+							}
+							for _, field := range strings.Split(t[1], `,`) {
+								field = strings.TrimSpace(field)
+								if len(field) == 0 {
+									continue
+								}
+								cfg.AutoTimeFields.Insert[t[0]] = append(cfg.AutoTimeFields.Insert[t[0]], field)
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	defer sess.Close()
@@ -212,37 +271,51 @@ func main() {
 		replaceMap["beforeDelete"] = ""
 		importTime := false
 		if cfg.AutoTimeFields != nil {
-			_fieldName, ok := cfg.AutoTimeFields.Insert[`*`]
+			_fieldNames, ok := cfg.AutoTimeFields.Insert[`*`]
 			if !ok {
-				_fieldName, ok = cfg.AutoTimeFields.Insert[tableName]
+				_fieldNames, ok = cfg.AutoTimeFields.Insert[tableName]
 			}
-			if ok && len(_fieldName) > 0 {
-				fieldInf, ok := fields[_fieldName]
-				if ok {
+			if ok && len(_fieldNames) > 0 {
+				beforeInsert := ``
+				newLine := ``
+				for _, _fieldName := range _fieldNames {
+					fieldInf, ok := fields[_fieldName]
+					if !ok {
+						continue
+					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `int64`, `uint64`:
-						replaceMap["beforeInsert"] = `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						newLine = "\n\t"
 						importTime = true
 					case `string`:
 						//TODO
 					}
 				}
+				replaceMap["beforeInsert"] = beforeInsert
 			}
-			_fieldName, ok = cfg.AutoTimeFields.Update[`*`]
+			_fieldNames, ok = cfg.AutoTimeFields.Update[`*`]
 			if !ok {
-				_fieldName, ok = cfg.AutoTimeFields.Update[tableName]
+				_fieldNames, ok = cfg.AutoTimeFields.Update[tableName]
 			}
-			if ok && len(_fieldName) > 0 {
-				fieldInf, ok := fields[_fieldName]
-				if ok {
+			if ok && len(_fieldNames) > 0 {
+				beforeUpdate := ``
+				newLine := ``
+				for _, _fieldName := range _fieldNames {
+					fieldInf, ok := fields[_fieldName]
+					if !ok {
+						continue
+					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `int64`, `uint64`:
-						replaceMap["beforeUpdate"] = `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeUpdate += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						newLine = "\n\t"
 						importTime = true
 					case `string`:
 						//TODO
 					}
 				}
+				replaceMap["beforeUpdate"] = beforeUpdate
 			}
 		}
 		if importTime {
