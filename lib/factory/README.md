@@ -79,10 +79,10 @@ err = factory.All(factory.NewParam().SetCollection(`post`).SetRecv(&posts))
 
 也可以附加更多条件（后面介绍的所有方法均支持这种方式）：
 ```
-    err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetArgs(db.Cond{`title LIKE`:`%test%`}).SetMiddleware(func(r db.Result)db.Result{
-        return r.OrderBy(`-id`).Group(`group`)
-    }).All()
-    // 生成SQL：SELECT * FROM `webx_post` WHERE (`title` LIKE "%test%") GROUP BY `group` ORDER BY `id` DESC
+ err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetArgs(db.Cond{`title LIKE`:`%test%`}).SetMiddleware(func(r db.Result)db.Result{
+     return r.OrderBy(`-id`).Group(`group`)
+ }).All()
+ // 生成SQL：SELECT * FROM `webx_post` WHERE (`title` LIKE "%test%") GROUP BY `group` ORDER BY `id` DESC
 ```
 
 ### 方法 2.
@@ -180,33 +180,33 @@ err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
 
 ### 方法 1.
 ```
-	param = factory.NewParam().SetCollection(`post`).SetTxMW(func(t *factory.Transaction) (err error) {
-		param := factory.NewParam().SetCollection(`post`).SetSend(map[string]int{
-			"views": 1,
-		}).SetArgs("id", 1)
-		err = t.Update(param)
-		// err=fmt.Errorf(`failured`)
-		// 当返回 nil 时，自动执行Commit，否则自动执行Rollback
-		return
-	})
-	factory.Tx(param)
+param = factory.NewParam().SetCollection(`post`).SetTxMW(func(t *factory.Transaction) (err error) {
+	param := factory.NewParam().SetCollection(`post`).SetSend(map[string]int{
+		"views": 1,
+	}).SetArgs("id", 1)
+	err = t.Update(param)
+	// err=fmt.Errorf(`failured`)
+	// 当返回 nil 时，自动执行Commit，否则自动执行Rollback
+	return
+})
+factory.Tx(param)
 ```
 
 ### 方法 2.
 ```
-    param = factory.NewParam().Begin().SetCollection(`post`)
-    err:=param.SetSend(map[string]int{"views": 1}).SetArgs("id", 1).Update()
-    if err!=nil {
-        param.End(err)
-        return
-    }
-    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 2}).SetArgs("id", 1).Update()
-    if err!=nil {
-        param.End(err)
-        return
-    }
-    err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 3}).SetArgs("id", 1).Update()
+param = factory.NewParam().Begin().SetCollection(`post`)
+err:=param.SetSend(map[string]int{"views": 1}).SetArgs("id", 1).Update()
+if err!=nil {
     param.End(err)
+    return
+}
+err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 2}).SetArgs("id", 1).Update()
+if err!=nil {
+    param.End(err)
+    return
+}
+err=factory.NewParam().TransFrom(param).SetCollection(`post`).SetSend(map[string]int{"views": 3}).SetArgs("id", 1).Update()
+param.End(err)
 ```
 
 # 自动生成数据表的结构体(struct)
@@ -229,7 +229,7 @@ generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机�
 * -autoTime <自动生成时间戳的字段> 默认为`update(*:updated)/insert(*:created)`：
   
   >  即在更新任意数据表时，自动设置表的updated字段；
-  >  在新增数据到任意数据表时，自动设置表的created字段。\
+  >  在新增数据到任意数据表时，自动设置表的created字段。  
   >  括号内的格式：`<表1>:<字段1>,<字段2>,<...字段N>;<表2>:<字段1>,<字段2>,<...字段N>`
 
 本命令会自动生成各个表的结构体和所有表的相关信息
@@ -250,8 +250,8 @@ generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机�
 * 修改数据 `Edit(mw func(db.Result) db.Result) error`
 * 删除数据 `Delete(mw func(db.Result) db.Result) error`
 
-> 如果数据库中的字段含有注释，并且注释内容是以反引号``` `...` ```这样的样式开头，\
-> 那么反引号内的内容会作为是否在该表结构体字段上的db标签添加`omitempty`和`pk`的依据。\
+> 如果数据库中的字段含有注释，并且注释内容是以反引号``` `...` ```这样的样式开头，  
+> 那么反引号内的内容会作为是否在该表结构体字段上的db标签添加`omitempty`和`pk`的依据。  
 > 例如：数据表user的字段username注释为``` `omitempty`用户名 ```，则该结构体就会生成这样：
 ```
 ...
