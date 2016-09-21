@@ -11,7 +11,7 @@
 
 # 用法
 
-```
+```go
 package main
 import (
 	"fmt"
@@ -73,12 +73,12 @@ func main() {
 ## 查询多行数据 (使用All方法)
 
 ### 方法 1.
-```
+```go
 err = factory.All(factory.NewParam().SetCollection(`post`).SetRecv(&posts))
 ```
 
 也可以附加更多条件（后面介绍的所有方法均支持这种方式）：
-```
+```go
  err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetArgs(db.Cond{`title LIKE`:`%test%`}).SetMiddleware(func(r db.Result)db.Result{
      return r.OrderBy(`-id`).Group(`group`)
  }).All()
@@ -86,13 +86,13 @@ err = factory.All(factory.NewParam().SetCollection(`post`).SetRecv(&posts))
 ```
 
 ### 方法 2.
-```
+```go
 err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).All()
 
 ```
 
 ### 关联查询
-```
+```go
 m := []*PostCollection{}
 err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
 ```
@@ -100,26 +100,26 @@ err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJo
 ## 查询分页数据 (使用List方法)
 
 ### 方法 1.
-```
+```go
 var countFn func()int64
 countFn, err = factory.List(factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetPage(1).SetSize(10))
 ```
 
 ### 方法 2.
-```
+```go
 countFn, err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).SetPage(1).SetSize(10).List()
 ```
 
 ## 查询一行数据 (使用One方法)
 
 ### 方法 1.
-```
+```go
 var post Post
 err = factory.One(factory.NewParam().SetCollection(`post`).SetRecv(&post))
 ```
 
 ### 方法 2.
-```
+```go
 var post Post
 err = factory.NewParam().SetCollection(`post`).SetRecv(&post).One()
 ```
@@ -127,7 +127,7 @@ err = factory.NewParam().SetCollection(`post`).SetRecv(&post).One()
 ## 插入数据 (使用Insert方法)
 
 ### 方法 1.
-```
+```go
 var post Post
 post=Post{
     Title:`test title`,
@@ -136,7 +136,7 @@ err = factory.Insert(factory.NewParam().SetCollection(`post`).SetSend(&post))
 ```
 
 ### 方法 2.
-```
+```go
 var post Post
 post=Post{
     Title:`test title`,
@@ -147,7 +147,7 @@ err = factory.NewParam().SetCollection(`post`).SetSend(&post).Insert()
 ## 更新数据 (使用Update方法)
 
 ### 方法 1.
-```
+```go
 var post Post
 post=Post{
     Title:`test title`,
@@ -156,7 +156,7 @@ err = factory.Update(factory.NewParam().SetCollection(`post`).SetSend(&post).Set
 ```
 
 ### 方法 2.
-```
+```go
 var post Post
 post=Post{
     Title:`test title`,
@@ -167,19 +167,19 @@ err = factory.NewParam().SetCollection(`post`).SetSend(&post).SetArgs("id",1).Up
 ## 删除数据 (使用Delete方法)
 
 ### 方法 1.
-```
+```go
 err = factory.Delete(factory.NewParam().SetCollection(`post`).SetArgs("id",1))
 ```
 
 ### 方法 2.
-```
+```go
 err = factory.NewParam().SetCollection(`post`).SetArgs("id",1).Update()
 ```
 
 ## 使用事务
 
 ### 方法 1.
-```
+```go
 param = factory.NewParam().SetCollection(`post`).SetTxMW(func(t *factory.Transaction) (err error) {
 	param := factory.NewParam().SetCollection(`post`).SetSend(map[string]int{
 		"views": 1,
@@ -193,7 +193,7 @@ factory.Tx(param)
 ```
 
 ### 方法 2.
-```
+```go
 param = factory.NewParam().Begin().SetCollection(`post`)
 err:=param.SetSend(map[string]int{"views": 1}).SetArgs("id", 1).Update()
 if err!=nil {
@@ -211,7 +211,7 @@ param.End(err)
 
 # 自动生成数据表的结构体(struct)
 进入目录`github.com/webx-top/db/_tools/generator`执行命令
-```
+```go
 go build -o generator.exe
 generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机名> -e <数据库类型> -d <数据库名> -o <文件保存目录> -pre <数据表前缀> -pkg <生成的包名>
 ```
@@ -253,14 +253,14 @@ generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机�
 > 如果数据库中的字段含有注释，并且注释内容是以反引号``` `...` ```这样的样式开头，  
 > 那么反引号内的内容会作为是否在该表结构体字段上的db标签添加`omitempty`和`pk`的依据。  
 > 例如：数据表user的字段username注释为``` `omitempty`用户名 ```，则该结构体就会生成这样：
-```
+```go
 ...
 type User struct {
 	Username string `db:"username,omitempty" bson:"username,omitempty" comment:"用户名" json:"username" xml:"username"`
 }
 ```
 > 又例如：数据表user的字段username注释为``` `omitempty,pk`用户名 ```，则该结构体就会生成这样：
-```
+```go
 ...
 type User struct {
 	Username string `db:"username,omitempty,pk" bson:"username,omitempty" comment:"用户名" json:"username" xml:"username"`
