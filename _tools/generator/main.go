@@ -130,7 +130,7 @@ func main() {
 	confFile := flag.String(`c`, ``, `-c conf.yaml`)
 	username := flag.String(`u`, `root`, `-u user`)
 	password := flag.String(`p`, ``, `-p password`)
-	host := flag.String(`h`, `localhost`, `-p host`)
+	host := flag.String(`h`, `localhost`, `-h host`)
 	engine := flag.String(`e`, `mysql`, `-e engine`)
 	database := flag.String(`d`, `blog`, `-d database`)
 	saveDir := flag.String(`o`, `dbschema`, `-o targetDir`)
