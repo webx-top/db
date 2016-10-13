@@ -105,7 +105,7 @@ func (s *Setting) Recv(result interface{}) *Setting {
 }
 
 func (s *Setting) Args(args ...interface{}) *Setting {
-	s.Param.SetArgs(args)
+	s.Param.SetArgs(args...)
 	return s
 }
 
@@ -115,7 +115,7 @@ func (s *Setting) AddArgs(args ...interface{}) *Setting {
 }
 
 func (s *Setting) Cols(args ...interface{}) *Setting {
-	s.Param.SetCols(args)
+	s.Param.SetCols(args...)
 	return s
 }
 
