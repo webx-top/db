@@ -11,15 +11,21 @@ import (
 )
 
 type Replace struct {
-	Old    string
-	New    string
-	Regexp *regexp.Regexp
+	Old      string
+	New      string
+	Regexp   *regexp.Regexp
+	FileRule *regexp.Regexp
 }
 
 var replaces = []*Replace{
-	&Replace{` // import "upper.io/db.v2"`, ``, nil},
-	&Replace{`"upper.io/db.v2"`, `"github.com/webx-top/db"`, nil},
-	&Replace{`"upper.io/db.v2/`, `"github.com/webx-top/db/`, nil},
+	&Replace{` // import "upper.io/db.v2"`, ``, nil, nil},
+	&Replace{`"upper.io/db.v2"`, `"github.com/webx-top/db"`, nil, nil},
+	&Replace{`"upper.io/db.v2/`, `"github.com/webx-top/db/`, nil, nil},
+	&Replace{"",
+		"${1}case `!=`, `<>`:\n\t\t\t\top = `$$ne`\n\t\t\t",
+		regexp.MustCompile("([\\s]+op \\= \\`\\$gte\\`[\\s]+)"),
+		regexp.MustCompile(`mongo[/\\]collection\.go$`),
+	},
 }
 
 func main() {
@@ -41,9 +47,16 @@ func main() {
 		}
 		content := string(b)
 		for _, re := range replaces {
+			if re.FileRule != nil {
+				if re.FileRule.MatchString(path) == false {
+					continue
+				}
+				//panic(path)
+			}
 			if re.Regexp == nil {
 				content = strings.Replace(content, re.Old, re.New, -1)
 			} else {
+				fmt.Printf("%#v\n", re.Regexp.FindAllString(content, -1))
 				content = re.Regexp.ReplaceAllString(content, re.New)
 			}
 		}

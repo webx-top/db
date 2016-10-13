@@ -104,6 +104,8 @@ func compileStatement(cond db.Cond) bson.M {
 				op = `$lte`
 			case `>=`:
 				op = `$gte`
+			case `!=`, `<>`:
+				op = `$ne`
 			default:
 				op = chunks[1]
 			}
