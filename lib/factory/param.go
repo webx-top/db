@@ -57,6 +57,7 @@ type Param struct {
 	trans                  *Transaction
 	cachedKey              string
 	setter                 *Setting
+	cluster                *Cluster
 	model                  Model
 }
 

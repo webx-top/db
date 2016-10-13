@@ -15,16 +15,18 @@ type Transaction struct {
 }
 
 func (t *Transaction) Database(param *Param) db.Database {
+	if t.Cluster == nil {
+		param.cluster = t.Factory.Cluster(param.Index)
+	} else {
+		param.cluster = t.Cluster
+	}
 	if t.Tx != nil {
 		return t.Tx
 	}
-	if t.Cluster == nil {
-		t.Cluster = t.Factory.Cluster(param.Index)
-	}
 	if param.ReadOrWrite == R {
-		return t.Cluster.R()
+		return param.cluster.R()
 	}
-	return t.Cluster.W()
+	return param.cluster.W()
 }
 
 func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
@@ -40,7 +42,7 @@ func (t *Transaction) Result(param *Param) db.Result {
 }
 
 func (t *Transaction) C(param *Param) db.Collection {
-	return t.Database(param).Collection(t.Cluster.Table(param.Collection))
+	return t.Database(param).Collection(param.cluster.Table(param.Collection))
 }
 
 // ================================
