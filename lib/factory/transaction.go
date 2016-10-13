@@ -146,7 +146,7 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 	counter := struct {
 		Count int64 `db:"_t"`
 	}{}
-	selector := t.Backend(param).Select(db.Raw("count(1) AS _t")).From(t.Table(param.Collection))
+	selector := t.Backend(param).Select(db.Raw("count(1) AS _t")).From(param.cluster.Table(param.Collection))
 	selector = t.joinSelect(param, selector)
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
@@ -167,7 +167,7 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 		return selector
 	}
 	for _, join := range param.Joins {
-		coll := t.Table(join.Collection)
+		coll := param.cluster.Table(join.Collection)
 		if len(join.Alias) > 0 {
 			coll += ` AS ` + join.Alias
 		}
@@ -191,7 +191,7 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 }
 
 func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
-	selector := t.Backend(param).Select(param.Cols...).From(t.Table(param.Collection))
+	selector := t.Backend(param).Select(param.Cols...).From(param.cluster.Table(param.Collection))
 	return t.joinSelect(param, selector)
 }
 
