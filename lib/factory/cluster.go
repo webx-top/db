@@ -24,15 +24,17 @@ type Cluster struct {
 }
 
 // W : write
-func (c *Cluster) W() db.Database {
+func (c *Cluster) W() (r db.Database) {
 	length := len(c.masters)
 	if length == 0 {
 		panic(`Not connected to any database`)
 	}
 	if length > 1 {
-		return c.masters[rand.Intn(length-1)]
+		r = c.masters[rand.Intn(length-1)]
+	} else {
+		r = c.masters[0]
 	}
-	return c.masters[0]
+	return
 }
 
 // Prefix : table prefix
@@ -51,15 +53,18 @@ func (c *Cluster) SetPrefix(prefix string) {
 }
 
 // R : read-only
-func (c *Cluster) R() db.Database {
+func (c *Cluster) R() (r db.Database) {
 	length := len(c.slaves)
 	if length == 0 {
-		return c.W()
+		r = c.W()
+	} else {
+		if length > 1 {
+			r = c.slaves[rand.Intn(length-1)]
+		} else {
+			r = c.slaves[0]
+		}
 	}
-	if length > 1 {
-		return c.slaves[rand.Intn(length-1)]
-	}
-	return c.slaves[0]
+	return
 }
 
 // AddW : added writable database
