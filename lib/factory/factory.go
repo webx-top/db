@@ -36,11 +36,11 @@ type Factory struct {
 }
 
 func (f *Factory) Debug() bool {
-	return db.Debug
+	return db.Conf.LoggingEnabled()
 }
 
 func (f *Factory) SetDebug(on bool) *Factory {
-	db.Debug = on
+	db.Conf.SetLogging(on)
 	return f
 }
 
