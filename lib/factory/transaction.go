@@ -355,6 +355,36 @@ func (t *Transaction) Update(param *Param) error {
 	return res.Update(param.SaveData)
 }
 
+func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) error {
+	param.ReadOrWrite = W
+	res := t.Result(param)
+	if param.Middleware != nil {
+		res = param.Middleware(res)
+	}
+	cnt, err := res.Count()
+	if err != nil {
+		if err == db.ErrNoMoreRows {
+			if len(beforeUpsert) > 1 {
+				beforeUpsert[1]()
+			}
+			_, err = t.C(param).Insert(param.SaveData)
+			return err
+		}
+		return err
+	}
+	if cnt < 1 {
+		if len(beforeUpsert) > 1 {
+			beforeUpsert[1]()
+		}
+		_, err = t.C(param).Insert(param.SaveData)
+		return err
+	}
+	if len(beforeUpsert) > 0 {
+		beforeUpsert[0]()
+	}
+	return res.Update(param.SaveData)
+}
+
 func (t *Transaction) Delete(param *Param) error {
 	param.ReadOrWrite = W
 	res := t.Result(param)

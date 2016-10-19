@@ -98,6 +98,14 @@ func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface
 	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
+func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+		{{beforeUpdate}}
+	},func(){
+		{{beforeInsert}}
+	})
+}
+
 func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeDelete}}
 	return this.Param().SetMiddleware(mw).Delete()
@@ -269,6 +277,7 @@ func main() {
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
 		replaceMap["beforeDelete"] = ""
+
 		importTime := false
 		if cfg.AutoTimeFields != nil {
 			_fieldNames, ok := cfg.AutoTimeFields.Insert[`*`]

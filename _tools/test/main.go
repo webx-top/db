@@ -162,6 +162,19 @@ func main() {
 		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
 	}
 
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`测试Upsert：`)
+	err = post.Get(nil, db.Cond{"id": 12})
+	if err != nil {
+		log.Fatal(err)
+	}
+	post.Content += ` by Upsert!`
+	post.Id = 13
+	err = post.Param().Setter().Args(db.Cond{"id": post.Id}).Send(post).Upsert()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return
 
 	param = post.Param()

@@ -47,14 +47,14 @@ func (this *Ocontent) Get(mw func(db.Result) db.Result, args ...interface{}) err
 	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Ocontent) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+func (this *Ocontent) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = this.NewObjects()
 	}
 	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Ocontent) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+func (this *Ocontent) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = this.NewObjects()
 	}
@@ -69,6 +69,14 @@ func (this *Ocontent) Add() (interface{}, error) {
 func (this *Ocontent) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
+}
+
+func (this *Ocontent) Upsert(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+		
+	},func(){
+		
+	})
 }
 
 func (this *Ocontent) Delete(mw func(db.Result) db.Result, args ...interface{}) error {

@@ -56,14 +56,14 @@ func (this *Attathment) Get(mw func(db.Result) db.Result, args ...interface{}) e
 	return this.Param().SetArgs(args...).SetRecv(this).SetMiddleware(mw).One()
 }
 
-func (this *Attathment) List(recv interface{},mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+func (this *Attathment) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = this.NewObjects()
 	}
 	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Attathment) ListByOffset(recv interface{},mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+func (this *Attathment) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = this.NewObjects()
 	}
@@ -78,6 +78,14 @@ func (this *Attathment) Add() (interface{}, error) {
 func (this *Attathment) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	
 	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
+}
+
+func (this *Attathment) Upsert(mw func(db.Result) db.Result, args ...interface{}) error {
+	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+		
+	},func(){
+		this.Created = uint(time.Now().Unix())
+	})
 }
 
 func (this *Attathment) Delete(mw func(db.Result) db.Result, args ...interface{}) error {

@@ -127,6 +127,10 @@ func Update(param *Param) error {
 	return DefaultFactory.Update(param)
 }
 
+func Upsert(param *Param, beforeUpsert ...func()) error {
+	return DefaultFactory.Upsert(param, beforeUpsert...)
+}
+
 func Delete(param *Param) error {
 	return DefaultFactory.Delete(param)
 }
