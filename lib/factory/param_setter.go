@@ -163,3 +163,8 @@ func (s *Setting) Begin() *Setting {
 	s.Param.Begin()
 	return s
 }
+
+func (s *Setting) TableField(m interface{}, structField *string, tableField ...*string) *Setting {
+	s.Param.TableField(m, structField, tableField...)
+	return s
+}
