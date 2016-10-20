@@ -22,6 +22,11 @@ type PostCollection struct {
 	User *dbschema.User `db:",inline"`
 }
 
+type PostCollection2 struct {
+	P *dbschema.Post `db:",inline"`
+	U *dbschema.User `db:",inline"`
+}
+
 func main() {
 	database, err := mysql.Open(settings)
 	if err != nil {
@@ -98,6 +103,19 @@ func main() {
 
 	for _, post := range m {
 		log.Printf("%q (ID: %d)\n", post.Post.Title, post.Post.Id)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`查询方式4.1：使用LeftJoin关联查询`)
+	m2 := []*PostCollection2{}
+	err = factory.NewParam().SetCollection(`post a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, post := range m2 {
+		log.Printf("%q (ID: %d)\n", post.P.Title, post.P.Id)
 	}
 
 	fmt.Println(``)

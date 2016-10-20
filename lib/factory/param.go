@@ -4,11 +4,21 @@ package factory
 import (
 	"encoding/gob"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
+	"github.com/webx-top/tagfast"
 )
+
+var tagParser = func(tag string) interface{} {
+	if len(tag) == 0 {
+		return nil
+	}
+	return strings.Split(tag, `,`)
+}
 
 func init() {
 	gob.Register(&Param{})
@@ -39,6 +49,7 @@ type Param struct {
 	Index                  int //数据库对象元素所在的索引位置
 	ReadOrWrite            int
 	Collection             string //集合名或表名称
+	Alias                  string //表别名
 	Middleware             func(db.Result) db.Result
 	MiddlewareName         string
 	SelectorMiddleware     func(sqlbuilder.Selector) sqlbuilder.Selector
@@ -176,8 +187,103 @@ func (p *Param) AddJoin(joinType string, collection string, alias string, condit
 	return p
 }
 
-func (p *Param) SetCollection(collection string) *Param {
+func (p *Param) SetCollection(collection string, alias ...string) *Param {
 	p.Collection = collection
+	if len(alias) > 0 {
+		p.Alias = alias[0]
+		p.Collection += ` ` + p.Alias
+	} else {
+		pos := strings.LastIndex(p.Collection, ` `)
+		if pos > 0 {
+			p.Alias = p.Collection[pos+1:]
+		}
+	}
+	return p
+}
+
+func (p *Param) TableField(m interface{}, structField *string, tableField ...*string) *Param {
+	var tblField *string
+	if len(tableField) > 0 {
+		tblField = tableField[0]
+	} else {
+		tblField = structField
+	}
+	parts := strings.Split(*structField, `.`)
+	j := len(parts)
+	rv := reflect.Indirect(reflect.ValueOf(m))
+	rt := rv.Type()
+	if j == 1 {
+		sf, ok := rt.FieldByName(parts[0])
+		if !ok {
+			*tblField = ``
+			return p
+		}
+		tag := tagfast.GetParsed(rt, sf, `bson`, tagParser)
+		if tag == nil {
+			tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
+		}
+		field := parts[0]
+		if tags, ok := tag.([]string); ok && len(tags) > 0 {
+			field = tags[0]
+		}
+		*tblField = field
+		if len(p.Alias) > 0 {
+			*tblField = p.Alias + `.` + *tblField
+		}
+		return p
+	}
+	var prefix string
+	for i, v := range parts {
+		if i+1 == j { //end
+			sf, ok := rt.FieldByName(v)
+			if !ok {
+				*tblField = ``
+				break
+			}
+			tag := tagfast.GetParsed(rt, sf, `bson`, tagParser)
+			if tag == nil {
+				tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
+			}
+			field := v
+			if tags, ok := tag.([]string); ok && len(tags) > 0 {
+				field = tags[0]
+			}
+			*tblField = prefix + field
+			break
+		}
+		sf, ok := rt.FieldByName(v)
+		if !ok {
+			*tblField = ``
+			break
+		}
+		tag := tagfast.GetParsed(rt, sf, `bson`, tagParser)
+		if tag == nil {
+			tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
+		}
+		table := v
+		if tags, ok := tag.([]string); ok && len(tags) > 0 {
+			table = tags[0]
+		}
+		if len(p.Joins) > 0 {
+			for _, jo := range p.Joins {
+				if jo.Collection == table {
+					if len(jo.Alias) > 0 {
+						table = jo.Alias
+					}
+					break
+				}
+			}
+		}
+		prefix += table + `.`
+
+		rv = rv.FieldByName(v)
+		if !rv.IsValid() {
+			*tblField = ``
+			break
+		}
+		rv = reflect.Indirect(rv)
+		rt = rv.Type()
+	}
 	return p
 }
 
