@@ -17,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqladapter"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
@@ -73,6 +74,48 @@ func TestOpenMustSucceed(t *testing.T) {
 
 	err = sess.Close()
 	assert.NoError(t, err)
+}
+
+func TestPreparedStatementsCache(t *testing.T) {
+	sess, err := Open(settings)
+	assert.NoError(t, err)
+	defer sess.Close()
+
+	var tMu sync.Mutex
+	tFatal := func(err error) {
+		tMu.Lock()
+		defer tMu.Unlock()
+		t.Fatal(err)
+	}
+
+	// The max number of elements we can have on our LRU is 128, if an statement
+	// is evicted it will be marked as dead and will be closed only when no other
+	// queries are using it.
+	const maxPreparedStatements = 128 * 2
+
+	var wg sync.WaitGroup
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			// This query is different with each iteration and thus generates a new
+			// prepared statement everytime it's called.
+			res := sess.Collection("artist").Find().Select(db.Raw(fmt.Sprintf("count(%d)", i)))
+			var count map[string]uint64
+			err := res.One(&count)
+			if err != nil {
+				tFatal(err)
+			}
+			if activeStatements := sqladapter.NumActiveStatements(); activeStatements > maxPreparedStatements {
+				tFatal(fmt.Errorf("The number of active statements cannot exceed %d (got %d).", maxPreparedStatements, activeStatements))
+			}
+		}(i)
+		if i%50 == 0 {
+			wg.Wait()
+		}
+	}
+
+	wg.Wait()
 }
 
 func TestTruncateAllCollections(t *testing.T) {
@@ -325,6 +368,22 @@ func TestInsertIntoArtistsTable(t *testing.T) {
 	count, err := artist.Find().Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(4), count)
+
+	count, err = artist.Find(db.Cond{"name": "Ozzie"}).Count()
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(1), count)
+
+	count, err = artist.Find(db.Or(db.Cond{"name": "Ozzie"}, db.Cond{"name": "Flea"})).Count()
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(2), count)
+
+	count, err = artist.Find(db.And(db.Cond{"name": "Ozzie"}, db.Cond{"name": "Flea"})).Count()
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(0), count)
+
+	count, err = artist.Find(db.Cond{"name": "Ozzie"}).And(db.Cond{"name": "Flea"}).Count()
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(0), count)
 }
 
 func TestQueryNonExistentCollection(t *testing.T) {
@@ -1133,7 +1192,7 @@ func TestUpdateWithNullColumn(t *testing.T) {
 	assert.NotEqual(t, nil, item.Name)
 	assert.Equal(t, name, *item.Name)
 
-	artist.Find(db.Cond{"id": id}).Update(Artist{Name: nil})
+	artist.Find(id).Update(Artist{Name: nil})
 	assert.NoError(t, err)
 
 	var item2 Artist
@@ -1368,34 +1427,6 @@ func TestBuilder(t *testing.T) {
 	err = q.All(&all)
 	assert.NoError(t, err)
 	assert.NotZero(t, all)
-}
-
-func TestStressPreparedStatementCache(t *testing.T) {
-	sess := mustOpen()
-	defer sess.Close()
-
-	var tMu sync.Mutex
-	tFatal := func(err error) {
-		tMu.Lock()
-		defer tMu.Unlock()
-		t.Fatal(err)
-	}
-
-	var wg sync.WaitGroup
-
-	for i := 1; i < 1000; i++ {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			res := sess.Collection("artist").Find().Select(db.Raw(fmt.Sprintf("COUNT(%d)", i%5)))
-			var data map[string]interface{}
-			if err := res.One(&data); err != nil {
-				tFatal(err)
-			}
-		}(i)
-	}
-
-	wg.Wait()
 }
 
 func TestExhaustConnectionPool(t *testing.T) {
