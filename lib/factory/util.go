@@ -40,3 +40,22 @@ func ToSnakeCase(name string) string {
 	}
 	return string(bytes)
 }
+
+// ToCamleCase : webx_top => WebxTop
+func ToCamleCase(name string) string {
+	underline := rune('_')
+	isUnderline := false
+	bytes := []rune{}
+	for i, v := range name {
+		if v == underline {
+			isUnderline = true
+			continue
+		}
+		if isUnderline || i == 0 {
+			v = unicode.ToUpper(v)
+		}
+		isUnderline = false
+		bytes = append(bytes, v)
+	}
+	return string(bytes)
+}

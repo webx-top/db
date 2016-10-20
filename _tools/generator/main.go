@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"unicode"
 
 	"github.com/admpub/confl"
 	"github.com/webx-top/db/lib/factory"
@@ -386,8 +385,7 @@ func TableToStructName(tableName string, prefix string) string {
 	if len(prefix) > 0 {
 		tableName = strings.TrimPrefix(tableName, prefix)
 	}
-	tableName = strings.Title(tableName)
-	return camleCase(tableName)
+	return factory.ToCamleCase(tableName)
 }
 
 func DataType(fieldInfo *factory.FieldInfo) string {
@@ -423,25 +421,6 @@ func DataType(fieldInfo *factory.FieldInfo) string {
 	default:
 		return `string`
 	}
-}
-
-func camleCase(s string) string {
-	vs := []rune(s)
-	underline := rune('_')
-	isUnderline := false
-	vals := []rune{}
-	for _, v := range vs {
-		if v == underline {
-			isUnderline = true
-			continue
-		}
-		if isUnderline {
-			v = unicode.ToUpper(v)
-		}
-		isUnderline = false
-		vals = append(vals, v)
-	}
-	return string(vals)
 }
 
 func GetTableFields(engine string, d sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo) {
