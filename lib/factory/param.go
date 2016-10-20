@@ -223,7 +223,7 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 			tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
 		}
 		field := parts[0]
-		if tags, ok := tag.([]string); ok && len(tags) > 0 {
+		if tags, ok := tag.([]string); ok && len(tags) > 0 && len(tags[0]) > 0 {
 			field = tags[0]
 		}
 		*tblField = field
@@ -245,7 +245,7 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 				tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
 			}
 			field := v
-			if tags, ok := tag.([]string); ok && len(tags) > 0 {
+			if tags, ok := tag.([]string); ok && len(tags) > 0 && len(tags[0]) > 0 {
 				field = tags[0]
 			}
 			*tblField = prefix + field
@@ -260,29 +260,56 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 		if tag == nil {
 			tag = tagfast.GetParsed(rt, sf, `db`, tagParser)
 		}
-		table := v
-		if tags, ok := tag.([]string); ok && len(tags) > 0 {
-			table = tags[0]
-		}
-		if len(p.Joins) > 0 {
-			for _, jo := range p.Joins {
-				if jo.Collection == table {
-					if len(jo.Alias) > 0 {
-						table = jo.Alias
-					}
-					break
-				}
-			}
-		}
-		prefix += table + `.`
 
 		rv = rv.FieldByName(v)
 		if !rv.IsValid() {
 			*tblField = ``
 			break
 		}
-		rv = reflect.Indirect(rv)
-		rt = rv.Type()
+		if rv.Kind() == reflect.Ptr {
+			rt = rv.Type().Elem()
+			if rt.Kind() == reflect.Struct {
+				fieldPtr := rv
+				rv = rv.Elem()
+				if !rv.IsValid() || fieldPtr.IsNil() {
+					rv = reflect.New(rt).Elem()
+				}
+			}
+		} else {
+			rt = rv.Type()
+		}
+
+		var table string
+		if tags, ok := tag.([]string); ok && len(tags) > 0 && len(tags[0]) > 0 {
+			table = tags[0]
+		}
+		if len(p.Joins) > 0 {
+			var rawTableName string
+			if len(table) < 1 {
+				rawTableName = ToSnakeCase(rt.Name())
+			} else {
+				rawTableName = table
+			}
+			for _, jo := range p.Joins {
+				if jo.Collection == rawTableName {
+					if len(jo.Alias) > 0 {
+						table = jo.Alias
+					} else {
+						table = v
+					}
+					break
+				}
+			}
+		}
+
+		if len(table) == 0 {
+			if len(p.Alias) > 0 {
+				table = p.Alias
+			} else {
+				table = v
+			}
+		}
+		prefix += table + `.`
 	}
 	return p
 }

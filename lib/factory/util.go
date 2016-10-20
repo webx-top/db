@@ -2,6 +2,7 @@ package factory
 
 import (
 	"net"
+	"unicode"
 )
 
 func NetError(err error) net.Error {
@@ -23,4 +24,19 @@ func IsTemporaryError(err error) bool {
 		return netErr.Temporary()
 	}
 	return false
+}
+
+// ToSnakeCase : WebxTop => webx_top
+func ToSnakeCase(name string) string {
+	bytes := []rune{}
+	for i, char := range name {
+		if 'A' <= char && 'Z' >= char {
+			char = unicode.ToLower(char)
+			if i > 0 {
+				bytes = append(bytes, '_')
+			}
+		}
+		bytes = append(bytes, char)
+	}
+	return string(bytes)
 }

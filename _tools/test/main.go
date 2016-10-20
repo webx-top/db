@@ -107,15 +107,32 @@ func main() {
 
 	fmt.Println(``)
 	fmt.Println(``)
-	log.Println(`查询方式4.1：使用LeftJoin关联查询`)
+	log.Println(`查询方式4.1：使用LeftJoin关联查询，并测试字段转换`)
 	m2 := []*PostCollection2{}
-	err = factory.NewParam().SetCollection(`post a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m2)
+	structField := `P.Title`
+	tableName := ``
+	structField2 := `U.Id`
+	tableName2 := ``
+	paramJoin := factory.NewParam().SetCollection(`post a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`)
+	paramJoin.TableField(&PostCollection2{}, &structField, &tableName)
+	paramJoin.TableField(&PostCollection2{}, &structField2, &tableName2)
+	err = paramJoin.Select().All(&m2)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, post := range m2 {
 		log.Printf("%q (ID: %d)\n", post.P.Title, post.P.Id)
+	}
+	log.Println(`=== 字段转换结果：===================`)
+	log.Println(structField, `====>`, tableName)
+	log.Println(structField2, `====>`, tableName2)
+
+	if tableName != `a.title` {
+		panic(`字段名称转换错误:` + structField + `应该转换为a.title，实际却被转为了` + tableName)
+	}
+	if tableName2 != `b.id` {
+		panic(`字段名称转换错误:` + structField2 + `应该转换为b.id，实际却被转为了` + tableName2)
 	}
 
 	fmt.Println(``)
