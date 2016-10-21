@@ -25,6 +25,7 @@ var replaces = &map[string]string{
 	"attributes":   "",
 	"tableName":    "",
 	"beforeInsert": "",
+	"afterInsert":  "",
 	"beforeUpdate": "",
 	"beforeDelete": "",
 }
@@ -87,9 +88,11 @@ func (this *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db
 	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *{{structName}}) Add() (interface{}, error) {
+func (this *{{structName}}) Add() (pk interface{}, err error) {
 	{{beforeInsert}}
-	return this.Param().SetSend(this).Insert()
+	pk, err = this.Param().SetSend(this).Insert()
+	{{afterInsert}}
+	return
 }
 
 func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
@@ -97,12 +100,14 @@ func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface
 	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) error {
-	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
+	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
 		{{beforeUpdate}}
 	},func(){
 		{{beforeInsert}}
 	})
+	{{afterInsert}}
+	return 
 }
 
 func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
@@ -276,6 +281,7 @@ func main() {
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
 		replaceMap["beforeDelete"] = ""
+		replaceMap["afterInsert"] = ""
 
 		importTime := false
 		if cfg.AutoTimeFields != nil {
@@ -300,6 +306,24 @@ func main() {
 						//TODO
 					}
 				}
+				afterInsert := ``
+				newLine2 := ``
+				newTab2 := ``
+				for _, fieldInf := range fields {
+					if fieldInf.AutoIncrement && fieldInf.PrimaryKey {
+						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = 0`
+						newLine = "\n\t"
+						afterInsert += newLine2 + `if err == nil && pk != nil {
+` + newTab2 + `		if v, y := pk.(` + fieldInf.GoType + `); y {
+` + newTab2 + `			this.` + fieldInf.GoName + ` = v
+` + newTab2 + `		}
+` + newTab2 + `	}`
+						newLine2 = "\n\t"
+						newTab2 = "\t"
+						break
+					}
+				}
+				replaceMap["afterInsert"] = afterInsert
 				replaceMap["beforeInsert"] = beforeInsert
 			}
 			_fieldNames, ok = cfg.AutoTimeFields.Update[`*`]

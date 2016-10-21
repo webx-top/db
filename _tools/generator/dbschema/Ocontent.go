@@ -61,9 +61,15 @@ func (this *Ocontent) ListByOffset(recv interface{}, mw func(db.Result) db.Resul
 	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *Ocontent) Add() (interface{}, error) {
-	
-	return this.Param().SetSend(this).Insert()
+func (this *Ocontent) Add() (pk interface{}, err error) {
+	this.Id = 0
+	pk, err = this.Param().SetSend(this).Insert()
+	if err == nil && pk != nil {
+		if v, y := pk.(uint); y {
+			this.Id = v
+		}
+	}
+	return
 }
 
 func (this *Ocontent) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
@@ -71,12 +77,18 @@ func (this *Ocontent) Edit(mw func(db.Result) db.Result, args ...interface{}) er
 	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
 }
 
-func (this *Ocontent) Upsert(mw func(db.Result) db.Result, args ...interface{}) error {
-	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+func (this *Ocontent) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
+	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
 		
 	},func(){
-		
+		this.Id = 0
 	})
+	if err == nil && pk != nil {
+		if v, y := pk.(uint); y {
+			this.Id = v
+		}
+	}
+	return 
 }
 
 func (this *Ocontent) Delete(mw func(db.Result) db.Result, args ...interface{}) error {

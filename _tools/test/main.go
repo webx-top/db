@@ -206,7 +206,8 @@ func main() {
 	}
 	post.Content += ` by Upsert!`
 	post.Id = 13
-	err = post.Param().Setter().Args(db.Cond{"id": post.Id}).Send(post).Upsert()
+	err = post.Upsert(nil, db.Cond{"id": post.Id})
+	//err = post.Param().Setter().Args(db.Cond{"id": post.Id}).Send(post).Upsert()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -40,7 +40,7 @@ type Model interface {
 	ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error)
 	Add() (interface{}, error)
 	Edit(mw func(db.Result) db.Result, args ...interface{}) error
-	Upsert(mw func(db.Result) db.Result, args ...interface{}) error
+	Upsert(mw func(db.Result) db.Result, args ...interface{}) (interface{}, error)
 	Delete(mw func(db.Result) db.Result, args ...interface{}) error
 }
 
@@ -532,7 +532,7 @@ func (p *Param) Update() error {
 	return p.T().Update(p)
 }
 
-func (p *Param) Upsert(beforeUpsert ...func()) error {
+func (p *Param) Upsert(beforeUpsert ...func()) (interface{}, error) {
 	return p.T().Upsert(p, beforeUpsert...)
 }
 

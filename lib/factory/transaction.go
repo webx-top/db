@@ -355,7 +355,7 @@ func (t *Transaction) Update(param *Param) error {
 	return res.Update(param.SaveData)
 }
 
-func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) error {
+func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) (interface{}, error) {
 	param.ReadOrWrite = W
 	res := t.Result(param)
 	if param.Middleware != nil {
@@ -367,22 +367,20 @@ func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) error {
 			if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
 				beforeUpsert[1]()
 			}
-			_, err = t.C(param).Insert(param.SaveData)
-			return err
+			return t.C(param).Insert(param.SaveData)
 		}
-		return err
+		return nil, err
 	}
 	if cnt < 1 {
 		if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
 			beforeUpsert[1]()
 		}
-		_, err = t.C(param).Insert(param.SaveData)
-		return err
+		return t.C(param).Insert(param.SaveData)
 	}
 	if len(beforeUpsert) > 0 && beforeUpsert[0] != nil {
 		beforeUpsert[0]()
 	}
-	return res.Update(param.SaveData)
+	return nil, res.Update(param.SaveData)
 }
 
 func (t *Transaction) Delete(param *Param) error {
