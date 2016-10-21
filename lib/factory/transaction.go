@@ -364,7 +364,7 @@ func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) error {
 	cnt, err := res.Count()
 	if err != nil {
 		if err == db.ErrNoMoreRows {
-			if len(beforeUpsert) > 1 {
+			if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
 				beforeUpsert[1]()
 			}
 			_, err = t.C(param).Insert(param.SaveData)
@@ -373,13 +373,13 @@ func (t *Transaction) Upsert(param *Param, beforeUpsert ...func()) error {
 		return err
 	}
 	if cnt < 1 {
-		if len(beforeUpsert) > 1 {
+		if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
 			beforeUpsert[1]()
 		}
 		_, err = t.C(param).Insert(param.SaveData)
 		return err
 	}
-	if len(beforeUpsert) > 0 {
+	if len(beforeUpsert) > 0 && beforeUpsert[0] != nil {
 		beforeUpsert[0]()
 	}
 	return res.Update(param.SaveData)
