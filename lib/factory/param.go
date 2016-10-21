@@ -247,6 +247,8 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 			field := v
 			if tags, ok := tag.([]string); ok && len(tags) > 0 && len(tags[0]) > 0 {
 				field = tags[0]
+			} else {
+				field = ToSnakeCase(field)
 			}
 			*tblField = prefix + field
 			break
