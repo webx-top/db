@@ -263,7 +263,7 @@ type User struct {
 ```go
 ...
 type User struct {
-	Username string `db:"username,omitempty,pk" bson:"username,omitempty" comment:"用户名" json:"username" xml:"username"`
+	Username string `db:"username,omitempty,pk" bson:"username,omitempty,pk" comment:"用户名" json:"username" xml:"username"`
 }
 ```
 
