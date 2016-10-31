@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/webx-top/cache/ttlmap"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/_tools/generator/dbschema"
 	"github.com/webx-top/db/lib/factory"
@@ -33,6 +35,8 @@ func main() {
 		log.Fatal(err)
 	}
 	factory.SetDebug(true)
+	cacher := ttlmap.New(1000000)
+	factory.SetCacher(cacher)
 	factory.AddDB(database).Cluster(0).SetPrefix(`webx_`)
 	defer factory.Default().CloseAll()
 
@@ -210,6 +214,23 @@ func main() {
 	//err = post.Param().Setter().Args(db.Cond{"id": post.Id}).Send(post).Upsert()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`测试缓存：`)
+	for i := 0; i < 5; i++ {
+		recv := post.NewObjects()
+		_, err = post.Param().SetCache(10*time.Minute, `testCaching`).Model().List(recv, nil, 1, 999, db.And(
+			db.Cond{`id >`: 1},
+			db.Cond{`id <`: 10},
+		))
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, post := range *recv {
+			log.Printf("%d => %q (ID: %d)\n", i+1, post.Title, post.Id)
+		}
 	}
 	return
 
