@@ -83,6 +83,7 @@ err = factory.All(factory.NewParam().SetCollection(`post`).SetRecv(&posts))
      return r.OrderBy(`-id`).Group(`group`)
  }).All()
  // 生成SQL：SELECT * FROM `webx_post` WHERE (`title` LIKE "%test%") GROUP BY `group` ORDER BY `id` DESC
+ // OrderBy(`-id`) 表示按字段id的值进行降序排列，如果没有前面的负号“-”则按照升序排列
 ```
 
 ### 方法 2.

@@ -33,7 +33,7 @@ import (
 // Adapter holds the name of the mongodb adapter.
 const Adapter = `mongo`
 
-var connTimeout = time.Second * 5
+var ConnTimeout = time.Second * 5
 
 // Source represents a MongoDB database.
 type Source struct {
@@ -116,7 +116,7 @@ func (s *Source) Driver() interface{} {
 func (s *Source) open() error {
 	var err error
 
-	if s.session, err = mgo.DialWithTimeout(s.connURL.String(), connTimeout); err != nil {
+	if s.session, err = mgo.DialWithTimeout(s.connURL.String(), ConnTimeout); err != nil {
 		return err
 	}
 

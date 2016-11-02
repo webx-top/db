@@ -26,6 +26,11 @@ var replaces = []*Replace{
 		regexp.MustCompile("([\\s]+op \\= \\`\\$gte\\`[\\s]+)"),
 		regexp.MustCompile(`mongo[/\\]collection\.go$`),
 	},
+	&Replace{"connTimeout",
+		"ConnTimeout",
+		nil,
+		regexp.MustCompile(`mongo[/\\]database\.go$`),
+	},
 }
 
 func main() {
