@@ -38,7 +38,11 @@ func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
 }
 
 func (t *Transaction) Result(param *Param) db.Result {
-	return t.C(param).Find(param.Args...)
+	res := t.C(param).Find(param.Args...)
+	if len(param.Cols) > 0 {
+		res = res.Select(param.Cols...)
+	}
+	return res
 }
 
 func (t *Transaction) C(param *Param) db.Collection {
