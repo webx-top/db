@@ -219,12 +219,12 @@ func main() {
 	fmt.Println(``)
 	fmt.Println(``)
 	log.Println(`测试缓存：`)
+	recv = post.NewObjects()
 	for i := 0; i < 5; i++ {
-		recv := post.NewObjects()
-		_, err = post.Param().SetCache(10*time.Minute, `testCaching`).Model().List(recv, nil, 1, 999, db.And(
+		_, err = post.Param().SetCache(10*time.Minute, `testCaching`).SetRecv(recv).SetArgs(db.And(
 			db.Cond{`id >`: 1},
 			db.Cond{`id <`: 10},
-		))
+		)).SetPage(1).SetSize(10).List()
 		if err != nil {
 			log.Fatal(err)
 		}
