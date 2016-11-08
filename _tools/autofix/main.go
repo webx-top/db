@@ -30,11 +30,8 @@ var replaces = []*Replace{
 		`
 			if v, y := conds[chunks[0]]; y {
 				if bsonM, ok := v.(bson.M); ok {
-					if _, ok := bsonM[op]; !ok {
-						bsonM[op] = value
-						conds[chunks[0]] = bsonM
-						continue
-					}
+					bsonM[op] = value
+					continue
 				}
 			}
 			conds[chunks[0]] = bson.M{op: value}
