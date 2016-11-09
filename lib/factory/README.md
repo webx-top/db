@@ -241,7 +241,9 @@ generator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机�
 
 * 获取事务 `Trans() *factory.Transaction`
 * 设置事务 `Use(trans *factory.Transaction) factory.Model`
-* 参数对象 `Param() *factory.Param` 
+* 新参数对象 `NewParam() *factory.Param` 
+* 设置默认参数对象 `SetParam(param *factory.Param) factory.Model` 
+* 获取参数对象 `Param() *factory.Param` (如果有默认参数对象则使用默认，否则新建参数对象)
 * 复制列表数据结果集 `Objects() []*结构体名` 
 * 新建列表数据结果集 `NewObjects() *[]*结构体名` 
 * 查询一行 `Get(mw func(db.Result) db.Result) error`
