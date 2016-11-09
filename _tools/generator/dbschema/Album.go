@@ -9,6 +9,7 @@ import (
 )
 
 type Album struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Album
 	
@@ -49,8 +50,20 @@ func (this *Album) NewObjects() *[]*Album {
 	return &this.objects
 }
 
-func (this *Album) Param() *factory.Param {
+func (this *Album) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("album").SetModel(this)
+}
+
+func (this *Album) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Album) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Album) Get(mw func(db.Result) db.Result, args ...interface{}) error {

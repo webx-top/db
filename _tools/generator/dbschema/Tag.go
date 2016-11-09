@@ -9,6 +9,7 @@ import (
 )
 
 type Tag struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Tag
 	
@@ -41,8 +42,20 @@ func (this *Tag) NewObjects() *[]*Tag {
 	return &this.objects
 }
 
-func (this *Tag) Param() *factory.Param {
+func (this *Tag) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("tag").SetModel(this)
+}
+
+func (this *Tag) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Tag) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Tag) Get(mw func(db.Result) db.Result, args ...interface{}) error {

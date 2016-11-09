@@ -9,6 +9,7 @@ import (
 )
 
 type Comment struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Comment
 	
@@ -55,8 +56,20 @@ func (this *Comment) NewObjects() *[]*Comment {
 	return &this.objects
 }
 
-func (this *Comment) Param() *factory.Param {
+func (this *Comment) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("comment").SetModel(this)
+}
+
+func (this *Comment) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Comment) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Comment) Get(mw func(db.Result) db.Result, args ...interface{}) error {

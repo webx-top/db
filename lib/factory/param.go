@@ -34,6 +34,8 @@ type Join struct {
 type Model interface {
 	Trans() *Transaction
 	Use(trans *Transaction) Model
+	NewParam() *Param
+	SetParam(param *Param) Model
 	Param() *Param
 	Get(mw func(db.Result) db.Result, args ...interface{}) error
 	List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error)
@@ -122,7 +124,7 @@ func (p *Param) SetModel(model Model) *Param {
 }
 
 func (p *Param) Model() Model {
-	return p.model.Use(p.trans)
+	return p.model.Use(p.trans).SetParam(p)
 }
 
 func (p *Param) SelectLink(index int) *Param {

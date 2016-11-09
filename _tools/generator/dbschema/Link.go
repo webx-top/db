@@ -9,6 +9,7 @@ import (
 )
 
 type Link struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Link
 	
@@ -45,8 +46,20 @@ func (this *Link) NewObjects() *[]*Link {
 	return &this.objects
 }
 
-func (this *Link) Param() *factory.Param {
+func (this *Link) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("link").SetModel(this)
+}
+
+func (this *Link) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Link) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Link) Get(mw func(db.Result) db.Result, args ...interface{}) error {

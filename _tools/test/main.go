@@ -232,6 +232,22 @@ func main() {
 			log.Printf("%d => %q (ID: %d)\n", i+1, post.Title, post.Id)
 		}
 	}
+
+	fmt.Println(``)
+	fmt.Println(``)
+	log.Println(`测试缓存2：`)
+	for i := 0; i < 5; i++ {
+		_, err = post.NewParam().SetCache(10*time.Minute, `testCaching`).Model().List(recv, nil, 1, 10, db.And(
+			db.Cond{`id >`: 1},
+			db.Cond{`id <`: 10},
+		))
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, post := range *recv {
+			log.Printf("%d => %q (ID: %d)\n", i+1, post.Title, post.Id)
+		}
+	}
 	return
 
 	param = post.Param()

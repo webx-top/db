@@ -9,6 +9,7 @@ import (
 )
 
 type Post struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Post
 	
@@ -55,8 +56,20 @@ func (this *Post) NewObjects() *[]*Post {
 	return &this.objects
 }
 
-func (this *Post) Param() *factory.Param {
+func (this *Post) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("post").SetModel(this)
+}
+
+func (this *Post) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Post) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Post) Get(mw func(db.Result) db.Result, args ...interface{}) error {

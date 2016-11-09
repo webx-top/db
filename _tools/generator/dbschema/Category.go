@@ -9,6 +9,7 @@ import (
 )
 
 type Category struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Category
 	
@@ -44,8 +45,20 @@ func (this *Category) NewObjects() *[]*Category {
 	return &this.objects
 }
 
-func (this *Category) Param() *factory.Param {
+func (this *Category) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("category").SetModel(this)
+}
+
+func (this *Category) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Category) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Category) Get(mw func(db.Result) db.Result, args ...interface{}) error {

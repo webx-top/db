@@ -9,6 +9,7 @@ import (
 )
 
 type User struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*User
 	
@@ -47,8 +48,20 @@ func (this *User) NewObjects() *[]*User {
 	return &this.objects
 }
 
-func (this *User) Param() *factory.Param {
+func (this *User) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("user").SetModel(this)
+}
+
+func (this *User) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *User) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *User) Get(mw func(db.Result) db.Result, args ...interface{}) error {

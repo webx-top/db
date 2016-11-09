@@ -39,6 +39,7 @@ import (
 )
 
 type {{structName}} struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*{{structName}}
 	
@@ -66,8 +67,20 @@ func (this *{{structName}}) NewObjects() *[]*{{structName}} {
 	return &this.objects
 }
 
-func (this *{{structName}}) Param() *factory.Param {
+func (this *{{structName}}) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("{{tableName}}").SetModel(this)
+}
+
+func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *{{structName}}) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) error {

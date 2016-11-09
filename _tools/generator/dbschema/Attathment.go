@@ -9,6 +9,7 @@ import (
 )
 
 type Attathment struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Attathment
 	
@@ -48,8 +49,20 @@ func (this *Attathment) NewObjects() *[]*Attathment {
 	return &this.objects
 }
 
-func (this *Attathment) Param() *factory.Param {
+func (this *Attathment) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("attathment").SetModel(this)
+}
+
+func (this *Attathment) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Attathment) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Attathment) Get(mw func(db.Result) db.Result, args ...interface{}) error {

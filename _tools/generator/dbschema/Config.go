@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Config
 	
@@ -39,8 +40,20 @@ func (this *Config) NewObjects() *[]*Config {
 	return &this.objects
 }
 
-func (this *Config) Param() *factory.Param {
+func (this *Config) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("config").SetModel(this)
+}
+
+func (this *Config) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Config) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Config) Get(mw func(db.Result) db.Result, args ...interface{}) error {

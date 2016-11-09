@@ -8,6 +8,7 @@ import (
 )
 
 type Ocontent struct {
+	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*Ocontent
 	
@@ -39,8 +40,20 @@ func (this *Ocontent) NewObjects() *[]*Ocontent {
 	return &this.objects
 }
 
-func (this *Ocontent) Param() *factory.Param {
+func (this *Ocontent) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("ocontent").SetModel(this)
+}
+
+func (this *Ocontent) SetParam(param *factory.Param) factory.Model {
+	this.param = param
+	return this
+}
+
+func (this *Ocontent) Param() *factory.Param {
+	if this.param == nil {
+		return this.NewParam()
+	}
+	return this.param
 }
 
 func (this *Ocontent) Get(mw func(db.Result) db.Result, args ...interface{}) error {
