@@ -117,11 +117,12 @@ func (p *Param) SetIndex(index int) *Param {
 
 func (p *Param) SetModel(model Model) *Param {
 	p.model = model
+	p.trans = model.Trans()
 	return p
 }
 
 func (p *Param) Model() Model {
-	return p.model
+	return p.model.Use(p.trans)
 }
 
 func (p *Param) SelectLink(index int) *Param {
