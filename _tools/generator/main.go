@@ -13,7 +13,7 @@ import (
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
-	//"github.com/webx-top/webx/lib/com"
+	//"github.com/webx-top/com"
 )
 
 var cfg = &config{}
