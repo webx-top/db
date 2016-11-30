@@ -311,7 +311,7 @@ func main() {
 						continue
 					}
 					switch fieldInf.GoType {
-					case `uint`, `int`, `int64`, `uint64`:
+					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
 						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
@@ -326,10 +326,16 @@ func main() {
 					if fieldInf.AutoIncrement && fieldInf.PrimaryKey {
 						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = 0`
 						newLine = "\n\t"
+						var extData string
+						if fieldInf.GoType != `int64` {
+							extData = ` else if v, y := pk.(int64); y {
+` + newTab2 + `			this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(v)
+` + newTab2 + `		}`
+						}
 						afterInsert += newLine2 + `if err == nil && pk != nil {
 ` + newTab2 + `		if v, y := pk.(` + fieldInf.GoType + `); y {
 ` + newTab2 + `			this.` + fieldInf.GoName + ` = v
-` + newTab2 + `		}
+` + newTab2 + `		}` + extData + `
 ` + newTab2 + `	}`
 						newLine2 = "\n\t"
 						newTab2 = "\t"
