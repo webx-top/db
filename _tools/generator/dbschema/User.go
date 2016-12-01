@@ -89,6 +89,8 @@ func (this *User) Add() (pk interface{}, err error) {
 	if err == nil && pk != nil {
 		if v, y := pk.(uint); y {
 			this.Id = v
+		} else if v, y := pk.(int64); y {
+			this.Id = uint(v)
 		}
 	}
 	return
@@ -109,6 +111,8 @@ func (this *User) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk 
 	if err == nil && pk != nil {
 		if v, y := pk.(uint); y {
 			this.Id = v
+		} else if v, y := pk.(int64); y {
+			this.Id = uint(v)
 		}
 	}
 	return 
@@ -116,6 +120,6 @@ func (this *User) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk 
 
 func (this *User) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
-	return this.Param().SetMiddleware(mw).Delete()
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 

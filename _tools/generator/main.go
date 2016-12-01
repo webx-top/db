@@ -125,7 +125,7 @@ func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interfa
 
 func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeDelete}}
-	return this.Param().SetMiddleware(mw).Delete()
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
 `

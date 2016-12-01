@@ -83,6 +83,8 @@ func (this *Tag) Add() (pk interface{}, err error) {
 	if err == nil && pk != nil {
 		if v, y := pk.(uint); y {
 			this.Id = v
+		} else if v, y := pk.(int64); y {
+			this.Id = uint(v)
 		}
 	}
 	return
@@ -103,6 +105,8 @@ func (this *Tag) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk i
 	if err == nil && pk != nil {
 		if v, y := pk.(uint); y {
 			this.Id = v
+		} else if v, y := pk.(int64); y {
+			this.Id = uint(v)
 		}
 	}
 	return 
@@ -110,6 +114,6 @@ func (this *Tag) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk i
 
 func (this *Tag) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
 	
-	return this.Param().SetMiddleware(mw).Delete()
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
