@@ -41,6 +41,16 @@ func main() {
 	defer factory.Default().CloseAll()
 
 	var posts []*dbschema.Post
+
+	_, err = factory.QueryTo(factory.NewParam(nil).SetCollection(`SELECT * FROM webx_post ORDER BY id DESC`).SetRecv(&posts).SetPage(1).SetSize(10))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, post := range posts {
+		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+	}
+
 	//err = db.Find("webx_post").All(&posts)
 	log.Println(`查询方式1：使用Factory查询`)
 	err = factory.All(factory.NewParam(nil).SetCollection(`post`).SetRecv(&posts).SetPage(2).SetSize(10))
