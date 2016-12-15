@@ -39,6 +39,25 @@ var replaces = []*Replace{
 		nil,
 		regexp.MustCompile(`mongo[/\\]collection\.go$`),
 	},
+	&Replace{``, ``,
+		regexp.MustCompile(regexp.QuoteMeta(`if c.Database == "" {`) + "[\\s]+" + regexp.QuoteMeta(`return ""`) + "[\\s]+\\}"),
+		regexp.MustCompile(`mysql[/\\]collection\.go$`),
+	},
+	&Replace{`if c.Database == "" {`, `if false {`,
+		nil,
+		regexp.MustCompile(`mysql[/\\]collection\.go$`),
+	},
+	&Replace{``,
+		`
+	if iter.Next() {
+		var name sql.NullString
+		err := iter.Scan(&name)
+		return name.String, err
+	}
+`,
+		regexp.MustCompile("[\\s]+if iter\\.Next\\(\\) \\{[\\s]+var name string[\\s]+err := iter\\.Scan\\(&name\\)[\\s]+return name, err[\\s]+\\}"),
+		regexp.MustCompile(`mysql[/\\]database\.go$`),
+	},
 
 	&Replace{"connTimeout",
 		"ConnTimeout",
