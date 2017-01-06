@@ -77,6 +77,10 @@ func Result(param *Param) db.Result {
 	return DefaultFactory.Result(param)
 }
 
+func Driver(param *Param) *sql.DB {
+	return DefaultFactory.Driver(param)
+}
+
 // ================================
 // API
 // ================================

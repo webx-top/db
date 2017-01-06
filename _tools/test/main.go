@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"database/sql"
+
 	"github.com/webx-top/cache/ttlmap"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/_tools/generator/dbschema"
@@ -41,6 +43,30 @@ func main() {
 	defer factory.Default().CloseAll()
 
 	var posts []*dbschema.Post
+
+	rows, err := factory.NewParam(nil).Driver().Query(`SELECT * FROM webx_post ORDER BY id DESC`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	columns, err := rows.Columns()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for rows.Next() {
+		recv := make([]interface{}, len(columns))
+		for k := range columns {
+			recv[k] = &sql.NullString{}
+		}
+		err = rows.Scan(recv...)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("=======================================")
+		for k, v := range recv {
+			colName := columns[k]
+			log.Printf("%v: %#v\n", colName, v.(*sql.NullString).String)
+		}
+	}
 
 	_, err = factory.QueryTo(factory.NewParam(nil).SetCollection(`SELECT * FROM webx_post ORDER BY id DESC`).SetRecv(&posts).SetPage(1).SetSize(10))
 	if err != nil {

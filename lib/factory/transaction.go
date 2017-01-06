@@ -30,6 +30,14 @@ func (t *Transaction) Database(param *Param) db.Database {
 	return param.cluster.W()
 }
 
+func (t *Transaction) Driver(param *Param) *sql.DB {
+	if db, ok := t.Database(param).Driver().(*sql.DB); ok {
+		return db
+	}
+	panic(db.ErrUnsupported.Error())
+	return nil
+}
+
 func (t *Transaction) Backend(param *Param) sqlbuilder.Backend {
 	if bkd, ok := t.Database(param).(sqlbuilder.Backend); ok {
 		return bkd

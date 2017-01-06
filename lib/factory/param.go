@@ -480,6 +480,10 @@ func (p *Param) T() *Transaction {
 	return p.factory.Transaction
 }
 
+func (p *Param) Driver() *sql.DB {
+	return p.T().Driver(p)
+}
+
 func (p *Param) Result() db.Result {
 	return p.T().Result(p)
 }
