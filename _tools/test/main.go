@@ -44,7 +44,7 @@ func main() {
 
 	var posts []*dbschema.Post
 
-	rows, err := factory.NewParam(nil).Driver().Query(`SELECT * FROM webx_post ORDER BY id DESC`)
+	rows, err := factory.NewParam(nil).DB().Query(`SELECT * FROM webx_post ORDER BY id DESC`)
 	if err != nil {
 		log.Fatal(err)
 	}

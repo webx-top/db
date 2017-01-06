@@ -30,8 +30,12 @@ func (t *Transaction) Database(param *Param) db.Database {
 	return param.cluster.W()
 }
 
-func (t *Transaction) Driver(param *Param) *sql.DB {
-	if db, ok := t.Database(param).Driver().(*sql.DB); ok {
+func (t *Transaction) Driver(param *Param) interface{} {
+	return t.Database(param).Driver()
+}
+
+func (t *Transaction) DB(param *Param) *sql.DB {
+	if db, ok := t.Driver(param).(*sql.DB); ok {
 		return db
 	}
 	panic(db.ErrUnsupported.Error())
