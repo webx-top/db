@@ -17,7 +17,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/db"
-	"github.com/webx-top/db/internal/sqladapter"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
@@ -72,14 +71,15 @@ func TestOpenMustSucceed(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, sess)
 
-	err = sess.Close()
-	assert.NoError(t, err)
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestPreparedStatementsCache(t *testing.T) {
-	sess, err := Open(settings)
-	assert.NoError(t, err)
-	defer sess.Close()
+	sess := mustOpen()
+
+	db.Conf.SetPreparedStatementCache(true)
+	defer db.Conf.SetPreparedStatementCache(false)
 
 	var tMu sync.Mutex
 	tFatal := func(err error) {
@@ -88,13 +88,12 @@ func TestPreparedStatementsCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The max number of elements we can have on our LRU is 128, if an statement
-	// is evicted it will be marked as dead and will be closed only when no other
-	// queries are using it.
-	const maxPreparedStatements = 128 * 2
-
+	// This limit was chosen because, by default, MySQL accepts 16k statements
+	// and dies. See https://github.com/upper/db/issues/287
+	limit := 20000
 	var wg sync.WaitGroup
-	for i := 0; i < 1000; i++ {
+
+	for i := 0; i < limit; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
@@ -106,22 +105,63 @@ func TestPreparedStatementsCache(t *testing.T) {
 			if err != nil {
 				tFatal(err)
 			}
-			if activeStatements := sqladapter.NumActiveStatements(); activeStatements > maxPreparedStatements {
-				tFatal(fmt.Errorf("The number of active statements cannot exceed %d (got %d).", maxPreparedStatements, activeStatements))
-			}
 		}(i)
-		if i%50 == 0 {
-			wg.Wait()
-		}
+	}
+	wg.Wait()
+
+	// Concurrent Insert can open many connections on MySQL / PostgreSQL, this
+	// sets a limit on them.
+	sess.SetMaxOpenConns(100)
+
+	switch Adapter {
+	case "ql":
+		limit = 1000
+	case "sqlite":
+		// TODO: We'll probably be able to workaround this with a mutex on inserts.
+		t.Skip(`Skipped due to a "database is locked" problem with concurrent transactions. See https://github.com/mattn/go-sqlite3/issues/274`)
 	}
 
+	for i := 0; i < limit; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			// The same prepared query on every iteration.
+			_, err := sess.Collection("artist").Insert(artistType{
+				Name: fmt.Sprintf("artist-%d", i),
+			})
+			if err != nil {
+				tFatal(err)
+			}
+		}(i)
+	}
 	wg.Wait()
+
+	// Insert returning creates a transaction.
+	for i := 0; i < limit; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			// The same prepared query on every iteration.
+			artist := artistType{
+				Name: fmt.Sprintf("artist-%d", i),
+			}
+			err := sess.Collection("artist").InsertReturning(&artist)
+			if err != nil {
+				tFatal(err)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	// Removing the limit.
+	sess.SetMaxOpenConns(0)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestTruncateAllCollections(t *testing.T) {
-	sess, err := Open(settings)
-	assert.NoError(t, err)
-	defer sess.Close()
+	sess := mustOpen()
 
 	collections, err := sess.Collections()
 	assert.NoError(t, err)
@@ -136,28 +176,31 @@ func TestTruncateAllCollections(t *testing.T) {
 			}
 		}
 	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestCustomQueryLogger(t *testing.T) {
-	sess, err := Open(settings)
-	assert.NoError(t, err)
-	defer sess.Close()
+	sess := mustOpen()
 
 	db.Conf.SetLogger(&customLogger{})
 	defer func() {
 		db.Conf.SetLogger(nil)
 	}()
 
-	_, err = sess.Collection("artist").Find().Count()
+	_, err := sess.Collection("artist").Find().Count()
 	assert.Equal(t, nil, err)
 
 	_, err = sess.Collection("artist_x").Find().Count()
 	assert.NotEqual(t, nil, err)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestExpectCursorError(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -169,11 +212,13 @@ func TestExpectCursorError(t *testing.T) {
 	var item map[string]interface{}
 	err = res.One(&item)
 	assert.Error(t, err)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestInsertReturning(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -228,11 +273,13 @@ func TestInsertReturning(t *testing.T) {
 	count, err = artist.Find().Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(2), count, "Expecting 2 elements")
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestInsertReturningWithinTransaction(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	err := sess.Collection("artist").Truncate()
 	assert.NoError(t, err)
@@ -300,11 +347,13 @@ func TestInsertReturningWithinTransaction(t *testing.T) {
 	count, err = sess.Collection("artist").Find().Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), count, "Expecting 0 elements, everything was rolled back!")
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestInsertIntoArtistsTable(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -384,20 +433,24 @@ func TestInsertIntoArtistsTable(t *testing.T) {
 	count, err = artist.Find(db.Cond{"name": "Ozzie"}).And(db.Cond{"name": "Flea"}).Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), count)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestQueryNonExistentCollection(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	count, err := sess.Collection("doesnotexist").Find().Count()
 	assert.Error(t, err)
 	assert.Zero(t, count)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestGetOneResult(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -419,11 +472,13 @@ func TestGetOneResult(t *testing.T) {
 	if Adapter != "ql" {
 		assert.NotZero(t, someArtist.ID)
 	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestGetResultsOneByOne(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -483,7 +538,7 @@ func TestGetResultsOneByOne(t *testing.T) {
 	assert.Equal(t, 4, len(allRowsMap))
 
 	for _, singleRowMap := range allRowsMap {
-		if pk, ok := singleRowMap["id"].(int64); !ok || pk == 0 {
+		if fmt.Sprintf("%d", singleRowMap["id"]) == "0" {
 			t.Fatalf("Expecting a not null ID.")
 		}
 	}
@@ -528,11 +583,13 @@ func TestGetResultsOneByOne(t *testing.T) {
 	for _, singleRowStruct := range allRowsStruct2 {
 		assert.NotZero(t, singleRowStruct.Value1)
 	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestGetAllResults(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -562,6 +619,9 @@ func TestGetAllResults(t *testing.T) {
 	assert.NotZero(t, len(artistObjs))
 	assert.NotZero(t, artistObjs[0].Name)
 	assert.NotZero(t, artistObjs[0].ID)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestInlineStructs(t *testing.T) {
@@ -578,7 +638,6 @@ func TestInlineStructs(t *testing.T) {
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	review := sess.Collection("review")
 
@@ -614,11 +673,13 @@ func TestInlineStructs(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, rec, recChk)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestUpdate(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 
@@ -742,11 +803,13 @@ func TestUpdate(t *testing.T) {
 
 	// Verifying
 	assert.Equal(t, value.Name, rowStruct3.Value1)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestFunction(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	rowStruct := struct {
 		ID   int64
@@ -805,11 +868,13 @@ func TestFunction(t *testing.T) {
 	total, err = res.Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(4), total)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestNullableFields(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	type testType struct {
 		ID              int64           `db:"id,omitempty"`
@@ -861,11 +926,13 @@ func TestNullableFields(t *testing.T) {
 	assert.True(t, test.NullInt64Test.Valid)
 	assert.True(t, test.NullBoolTest.Valid)
 	assert.True(t, test.NullStringTest.Valid)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestGroup(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	type statsType struct {
 		Numeric int `db:"numeric"`
@@ -897,11 +964,13 @@ func TestGroup(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 5, len(results))
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestDelete(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 	res := artist.Find()
@@ -916,6 +985,9 @@ func TestDelete(t *testing.T) {
 	total, err = res.Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(0), total)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestCompositeKeys(t *testing.T) {
@@ -924,7 +996,6 @@ func TestCompositeKeys(t *testing.T) {
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	compositeKeys := sess.Collection("composite_keys")
 
@@ -948,16 +1019,19 @@ func TestCompositeKeys(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, item2.SomeVal, item.SomeVal)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 // Attempts to test database transactions.
 func TestTransactionsAndRollback(t *testing.T) {
+
 	if Adapter == "ql" {
 		t.Skip("Currently not supported.")
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	// Simple transaction that should not fail.
 	tx, err := sess.NewTx()
@@ -981,8 +1055,12 @@ func TestTransactionsAndRollback(t *testing.T) {
 	err = tx.Close()
 	assert.NoError(t, err)
 
+	err = tx.Close()
+	assert.NoError(t, err)
+
 	// Use another transaction.
 	tx, err = sess.NewTx()
+	assert.NoError(t, err)
 
 	artist = tx.Collection("artist")
 
@@ -1070,6 +1148,9 @@ func TestTransactionsAndRollback(t *testing.T) {
 	count, err = artist.Find().Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(3), count)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestDataTypes(t *testing.T) {
@@ -1104,7 +1185,6 @@ func TestDataTypes(t *testing.T) {
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	// Getting a pointer to the "data_types" collection.
 	dataTypes := sess.Collection("data_types")
@@ -1166,11 +1246,13 @@ func TestDataTypes(t *testing.T) {
 
 	// The original value and the test subject must match.
 	assert.Equal(t, testValues, item)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestUpdateWithNullColumn(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	artist := sess.Collection("artist")
 	err := artist.Truncate()
@@ -1200,17 +1282,28 @@ func TestUpdateWithNullColumn(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, (*string)(nil), item2.Name)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestBatchInsert(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	for batchSize := 0; batchSize < 17; batchSize++ {
 		err := sess.Collection("artist").Truncate()
 		assert.NoError(t, err)
 
-		batch := sess.InsertInto("artist").Columns("name").Batch(batchSize)
+		q := sess.InsertInto("artist").Columns("name")
+
+		if Adapter == "postgresql" {
+			q = q.Amend(func(query string) string {
+				return query + ` ON CONFLICT DO NOTHING`
+			})
+		}
+
+
+		batch := q.Batch(batchSize)
 
 		totalItems := int(rand.Int31n(21))
 
@@ -1235,11 +1328,13 @@ func TestBatchInsert(t *testing.T) {
 			assert.Equal(t, uint64(1), c)
 		}
 	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestBatchInsertNoColumns(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	for batchSize := 0; batchSize < 17; batchSize++ {
 		err := sess.Collection("artist").Truncate()
@@ -1273,6 +1368,9 @@ func TestBatchInsertNoColumns(t *testing.T) {
 			assert.Equal(t, uint64(1), c)
 		}
 	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestBatchInsertReturningKeys(t *testing.T) {
@@ -1281,7 +1379,6 @@ func TestBatchInsertReturningKeys(t *testing.T) {
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	err := sess.Collection("artist").Truncate()
 	assert.NoError(t, err)
@@ -1322,11 +1419,13 @@ func TestBatchInsertReturningKeys(t *testing.T) {
 	c, err := sess.Collection("artist").Find().Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(totalItems), c)
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestBuilder(t *testing.T) {
 	sess := mustOpen()
-	defer sess.Close()
 
 	var all []map[string]interface{}
 
@@ -1427,6 +1526,11 @@ func TestBuilder(t *testing.T) {
 	err = q.All(&all)
 	assert.NoError(t, err)
 	assert.NotZero(t, all)
+
+	assert.NoError(t, tx.Commit())
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }
 
 func TestExhaustConnectionPool(t *testing.T) {
@@ -1449,10 +1553,9 @@ func TestExhaustConnectionPool(t *testing.T) {
 	}
 
 	sess := mustOpen()
-	defer sess.Close()
 
 	var wg sync.WaitGroup
-	for i := 0; i < 300; i++ {
+	for i := 0; i < 100; i++ {
 		tLogf("Tx %d: Pending", i)
 
 		wg.Add(1)
@@ -1461,7 +1564,7 @@ func TestExhaustConnectionPool(t *testing.T) {
 
 			// Requesting a new transaction session.
 			start := time.Now()
-			tLogf("Tx: %d: NewTx")
+			tLogf("Tx: %d: NewTx", i)
 			tx, err := sess.NewTx()
 			if err != nil {
 				tFatal(err)
@@ -1536,4 +1639,7 @@ func TestExhaustConnectionPool(t *testing.T) {
 	}
 
 	wg.Wait()
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
 }

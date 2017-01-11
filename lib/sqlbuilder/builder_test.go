@@ -1,6 +1,7 @@
 package sqlbuilder
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +16,13 @@ func TestSelect(t *testing.T) {
 	assert.Equal(
 		`SELECT DATE()`,
 		b.Select(db.Func("DATE")).String(),
+	)
+
+	assert.Equal(
+		`SELECT DATE() FOR UPDATE`,
+		b.Select(db.Func("DATE")).Amend(func(query string) string {
+			return query + " FOR UPDATE"
+		}).String(),
 	)
 
 	assert.Equal(
@@ -619,6 +627,54 @@ func TestSelect(t *testing.T) {
 			sel2.Arguments(),
 		)
 	}
+
+	{
+		sq := b.
+			Select("user_id").
+			From("user_access").
+			Where(db.Cond{"hub_id": 3})
+
+		sq.And(db.Cond{"role": []int{1, 2}})
+
+		assert.Equal(
+			`SELECT "user_id" FROM "user_access" WHERE ("hub_id" = $1 AND "role" IN ($2, $3))`,
+			sq.String(),
+		)
+
+		assert.Equal(
+			[]interface{}{3, 1, 2},
+			sq.Arguments(),
+		)
+
+		cond := db.Or(
+			db.Raw("a.id IN ?", sq),
+		)
+
+		cond.Or(db.Cond{"ml.mailing_list_id": []int{4, 5, 6}})
+
+		sel := b.
+			Select(db.Raw("DISTINCT ON(a.id) a.id"), db.Raw("COALESCE(NULLIF(ml.name,''), a.name) as name"), "a.email").
+			From("mailing_list_recipients ml").
+			FullJoin("accounts a").On("a.id = ml.user_id").
+			Where(cond)
+
+		search := "word"
+		sel.And(db.Or(
+			db.Raw("COALESCE(NULLIF(ml.name,''), a.name) ILIKE ?", fmt.Sprintf("%%%s%%", search)),
+			db.Cond{"a.email ILIKE": fmt.Sprintf("%%%s%%", search)},
+		))
+
+		assert.Equal(
+			`SELECT DISTINCT ON(a.id) a.id, COALESCE(NULLIF(ml.name,''), a.name) as name, "a"."email" FROM "mailing_list_recipients" AS "ml" FULL JOIN "accounts" AS "a" ON (a.id = ml.user_id) WHERE ((a.id IN (SELECT "user_id" FROM "user_access" WHERE ("hub_id" = $1 AND "role" IN ($2, $3))) OR "ml"."mailing_list_id" IN ($4, $5, $6)) AND (COALESCE(NULLIF(ml.name,''), a.name) ILIKE $7 OR "a"."email" ILIKE $8))`,
+			sel.String(),
+		)
+
+		assert.Equal(
+			[]interface{}{3, 1, 2, 4, 5, 6, `%word%`, `%word%`},
+			sel.Arguments(),
+		)
+
+	}
 }
 
 func TestInsert(t *testing.T) {
@@ -642,6 +698,13 @@ func TestInsert(t *testing.T) {
 	assert.Equal(
 		`INSERT INTO "artist" ("id", "name") VALUES ($1, $2) RETURNING "id"`,
 		b.InsertInto("artist").Values(map[string]string{"id": "12", "name": "Chavela Vargas"}).Returning("id").String(),
+	)
+
+	assert.Equal(
+		`INSERT INTO "artist" ("id", "name") VALUES ($1, $2) RETURNING "id"`,
+		b.InsertInto("artist").Values(map[string]string{"id": "12", "name": "Chavela Vargas"}).Amend(func(query string) string {
+			return query + ` RETURNING "id"`
+		}).String(),
 	)
 
 	assert.Equal(
@@ -698,6 +761,89 @@ func TestInsert(t *testing.T) {
 	}
 
 	{
+		type artistStruct struct {
+			ID   int    `db:"id,omitempty"`
+			Name string `db:"name,omitempty"`
+		}
+
+		assert.Equal(
+			`INSERT INTO "artist" ("name") VALUES ($1)`,
+			b.InsertInto("artist").
+				Values(artistStruct{Name: "Chavela Vargas"}).
+				String(),
+		)
+
+		assert.Equal(
+			`INSERT INTO "artist" ("id") VALUES ($1)`,
+			b.InsertInto("artist").
+				Values(artistStruct{ID: 1}).
+				String(),
+		)
+	}
+
+	{
+		type artistStruct struct {
+			ID   int    `db:"id,omitempty"`
+			Name string `db:"name,omitempty"`
+		}
+
+		{
+			q := b.InsertInto("artist").Values(artistStruct{Name: "Chavela Vargas"})
+
+			assert.Equal(
+				`INSERT INTO "artist" ("name") VALUES ($1)`,
+				q.String(),
+			)
+			assert.Equal(
+				[]interface{}{"Chavela Vargas"},
+				q.Arguments(),
+			)
+		}
+
+		{
+			q := b.InsertInto("artist").Values(artistStruct{Name: "Chavela Vargas"}).Values(artistStruct{Name: "Alondra de la Parra"})
+
+			assert.Equal(
+				`INSERT INTO "artist" ("name") VALUES ($1), ($2)`,
+				q.String(),
+			)
+			assert.Equal(
+				[]interface{}{"Chavela Vargas", "Alondra de la Parra"},
+				q.Arguments(),
+			)
+		}
+
+		{
+			q := b.InsertInto("artist").Values(artistStruct{ID: 1})
+
+			assert.Equal(
+				`INSERT INTO "artist" ("id") VALUES ($1)`,
+				q.String(),
+			)
+
+			assert.Equal(
+				[]interface{}{1},
+				q.Arguments(),
+			)
+		}
+
+		{
+			q := b.InsertInto("artist").Values(artistStruct{ID: 1}).Values(artistStruct{ID: 2})
+
+			assert.Equal(
+				`INSERT INTO "artist" ("id") VALUES ($1), ($2)`,
+				q.String(),
+			)
+
+			assert.Equal(
+				[]interface{}{1, 2},
+				q.Arguments(),
+			)
+		}
+
+	}
+
+	{
 		intRef := func(i int) *int {
 			if i == 0 {
 				return nil
@@ -748,6 +894,13 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(
 		`UPDATE "artist" SET "name" = $1`,
 		b.Update("artist").Set("name", "Artist").String(),
+	)
+
+	assert.Equal(
+		`UPDATE "artist" SET "name" = $1 RETURNING "name"`,
+		b.Update("artist").Set("name", "Artist").Amend(func(query string) string {
+			return query + ` RETURNING "name"`
+		}).String(),
 	)
 
 	{
@@ -827,6 +980,50 @@ func TestUpdate(t *testing.T) {
 			"id = id + ?", 10,
 		).Where("id > ?", 0).String(),
 	)
+
+	{
+		q := b.Update("posts").Set("column = ?", "foo")
+
+		assert.Equal(
+			`UPDATE "posts" SET "column" = $1`,
+			q.String(),
+		)
+
+		assert.Equal(
+			[]interface{}{"foo"},
+			q.Arguments(),
+		)
+	}
+
+	{
+		q := b.Update("posts").Set(db.Raw("column = ?", "foo"))
+
+		assert.Equal(
+			`UPDATE "posts" SET column = $1`,
+			q.String(),
+		)
+
+		assert.Equal(
+			[]interface{}{"foo"},
+			q.Arguments(),
+		)
+	}
+
+	{
+		q := b.Update("posts").Set(
+			db.Cond{"tags": db.Raw("array_remove(tags, ?)", "foo")},
+		).Where(db.Raw("hub_id = ? AND ? = ANY(tags) AND ? = ANY(tags)", 1, "bar", "baz"))
+
+		assert.Equal(
+			`UPDATE "posts" SET "tags" = array_remove(tags, $1) WHERE (hub_id = $2 AND $3 = ANY(tags) AND $4 = ANY(tags))`,
+			q.String(),
+		)
+
+		assert.Equal(
+			[]interface{}{"foo", 1, "bar", "baz"},
+			q.Arguments(),
+		)
+	}
 }
 
 func TestDelete(t *testing.T) {
@@ -836,6 +1033,13 @@ func TestDelete(t *testing.T) {
 	assert.Equal(
 		`DELETE FROM "artist" WHERE (name = $1)`,
 		bt.DeleteFrom("artist").Where("name = ?", "Chavela Vargas").String(),
+	)
+
+	assert.Equal(
+		`DELETE FROM "artist" WHERE (name = $1) RETURNING 1`,
+		bt.DeleteFrom("artist").Where("name = ?", "Chavela Vargas").Amend(func(query string) string {
+			return fmt.Sprintf("%s RETURNING 1", query)
+		}).String(),
 	)
 
 	assert.Equal(

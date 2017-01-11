@@ -22,8 +22,8 @@
 package sqlite
 
 import (
-	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
+	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 type tx struct {
@@ -31,19 +31,5 @@ type tx struct {
 }
 
 var (
-	_ = db.Tx(&tx{})
+	_ = sqlbuilder.Tx(&tx{})
 )
-
-func (t *tx) Commit() error {
-	if sess := t.Session(); sess != nil {
-		defer sess.Close()
-	}
-	return t.DatabaseTx.Commit()
-}
-
-func (t *tx) Rollback() error {
-	if sess := t.Session(); sess != nil {
-		defer sess.Close()
-	}
-	return t.DatabaseTx.Rollback()
-}

@@ -24,11 +24,14 @@ package postgresql
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqladapter"
+	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 const (
@@ -335,4 +338,44 @@ func TestOptionTypeJsonbStruct(t *testing.T) {
 	assert.Equal(t, "aah", item1Chk.Tags[0])
 	assert.Equal(t, "a", item1Chk.Settings.Name)
 	assert.Equal(t, int64(123), item1Chk.Settings.Num)
+}
+
+func getStats(sess sqlbuilder.Database) (map[string]int, error) {
+	stats := make(map[string]int)
+
+	row := sess.Driver().(*sql.DB).QueryRow(`SELECT count(1) AS value FROM pg_prepared_statements`)
+
+	var value int
+	err := row.Scan(&value)
+	if err != nil {
+		return nil, err
+	}
+
+	stats["pg_prepared_statements_count"] = value
+
+	return stats, nil
+}
+
+func cleanUpCheck(sess sqlbuilder.Database) (err error) {
+	var stats map[string]int
+	stats, err = getStats(sess)
+	if err != nil {
+		return err
+	}
+
+	if activeStatements := sqladapter.NumActiveStatements(); activeStatements > 128 {
+		return fmt.Errorf("Expecting active statements to be at most 128, got %d", activeStatements)
+	}
+
+	sess.ClearCache()
+
+	stats, err = getStats(sess)
+	if err != nil {
+		return err
+	}
+
+	if stats["pg_prepared_statements_count"] != 0 {
+		return fmt.Errorf(`Expecting "Prepared_stmt_count" to be 0, got %d`, stats["Prepared_stmt_count"])
+	}
+	return nil
 }
