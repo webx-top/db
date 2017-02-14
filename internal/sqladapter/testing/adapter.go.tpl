@@ -61,11 +61,6 @@ func mustOpen() sqlbuilder.Database {
 	return sess
 }
 
-func TestOpenMustFail(t *testing.T) {
-	_, err := Open(ConnectionURL{})
-	assert.Error(t, err)
-}
-
 func TestOpenMustSucceed(t *testing.T) {
 	sess, err := Open(settings)
 	assert.NoError(t, err)
@@ -215,6 +210,30 @@ func TestExpectCursorError(t *testing.T) {
 
 	assert.NoError(t, cleanUpCheck(sess))
 	assert.NoError(t, sess.Close())
+}
+
+func TestInsertDefault(t *testing.T) {
+	if Adapter == "ql" {
+		t.Skip("Currently not supported.")
+	}
+
+	sess := mustOpen()
+
+	artist := sess.Collection("artist")
+
+	err := artist.Truncate()
+	assert.NoError(t, err)
+
+	id, err := artist.Insert(&artistType{})
+	assert.NoError(t, err)
+	assert.NotNil(t, id)
+
+	err = artist.Truncate()
+	assert.NoError(t, err)
+
+	id, err = artist.Insert(nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, id)
 }
 
 func TestInsertReturning(t *testing.T) {
@@ -421,6 +440,10 @@ func TestInsertIntoArtistsTable(t *testing.T) {
 	count, err = artist.Find(db.Cond{"name": "Ozzie"}).Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), count)
+
+	count, err = artist.Find("name", "Ozzie").And("name", "Flea").Count()
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(0), count)
 
 	count, err = artist.Find(db.Or(db.Cond{"name": "Ozzie"}, db.Cond{"name": "Flea"})).Count()
 	assert.NoError(t, err)
@@ -1301,7 +1324,6 @@ func TestBatchInsert(t *testing.T) {
 				return query + ` ON CONFLICT DO NOTHING`
 			})
 		}
-
 
 		batch := q.Batch(batchSize)
 

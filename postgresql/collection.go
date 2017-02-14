@@ -26,7 +26,6 @@ import (
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
-	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 // table is the actual implementation of a collection.
@@ -60,31 +59,13 @@ func (t *table) Database() sqladapter.Database {
 	return t.d
 }
 
-func (t *table) Conds(conds ...interface{}) []interface{} {
-	if len(conds) == 1 {
-		switch id := conds[0].(type) {
-		case int64:
-			conds[0] = db.Cond{"id": id}
-		case int:
-			conds[0] = db.Cond{"id": id}
-		default:
-		}
-	}
-	return conds
-}
-
 // Insert inserts an item (map or struct) into the collection.
 func (t *table) Insert(item interface{}) (interface{}, error) {
-	columnNames, columnValues, err := sqlbuilder.Map(item, nil)
-	if err != nil {
-		return nil, err
-	}
+	var err error
 
 	pKey := t.BaseCollection.PrimaryKeys()
 
-	q := t.d.InsertInto(t.Name()).
-		Columns(columnNames...).
-		Values(columnValues...)
+	q := t.d.InsertInto(t.Name()).Values(item)
 
 	if len(pKey) == 0 {
 		// There is no primary key.

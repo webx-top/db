@@ -179,6 +179,23 @@ func TestSelect(t *testing.T) {
 		)
 	}
 
+	{
+		q := b.Select().From("artist").Where(
+			db.Or(
+				db.And(db.Cond{"a": 1, "b": 2, "c": 3}),
+				db.And(db.Cond{"f": 6, "e": 5, "d": 4}),
+			),
+		)
+		assert.Equal(
+			`SELECT * FROM "artist" WHERE ((("a" = $1 AND "b" = $2 AND "c" = $3) OR ("d" = $4 AND "e" = $5 AND "f" = $6)))`,
+			q.String(),
+		)
+		assert.Equal(
+			[]interface{}{1, 2, 3, 4, 5, 6},
+			q.Arguments(),
+		)
+	}
+
 	assert.Equal(
 		`SELECT * FROM "artist" WHERE ((("id" = $1 OR "id" = $2 OR "id" IS NULL) OR ("name" = $3 OR "name" = $4)))`,
 		b.Select().From("artist").Where(
@@ -602,6 +619,18 @@ func TestSelect(t *testing.T) {
 	}
 
 	{
+		sel := b.SelectFrom("foo").Where("group_id", 1).And("user_id", 2)
+		assert.Equal(
+			`SELECT * FROM "foo" WHERE ("group_id" = $1 AND "user_id" = $2)`,
+			sel.String(),
+		)
+		assert.Equal(
+			[]interface{}{1, 2},
+			sel.Arguments(),
+		)
+	}
+
+	{
 		s := `SUM(CASE WHEN foo in ? THEN 1 ELSE 0 END) AS _sum`
 		sel := b.Select("c1").Columns(db.Raw(s, []int{5, 4, 3, 2})).From("foo").Where("bar = ?", 1)
 		assert.Equal(
@@ -750,12 +779,12 @@ func TestInsert(t *testing.T) {
 			Values(artistStruct{0, ""})
 
 		assert.Equal(
-			`INSERT INTO "artist" ("id", "name") VALUES ($1, $2), ($3, $4), ($5, $6), ($7, $8), ($9, $10)`,
+			`INSERT INTO "artist" ("id", "name") VALUES (DEFAULT, DEFAULT), ($1, $2), (DEFAULT, $3), ($4, DEFAULT), (DEFAULT, DEFAULT)`,
 			q.String(),
 		)
 
 		assert.Equal(
-			[]interface{}{0, "", 12, "Chavela Vargas", 0, "Alondra de la Parra", 14, "", 0, ""},
+			[]interface{}{12, "Chavela Vargas", "Alondra de la Parra", 14},
 			q.Arguments(),
 		)
 	}
@@ -804,7 +833,7 @@ func TestInsert(t *testing.T) {
 			q := b.InsertInto("artist").Values(artistStruct{Name: "Chavela Vargas"}).Values(artistStruct{Name: "Alondra de la Parra"})
 
 			assert.Equal(
-				`INSERT INTO "artist" ("name") VALUES ($1), ($2)`,
+				`INSERT INTO "artist" ("id", "name") VALUES (DEFAULT, $1), (DEFAULT, $2)`,
 				q.String(),
 			)
 			assert.Equal(
@@ -831,7 +860,7 @@ func TestInsert(t *testing.T) {
 			q := b.InsertInto("artist").Values(artistStruct{ID: 1}).Values(artistStruct{ID: 2})
 
 			assert.Equal(
-				`INSERT INTO "artist" ("id") VALUES ($1), ($2)`,
+				`INSERT INTO "artist" ("id", "name") VALUES ($1, DEFAULT), ($2, DEFAULT)`,
 				q.String(),
 			)
 
@@ -871,12 +900,12 @@ func TestInsert(t *testing.T) {
 			Values(artistStruct{intRef(0), strRef("")})
 
 		assert.Equal(
-			`INSERT INTO "artist" ("id", "name") VALUES ($1, $2), ($3, $4), ($5, $6), ($7, $8), ($9, $10)`,
+			`INSERT INTO "artist" ("id", "name") VALUES (DEFAULT, DEFAULT), ($1, $2), (DEFAULT, $3), ($4, DEFAULT), (DEFAULT, DEFAULT)`,
 			q.String(),
 		)
 
 		assert.Equal(
-			[]interface{}{intRef(0), strRef(""), intRef(12), strRef("Chavela Vargas"), intRef(0), strRef("Alondra de la Parra"), intRef(14), strRef(""), intRef(0), strRef("")},
+			[]interface{}{intRef(12), strRef("Chavela Vargas"), strRef("Alondra de la Parra"), intRef(14)},
 			q.Arguments(),
 		)
 	}
@@ -884,6 +913,11 @@ func TestInsert(t *testing.T) {
 	assert.Equal(
 		`INSERT INTO "artist" ("name", "id") VALUES ($1, $2)`,
 		b.InsertInto("artist").Columns("name", "id").Values("Chavela Vargas", 12).String(),
+	)
+
+	assert.Equal(
+		`INSERT INTO "artist" VALUES (default)`,
+		b.InsertInto("artist").String(),
 	)
 }
 
