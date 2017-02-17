@@ -11,16 +11,18 @@ import (
 // NewCluster : database cluster
 func NewCluster() *Cluster {
 	return &Cluster{
-		masters: []db.Database{},
-		slaves:  []db.Database{},
+		masters:  []db.Database{},
+		slaves:   []db.Database{},
+		selecter: DefaultSelecter,
 	}
 }
 
 // Cluster : database cluster
 type Cluster struct {
-	masters []db.Database
-	slaves  []db.Database
-	prefix  string
+	masters  []db.Database
+	slaves   []db.Database
+	prefix   string
+	selecter Selecter
 }
 
 // W : write
@@ -37,6 +39,21 @@ func (c *Cluster) W() (r db.Database) {
 	return
 }
 
+// R : read-only
+func (c *Cluster) R() (r db.Database) {
+	length := len(c.slaves)
+	if length == 0 {
+		r = c.W()
+	} else {
+		if length > 1 {
+			r = c.slaves[c.selecter.Select(length)]
+		} else {
+			r = c.slaves[0]
+		}
+	}
+	return
+}
+
 // Prefix : table prefix
 func (c *Cluster) Prefix() string {
 	return c.prefix
@@ -48,23 +65,18 @@ func (c *Cluster) Table(tableName string) string {
 }
 
 // SetPrefix : setting table prefix
-func (c *Cluster) SetPrefix(prefix string) {
+func (c *Cluster) SetPrefix(prefix string) *Cluster {
 	c.prefix = prefix
+	return c
 }
 
-// R : read-only
-func (c *Cluster) R() (r db.Database) {
-	length := len(c.slaves)
-	if length == 0 {
-		r = c.W()
-	} else {
-		if length > 1 {
-			r = c.slaves[rand.Intn(length-1)]
-		} else {
-			r = c.slaves[0]
-		}
-	}
-	return
+func (c *Cluster) SetSelecter(selecter Selecter) *Cluster {
+	c.selecter = selecter
+	return c
+}
+
+func (c *Cluster) Selecter() Selecter {
+	return c.selecter
 }
 
 // AddW : added writable database
