@@ -13,7 +13,7 @@ func NewCluster() *Cluster {
 	return &Cluster{
 		masters:  []db.Database{},
 		slaves:   []db.Database{},
-		selecter: DefaultSelecter,
+		selecter: &RoundRobin{},
 	}
 }
 

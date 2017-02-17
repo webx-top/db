@@ -5,8 +5,6 @@ import (
 	"sync/atomic"
 )
 
-var DefaultSelecter = &RoundRobin{}
-
 type Selecter interface {
 	Select(length int) int
 }
