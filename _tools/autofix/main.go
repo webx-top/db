@@ -18,9 +18,7 @@ type Replace struct {
 }
 
 var replaces = []*Replace{
-	&Replace{` // import "upper.io/db.v2"`, ``, nil, nil},
-	&Replace{`"upper.io/db.v2"`, `"github.com/webx-top/db"`, nil, nil},
-	&Replace{`"upper.io/db.v2/`, `"github.com/webx-top/db/`, nil, nil},
+	&Replace{` // import "upper.io/db.v3"`, ``, nil, nil},
 	&Replace{`"upper.io/db.v3"`, `"github.com/webx-top/db"`, nil, nil},
 	&Replace{`"upper.io/db.v3/`, `"github.com/webx-top/db/`, nil, nil},
 	&Replace{"",
