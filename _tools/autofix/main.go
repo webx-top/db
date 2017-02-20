@@ -21,6 +21,8 @@ var replaces = []*Replace{
 	&Replace{` // import "upper.io/db.v2"`, ``, nil, nil},
 	&Replace{`"upper.io/db.v2"`, `"github.com/webx-top/db"`, nil, nil},
 	&Replace{`"upper.io/db.v2/`, `"github.com/webx-top/db/`, nil, nil},
+	&Replace{`"upper.io/db.v3"`, `"github.com/webx-top/db"`, nil, nil},
+	&Replace{`"upper.io/db.v3/`, `"github.com/webx-top/db/`, nil, nil},
 	&Replace{"",
 		"${1}case `!=`, `<>`:\n\t\t\t\top = `$$ne`\n\t\t\t",
 		regexp.MustCompile("([\\s]+op \\= \\`\\$gte\\`[\\s]+)"),

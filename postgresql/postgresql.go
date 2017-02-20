@@ -23,7 +23,6 @@ package postgresql // import "github.com/webx-top/db/postgresql"
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/webx-top/db"
 
@@ -31,15 +30,9 @@ import (
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
-var (
-	connMaxLifetime = db.DefaultConnMaxLifetime
-	maxIdleConns    = db.DefaultMaxIdleConns
-	maxOpenConns    = db.DefaultMaxOpenConns
-)
-
 const sqlDriver = `postgres`
 
-// Adapter is the public name of the adapter.
+// Adapter is the unique name that you can use to refer to this adapter.
 const Adapter = `postgresql`
 
 func init() {
@@ -50,89 +43,51 @@ func init() {
 	})
 }
 
-// Open stablishes a new connection with the SQL server.
+// Open opens a new connection with the PostgreSQL server. The returned session
+// is validated first by Ping and then with a test query before being returned.
+// You may call Open() just once and use it on multiple goroutines on a
+// long-running program. See https://golang.org/pkg/database/sql/#Open and
+// http://go-database-sql.org/accessing.html
 func Open(settings db.ConnectionURL) (sqlbuilder.Database, error) {
-	d, err := newDatabase(settings)
-	if err != nil {
-		return nil, err
-	}
+	d := newDatabase(settings)
 	if err := d.Open(settings); err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
-// NewTx returns a transaction session.
+// NewTx wraps a regular *sql.Tx transaction and returns a new upper-db
+// transaction backed by it.
 func NewTx(sqlTx *sql.Tx) (sqlbuilder.Tx, error) {
-	d, err := newDatabase(nil)
-	if err != nil {
-		return nil, err
-	}
+	d := newDatabase(nil)
 
 	// Binding with sqladapter's logic.
 	d.BaseDatabase = sqladapter.NewBaseDatabase(d)
 
 	// Binding with sqlbuilder.
-	b, err := sqlbuilder.WithSession(d.BaseDatabase, template)
-	if err != nil {
-		return nil, err
-	}
-	d.Builder = b
+	d.SQLBuilder = sqlbuilder.WithSession(d.BaseDatabase, template)
 
-	if err := d.BaseDatabase.BindTx(sqlTx); err != nil {
+	if err := d.BaseDatabase.BindTx(d.Context(), sqlTx); err != nil {
 		return nil, err
 	}
 
-	newTx := sqladapter.NewTx(d)
+	newTx := sqladapter.NewDatabaseTx(d)
 	return &tx{DatabaseTx: newTx}, nil
 }
 
-// New wraps the given *sql.DB session and creates a new db session.
+// New wraps a regular *sql.DB session and creates a new upper-db session
+// backed by it.
 func New(sess *sql.DB) (sqlbuilder.Database, error) {
-	d, err := newDatabase(nil)
-	if err != nil {
-		return nil, err
-	}
+	d := newDatabase(nil)
 
 	// Binding with sqladapter's logic.
 	d.BaseDatabase = sqladapter.NewBaseDatabase(d)
 
 	// Binding with sqlbuilder.
-	b, err := sqlbuilder.WithSession(d.BaseDatabase, template)
-	if err != nil {
-		return nil, err
-	}
-	d.Builder = b
+	d.SQLBuilder = sqlbuilder.WithSession(d.BaseDatabase, template)
 
 	if err := d.BaseDatabase.BindSession(sess); err != nil {
 		return nil, err
 	}
 	return d, nil
-}
-
-// SetConnMaxLifetime sets the default value to be passed to
-// db.SetConnMaxLifetime.
-func SetConnMaxLifetime(d time.Duration) {
-	connMaxLifetime = d
-}
-
-// SetMaxIdleConns sets the default value to be passed to db.SetMaxOpenConns.
-func SetMaxIdleConns(n int) {
-	if n < 0 {
-		n = 0
-	}
-	maxIdleConns = n
-}
-
-// SetMaxOpenConns sets the default value to be passed to db.SetMaxOpenConns.
-// If the value of maxIdleConns is >= 0 and maxOpenConns is less than
-// maxIdleConns, then maxIdleConns will be reduced to match maxOpenConns.
-func SetMaxOpenConns(n int) {
-	if n < 0 {
-		n = 0
-	}
-	if n > maxIdleConns {
-		maxIdleConns = n
-	}
-	maxOpenConns = n
 }

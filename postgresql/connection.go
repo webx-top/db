@@ -78,7 +78,21 @@ func (vs values) Isset(k string) bool {
 
 const connectionScheme = `postgres`
 
-// ConnectionURL implements a PostgreSQL connection struct.
+// ConnectionURL represents a parsed PostgreSQL connection URL.
+//
+// You can use a ConnectionURL struct as an argument for Open:
+//
+//   var settings = postgresql.ConnectionURL{
+//     Host:       "localhost",          // PostgreSQL server IP or name.
+//     Database:   "peanuts",            // Database name.
+//     User:       "cbrown",             // Optional user name.
+//     Password:   "snoopy",             // Optional user password.
+//   }
+//
+//   sess, err = postgresql.Open(settings)
+//
+// If you already have a valid DSN, you can use ParseURL to convert it into
+// a ConnectionURL before passing it to Open.
 type ConnectionURL struct {
 	User     string
 	Password string
@@ -90,6 +104,7 @@ type ConnectionURL struct {
 
 var escaper = strings.NewReplacer(` `, `\ `, `'`, `\'`, `\`, `\\`)
 
+// String reassembles the parsed PostgreSQL connection URL into a valid DSN.
 func (c ConnectionURL) String() (s string) {
 	u := make([]string, 0, 6)
 
@@ -148,7 +163,10 @@ func (c ConnectionURL) String() (s string) {
 	return strings.Join(u, " ")
 }
 
-// ParseURL parses s into a ConnectionURL struct.
+// ParseURL parses the given DSN into a ConnectionURL struct.
+// A typical PostgreSQL connection URL looks like:
+//
+//   postgres://bob:secret@1.2.3.4:5432/mydb?sslmode=verify-full
 func ParseURL(s string) (u ConnectionURL, err error) {
 	o := make(values)
 
@@ -167,11 +185,16 @@ func ParseURL(s string) (u ConnectionURL, err error) {
 	u.Password = o.Get("password")
 
 	h := o.Get("host")
+	p := o.Get("port")
 
 	if strings.HasPrefix(h, "/") {
 		u.Socket = h
 	} else {
-		u.Host = h
+		if p == "" {
+			u.Host = h
+		} else {
+			u.Host = fmt.Sprintf("%s:%s", h, p)
+		}
 	}
 
 	u.Database = o.Get("dbname")

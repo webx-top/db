@@ -28,8 +28,8 @@ import (
 	"github.com/webx-top/db/internal/sqladapter"
 )
 
-// table is the actual implementation of a collection.
-type table struct {
+// collection is the actual implementation of a collection.
+type collection struct {
 	sqladapter.BaseCollection // Leveraged by sqladapter
 
 	d    *database
@@ -37,35 +37,35 @@ type table struct {
 }
 
 var (
-	_ = sqladapter.Collection(&table{})
-	_ = db.Collection(&table{})
+	_ = sqladapter.Collection(&collection{})
+	_ = db.Collection(&collection{})
 )
 
-// newTable binds *table with sqladapter.
-func newTable(d *database, name string) *table {
-	t := &table{
+// newCollection binds *collection with sqladapter.
+func newCollection(d *database, name string) *collection {
+	c := &collection{
 		name: name,
 		d:    d,
 	}
-	t.BaseCollection = sqladapter.NewBaseCollection(t)
-	return t
+	c.BaseCollection = sqladapter.NewBaseCollection(c)
+	return c
 }
 
-func (t *table) Name() string {
-	return t.name
+func (c *collection) Name() string {
+	return c.name
 }
 
-func (t *table) Database() sqladapter.Database {
-	return t.d
+func (c *collection) Database() sqladapter.Database {
+	return c.d
 }
 
 // Insert inserts an item (map or struct) into the collection.
-func (t *table) Insert(item interface{}) (interface{}, error) {
+func (c *collection) Insert(item interface{}) (interface{}, error) {
 	var err error
 
-	pKey := t.BaseCollection.PrimaryKeys()
+	pKey := c.BaseCollection.PrimaryKeys()
 
-	q := t.d.InsertInto(t.Name()).Values(item)
+	q := c.d.InsertInto(c.Name()).Values(item)
 
 	if len(pKey) == 0 {
 		// There is no primary key.
@@ -83,7 +83,7 @@ func (t *table) Insert(item interface{}) (interface{}, error) {
 	}
 
 	// Asking the database to return the primary key after insertion.
-	q.Returning(pKey...)
+	q = q.Returning(pKey...)
 
 	var keyMap db.Cond
 	if err = q.Iterator().One(&keyMap); err != nil {

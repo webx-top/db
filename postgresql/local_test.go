@@ -39,26 +39,21 @@ func TestStringAndInt64Array(t *testing.T) {
 	tt := []arrayType{
 		// Test nil arrays.
 		arrayType{
-			ID: 1,
-		},
-
-		// Test nil arrays.
-		arrayType{
-			ID:       2,
+			ID:       1,
 			Integers: nil,
 			Strings:  nil,
 		},
 
 		// Test empty arrays.
 		arrayType{
-			ID:       3,
+			ID:       2,
 			Integers: []int64{},
 			Strings:  []string{},
 		},
 
 		// Test non-empty arrays.
 		arrayType{
-			ID:       4,
+			ID:       3,
 			Integers: []int64{1, 2, 3},
 			Strings:  []string{"1", "2", "3"},
 		},
@@ -75,19 +70,10 @@ func TestStringAndInt64Array(t *testing.T) {
 		var itemCheck arrayType
 		err = arrayTypes.Find(db.Cond{"id": id}).One(&itemCheck)
 		assert.NoError(t, err)
-
 		assert.Len(t, itemCheck.Integers, len(item.Integers))
 		assert.Len(t, itemCheck.Strings, len(item.Strings))
 
-		// db.v2: Check nil/zero values just to make sure that the arrays won't be
-		// JSON-marshalled into `null` instead of empty array `[]`.
-		assert.NotNil(t, itemCheck.Integers)
-		assert.NotNil(t, itemCheck.Strings)
-		assert.NotZero(t, itemCheck.Integers)
-		assert.NotZero(t, itemCheck.Strings)
-
-		// db.v3: This will be the expected behaviour on db.v3.
-		//assert.Equal(t, item, itemCheck)
+		assert.Equal(t, item, itemCheck)
 	}
 }
 
@@ -109,7 +95,7 @@ func TestIssue210(t *testing.T) {
 	sess := mustOpen()
 	defer sess.Close()
 
-	tx, err := sess.NewTx()
+	tx, err := sess.NewTx(nil)
 	assert.NoError(t, err)
 
 	for i := range list {

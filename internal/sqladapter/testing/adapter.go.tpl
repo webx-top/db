@@ -43,6 +43,37 @@ type itemWithCompoundKey struct {
 	SomeVal string `db:"some_val"`
 }
 
+type customType struct {
+	Val []byte
+}
+
+type artistWithCustomType struct {
+	Custom customType `db:"name"`
+}
+
+func (f customType) String() string {
+	return fmt.Sprintf("foo: %s", string(f.Val))
+}
+
+func (f customType) MarshalDB() (interface{}, error) {
+	return f.String(), nil
+}
+
+func (f *customType) UnmarshalDB(in interface{}) error {
+	switch t := in.(type) {
+	case []byte:
+		f.Val = t
+	case string:
+		f.Val = []byte(t)
+	}
+	return nil
+}
+
+var (
+	_ = db.Marshaler(&customType{})
+	_ = db.Unmarshaler(&customType{})
+)
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 
@@ -73,8 +104,8 @@ func TestOpenMustSucceed(t *testing.T) {
 func TestPreparedStatementsCache(t *testing.T) {
 	sess := mustOpen()
 
-	db.Conf.SetPreparedStatementCache(true)
-	defer db.Conf.SetPreparedStatementCache(false)
+	sess.SetPreparedStatementCache(true)
+	defer sess.SetPreparedStatementCache(false)
 
 	var tMu sync.Mutex
 	tFatal := func(err error) {
@@ -179,9 +210,9 @@ func TestTruncateAllCollections(t *testing.T) {
 func TestCustomQueryLogger(t *testing.T) {
 	sess := mustOpen()
 
-	db.Conf.SetLogger(&customLogger{})
+	sess.SetLogger(&customLogger{})
 	defer func() {
-		db.Conf.SetLogger(nil)
+		sess.SetLogger(nil)
 	}()
 
 	_, err := sess.Collection("artist").Find().Count()
@@ -303,7 +334,7 @@ func TestInsertReturningWithinTransaction(t *testing.T) {
 	err := sess.Collection("artist").Truncate()
 	assert.NoError(t, err)
 
-	tx, err := sess.NewTx()
+	tx, err := sess.NewTx(nil)
 	assert.NoError(t, err)
 	defer tx.Close()
 
@@ -1057,7 +1088,7 @@ func TestTransactionsAndRollback(t *testing.T) {
 	sess := mustOpen()
 
 	// Simple transaction that should not fail.
-	tx, err := sess.NewTx()
+	tx, err := sess.NewTx(nil)
 	assert.NoError(t, err)
 
 	artist := tx.Collection("artist")
@@ -1082,7 +1113,7 @@ func TestTransactionsAndRollback(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Use another transaction.
-	tx, err = sess.NewTx()
+	tx, err = sess.NewTx(nil)
 	assert.NoError(t, err)
 
 	artist = tx.Collection("artist")
@@ -1115,7 +1146,7 @@ func TestTransactionsAndRollback(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Attempt to add some rows.
-	tx, err = sess.NewTx()
+	tx, err = sess.NewTx(nil)
 	assert.NoError(t, err)
 
 	artist = tx.Collection("artist")
@@ -1146,7 +1177,7 @@ func TestTransactionsAndRollback(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Attempt to add some rows.
-	tx, err = sess.NewTx()
+	tx, err = sess.NewTx(nil)
 	assert.NoError(t, err)
 
 	artist = tx.Collection("artist")
@@ -1446,7 +1477,7 @@ func TestBatchInsertReturningKeys(t *testing.T) {
 	assert.NoError(t, sess.Close())
 }
 
-func TestBuilder(t *testing.T) {
+func TestSQLBuilder(t *testing.T) {
 	sess := mustOpen()
 
 	var all []map[string]interface{}
@@ -1537,7 +1568,7 @@ func TestBuilder(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotZero(t, all)
 
-	tx, err := sess.NewTx()
+	tx, err := sess.NewTx(nil)
 	assert.NoError(t, err)
 	assert.NotZero(t, tx)
 	defer tx.Close()
@@ -1587,7 +1618,7 @@ func TestExhaustConnectionPool(t *testing.T) {
 			// Requesting a new transaction session.
 			start := time.Now()
 			tLogf("Tx: %d: NewTx", i)
-			tx, err := sess.NewTx()
+			tx, err := sess.NewTx(nil)
 			if err != nil {
 				tFatal(err)
 			}
@@ -1664,4 +1695,26 @@ func TestExhaustConnectionPool(t *testing.T) {
 
 	assert.NoError(t, cleanUpCheck(sess))
 	assert.NoError(t, sess.Close())
+}
+
+func TestCustomType(t *testing.T) {
+	// See https://github.com/upper/db/issues/332
+	sess := mustOpen()
+
+	artist := sess.Collection("artist")
+
+	err := artist.Truncate()
+	assert.NoError(t, err)
+
+	id, err := artist.Insert(artistWithCustomType{
+		Custom: customType{Val: []byte("some name")},
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, id)
+
+	var bar artistWithCustomType
+	err = artist.Find(id).One(&bar)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "foo: some name", string(bar.Custom.Val))
 }

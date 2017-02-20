@@ -19,9 +19,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+// Package sqlite wraps the github.com/lib/sqlite SQLite driver. See
+// https://upper.io/db.v3/sqlite for documentation, particularities and
+// usage examples.
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -31,21 +35,24 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver.
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
+	"github.com/webx-top/db/internal/sqladapter/compat"
 	"github.com/webx-top/db/internal/sqladapter/exql"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 // database is the actual implementation of Database
 type database struct {
-	sqladapter.BaseDatabase // Leveraged by sqladapter
-	sqlbuilder.Builder
+	sqladapter.BaseDatabase
+
+	sqlbuilder.SQLBuilder
 
 	connURL db.ConnectionURL
-	txMu    sync.Mutex
+	mu      sync.Mutex
 }
 
 var (
 	_ = sqlbuilder.Database(&database{})
+	_ = sqladapter.Database(&database{})
 )
 
 var (
@@ -54,12 +61,11 @@ var (
 	maxOpenFiles        int32 = 100
 )
 
-// newDatabase binds *database with sqladapter and the SQL builer.
-func newDatabase(settings db.ConnectionURL) (*database, error) {
-	d := &database{
+// newDatabase creates a new *database session for internal use.
+func newDatabase(settings db.ConnectionURL) *database {
+	return &database{
 		connURL: settings,
 	}
-	return d, nil
 }
 
 // CleanUp cleans up the session.
@@ -85,8 +91,8 @@ func (d *database) Open(connURL db.ConnectionURL) error {
 }
 
 // NewTx starts a transaction block.
-func (d *database) NewTx() (sqlbuilder.Tx, error) {
-	nTx, err := d.NewLocalTransaction()
+func (d *database) NewTx(ctx context.Context) (sqlbuilder.Tx, error) {
+	nTx, err := d.NewDatabaseTx(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +124,7 @@ func (d *database) open() error {
 	d.BaseDatabase = sqladapter.NewBaseDatabase(d)
 
 	// Binding with sqlbuilder.
-	b, err := sqlbuilder.WithSession(d.BaseDatabase, template)
-	if err != nil {
-		return err
-	}
-	d.Builder = b
+	d.SQLBuilder = sqlbuilder.WithSession(d.BaseDatabase, template)
 
 	openFn := func() error {
 		openFiles := atomic.LoadInt32(&fileOpenCount)
@@ -147,22 +149,18 @@ func (d *database) open() error {
 	return nil
 }
 
-func (d *database) clone() (*database, error) {
-	clone, err := newDatabase(d.connURL)
+func (d *database) clone(ctx context.Context, checkConn bool) (*database, error) {
+	clone := newDatabase(d.connURL)
+
+	var err error
+	clone.BaseDatabase, err = d.NewClone(clone, checkConn)
 	if err != nil {
 		return nil, err
 	}
 
-	clone.BaseDatabase, err = d.BindClone(clone)
-	if err != nil {
-		return nil, err
-	}
+	clone.SetContext(ctx)
 
-	b, err := sqlbuilder.WithSession(clone.BaseDatabase, template)
-	if err != nil {
-		return nil, err
-	}
-	clone.Builder = b
+	clone.SQLBuilder = sqlbuilder.WithSession(clone.BaseDatabase, template)
 
 	return clone, nil
 }
@@ -170,7 +168,11 @@ func (d *database) clone() (*database, error) {
 // CompileStatement allows sqladapter to compile the given statement into the
 // format SQLite expects.
 func (d *database) CompileStatement(stmt *exql.Statement, args []interface{}) (string, []interface{}) {
-	return sqlbuilder.Preprocess(stmt.Compile(template), args)
+	compiled, err := stmt.Compile(template)
+	if err != nil {
+		panic(err.Error())
+	}
+	return sqlbuilder.Preprocess(compiled, args)
 }
 
 // Err allows sqladapter to translate some known errors into generic errors.
@@ -184,20 +186,20 @@ func (d *database) Err(err error) error {
 }
 
 // StatementExec wraps the statement to execute around a transaction.
-func (d *database) StatementExec(query string, args ...interface{}) (res sql.Result, err error) {
-	d.txMu.Lock()
-	defer d.txMu.Unlock()
+func (d *database) StatementExec(ctx context.Context, query string, args ...interface{}) (res sql.Result, err error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 
 	if d.Transaction() != nil {
-		return d.Driver().(*sql.Tx).Exec(query, args...)
+		return compat.ExecContext(d.Driver().(*sql.Tx), ctx, query, args)
 	}
 
-	sqlTx, err := d.Session().Begin()
+	sqlTx, err := compat.BeginTx(d.Session(), ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	if res, err = sqlTx.Exec(query, args...); err != nil {
+	if res, err = compat.ExecContext(sqlTx, ctx, query, args); err != nil {
 		return nil, err
 	}
 
@@ -208,31 +210,31 @@ func (d *database) StatementExec(query string, args ...interface{}) (res sql.Res
 	return res, err
 }
 
-// NewLocalCollection allows sqladapter create a local db.Collection.
-func (d *database) NewLocalCollection(name string) db.Collection {
+// NewCollection allows sqladapter create a local db.Collection.
+func (d *database) NewCollection(name string) db.Collection {
 	return newTable(d, name)
 }
 
 // Tx creates a transaction and passes it to the given function, if if the
 // function returns no error then the transaction is commited.
-func (d *database) Tx(fn func(tx sqlbuilder.Tx) error) error {
-	return sqladapter.RunTx(d, fn)
+func (d *database) Tx(ctx context.Context, fn func(tx sqlbuilder.Tx) error) error {
+	return sqladapter.RunTx(d, ctx, fn)
 }
 
-// NewLocalTransaction allows sqladapter start a transaction block.
-func (d *database) NewLocalTransaction() (sqladapter.DatabaseTx, error) {
-	clone, err := d.clone()
+// NewDatabaseTx allows sqladapter start a transaction block.
+func (d *database) NewDatabaseTx(ctx context.Context) (sqladapter.DatabaseTx, error) {
+	clone, err := d.clone(ctx, true)
 	if err != nil {
 		return nil, err
 	}
-
-	clone.txMu.Lock()
-	defer clone.txMu.Unlock()
+	clone.mu.Lock()
+	defer clone.mu.Unlock()
 
 	openFn := func() error {
+		//sqlTx, err := compat.BeginTx(clone.BaseDatabase.Session(), ctx, nil) // Temporal fix.
 		sqlTx, err := clone.BaseDatabase.Session().Begin()
 		if err == nil {
-			return clone.BindTx(sqlTx)
+			return clone.BindTx(ctx, sqlTx)
 		}
 		return err
 	}
@@ -241,11 +243,11 @@ func (d *database) NewLocalTransaction() (sqladapter.DatabaseTx, error) {
 		return nil, err
 	}
 
-	return sqladapter.NewTx(clone), nil
+	return sqladapter.NewDatabaseTx(clone), nil
 }
 
-// FindDatabaseName allows sqladapter look up the database's name.
-func (d *database) FindDatabaseName() (string, error) {
+// LookupName allows sqladapter look up the database's name.
+func (d *database) LookupName() (string, error) {
 	connURL, err := ParseURL(d.ConnectionURL().String())
 	if err != nil {
 		return "", err
@@ -273,8 +275,8 @@ func (d *database) TableExists(name string) error {
 	return db.ErrCollectionDoesNotExist
 }
 
-// FindTablePrimaryKeys allows sqladapter find a table's primary keys.
-func (d *database) FindTablePrimaryKeys(tableName string) ([]string, error) {
+// PrimaryKeys allows sqladapter find a table's primary keys.
+func (d *database) PrimaryKeys(tableName string) ([]string, error) {
 	pk := make([]string, 0, 1)
 
 	stmt := exql.RawSQL(fmt.Sprintf("PRAGMA TABLE_INFO('%s')", tableName))
@@ -310,4 +312,10 @@ func (d *database) FindTablePrimaryKeys(tableName string) ([]string, error) {
 	}
 
 	return pk, nil
+}
+
+// WithContext creates a copy of the session on the given context.
+func (d *database) WithContext(ctx context.Context) sqlbuilder.Database {
+	newDB, _ := d.clone(ctx, false)
+	return newDB
 }
