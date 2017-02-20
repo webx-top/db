@@ -3,7 +3,6 @@ package factory
 
 import (
 	"log"
-	"math/rand"
 
 	"github.com/webx-top/db"
 )
@@ -11,18 +10,20 @@ import (
 // NewCluster : database cluster
 func NewCluster() *Cluster {
 	return &Cluster{
-		masters:  []db.Database{},
-		slaves:   []db.Database{},
-		selecter: &RoundRobin{},
+		masters:        []db.Database{},
+		slaves:         []db.Database{},
+		masterSelecter: &SelectFirst{},
+		slaveSelecter:  &RoundRobin{},
 	}
 }
 
 // Cluster : database cluster
 type Cluster struct {
-	masters  []db.Database
-	slaves   []db.Database
-	prefix   string
-	selecter Selecter
+	masters        []db.Database
+	slaves         []db.Database
+	prefix         string
+	masterSelecter Selecter
+	slaveSelecter  Selecter
 }
 
 // W : write
@@ -32,7 +33,7 @@ func (c *Cluster) W() (r db.Database) {
 		panic(`Not connected to any database`)
 	}
 	if length > 1 {
-		r = c.masters[rand.Intn(length-1)]
+		r = c.masters[c.masterSelecter.Select(length)]
 	} else {
 		r = c.masters[0]
 	}
@@ -46,7 +47,7 @@ func (c *Cluster) R() (r db.Database) {
 		r = c.W()
 	} else {
 		if length > 1 {
-			r = c.slaves[c.selecter.Select(length)]
+			r = c.slaves[c.slaveSelecter.Select(length)]
 		} else {
 			r = c.slaves[0]
 		}
@@ -70,13 +71,22 @@ func (c *Cluster) SetPrefix(prefix string) *Cluster {
 	return c
 }
 
-func (c *Cluster) SetSelecter(selecter Selecter) *Cluster {
-	c.selecter = selecter
+func (c *Cluster) SetSlaveSelecter(selecter Selecter) *Cluster {
+	c.slaveSelecter = selecter
 	return c
 }
 
-func (c *Cluster) Selecter() Selecter {
-	return c.selecter
+func (c *Cluster) SlaveSelecter() Selecter {
+	return c.slaveSelecter
+}
+
+func (c *Cluster) SetMasterSelecter(selecter Selecter) *Cluster {
+	c.masterSelecter = selecter
+	return c
+}
+
+func (c *Cluster) MasterSelecter() Selecter {
+	return c.masterSelecter
 }
 
 // AddW : added writable database

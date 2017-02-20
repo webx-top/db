@@ -22,3 +22,10 @@ type RoundRobin struct {
 func (r *RoundRobin) Select(length int) int {
 	return int((atomic.AddUint64(&r.count, 1) % uint64(length)))
 }
+
+type SelectFirst struct {
+}
+
+func (s *SelectFirst) Select(length int) int {
+	return 0
+}
