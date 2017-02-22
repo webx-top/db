@@ -95,7 +95,7 @@ err = factory.NewParam().SetCollection(`post`).SetRecv(&posts).All()
 ### 关联查询
 ```go
 m := []*PostCollection{}
-err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
+err = factory.NewParam().SetCollection(`post`,`a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
 ```
 
 ## 查询分页数据 (使用List方法)

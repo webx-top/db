@@ -59,7 +59,7 @@ func (t *Transaction) Result(param *Param) db.Result {
 }
 
 func (t *Transaction) C(param *Param) db.Collection {
-	return t.Database(param).Collection(param.cluster.Table(param.Collection))
+	return t.Database(param).Collection(param.TableName())
 }
 
 // Exec execute SQL
@@ -193,7 +193,7 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 	counter := struct {
 		Count int64 `db:"_t"`
 	}{}
-	selector := t.SQLBuidler(param).Select(db.Raw("count(1) AS _t")).From(param.cluster.Table(param.Collection))
+	selector := t.SQLBuidler(param).Select(db.Raw("count(1) AS _t")).From(param.TableName())
 	selector = t.joinSelect(param, selector)
 	if param.SelectorMiddleware != nil {
 		selector = param.SelectorMiddleware(selector)
@@ -216,7 +216,7 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 	for _, join := range param.Joins {
 		coll := param.cluster.Table(join.Collection)
 		if len(join.Alias) > 0 {
-			coll += ` AS ` + join.Alias
+			coll += ` ` + join.Alias
 		}
 		switch strings.ToUpper(join.Type) {
 		case "LEFT":
@@ -238,7 +238,7 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 }
 
 func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
-	selector := t.SQLBuidler(param).Select(param.Cols...).From(param.cluster.Table(param.Collection))
+	selector := t.SQLBuidler(param).Select(param.Cols...).From(param.TableName())
 	return t.joinSelect(param, selector)
 }
 

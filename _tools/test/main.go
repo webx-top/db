@@ -136,7 +136,7 @@ func main() {
 	fmt.Println(``)
 	log.Println(`查询方式4：使用LeftJoin关联查询`)
 	m := []*PostCollection{}
-	err = factory.NewParam().SetCollection(`post AS a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
+	err = factory.NewParam().SetCollection(`post`, `a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -153,7 +153,7 @@ func main() {
 	tableName := ``
 	structField2 := `U.Id`
 	tableName2 := ``
-	paramJoin := factory.NewParam().SetCollection(`post a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`)
+	paramJoin := factory.NewParam().SetCollection(`post`, `a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`)
 	paramJoin.TableField(&PostCollection2{}, &structField, &tableName)
 	paramJoin.TableField(&PostCollection2{}, &structField2, &tableName2)
 	err = paramJoin.Select().All(&m2)
