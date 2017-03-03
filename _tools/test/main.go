@@ -32,11 +32,11 @@ type PostCollection2 struct {
 }
 
 func main() {
+	factory.SetDebug(true) //要放在Open前面才有效
 	database, err := mysql.Open(settings)
 	if err != nil {
 		log.Fatal(err)
 	}
-	factory.SetDebug(true)
 	cacher := ttlmap.New(1000000)
 	factory.SetCacher(cacher)
 	factory.AddDB(database).Cluster(0).SetPrefix(`webx_`)
@@ -67,7 +67,7 @@ func main() {
 			log.Printf("%v: %#v\n", colName, v.(*sql.NullString).String)
 		}
 	}
-
+	return
 	_, err = factory.QueryTo(factory.NewParam(nil).SetCollection(`SELECT * FROM webx_post ORDER BY id DESC`).SetRecv(&posts).SetPage(1).SetSize(10))
 	if err != nil {
 		log.Fatal(err)
