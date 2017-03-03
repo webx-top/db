@@ -67,7 +67,7 @@ func main() {
 			log.Printf("%v: %#v\n", colName, v.(*sql.NullString).String)
 		}
 	}
-	return
+
 	_, err = factory.QueryTo(factory.NewParam(nil).SetCollection(`SELECT * FROM webx_post ORDER BY id DESC`).SetRecv(&posts).SetPage(1).SetSize(10))
 	if err != nil {
 		log.Fatal(err)
