@@ -46,6 +46,7 @@ type Model interface {
 	Edit(mw func(db.Result) db.Result, args ...interface{}) error
 	Upsert(mw func(db.Result) db.Result, args ...interface{}) (interface{}, error)
 	Delete(mw func(db.Result) db.Result, args ...interface{}) error
+	Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error)
 }
 
 type Param struct {

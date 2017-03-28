@@ -128,6 +128,9 @@ func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interfa
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
+func (this *{{structName}}) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}
 `
 
 type config struct {

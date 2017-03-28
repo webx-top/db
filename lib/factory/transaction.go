@@ -324,7 +324,11 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 			}
 			return param.Total
 		}
-		res = t.Result(param).Limit(param.Size).Offset(param.GetOffset())
+		if param.Size >= 0 {
+			res = t.Result(param).Limit(param.Size).Offset(param.GetOffset())
+		} else {
+			res = t.Result(param).Offset(param.GetOffset())
+		}
 	} else {
 		param.CountFunc = func() int64 {
 			if param.Total <= 0 {
@@ -334,7 +338,11 @@ func (t *Transaction) List(param *Param) (func() int64, error) {
 			}
 			return param.Total
 		}
-		res = param.Middleware(t.Result(param).Limit(param.Size).Offset(param.GetOffset()))
+		if param.Size >= 0 {
+			res = param.Middleware(t.Result(param).Limit(param.Size).Offset(param.GetOffset()))
+		} else {
+			res = param.Middleware(t.Result(param).Offset(param.GetOffset()))
+		}
 	}
 	return param.CountFunc, res.All(param.ResultData)
 }
