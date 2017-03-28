@@ -131,3 +131,6 @@ func (this *Post) Delete(mw func(db.Result) db.Result, args ...interface{}) erro
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
+func (this *Post) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}

@@ -125,3 +125,6 @@ func (this *Album) Delete(mw func(db.Result) db.Result, args ...interface{}) err
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
+func (this *Album) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}

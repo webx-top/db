@@ -124,3 +124,6 @@ func (this *Attathment) Delete(mw func(db.Result) db.Result, args ...interface{}
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
+func (this *Attathment) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}

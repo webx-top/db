@@ -12,8 +12,8 @@ type Ocontent struct {
 	trans	*factory.Transaction
 	objects []*Ocontent
 	
-	Id     	uint    	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
-	RcId   	uint    	`db:"rc_id" bson:"rc_id" comment:"关联ID" json:"rc_id" xml:"rc_id"`
+	Id     	uint64  	`db:"id,omitempty,pk" bson:"id,omitempty" comment:"ID" json:"id" xml:"id"`
+	RcId   	uint64  	`db:"rc_id" bson:"rc_id" comment:"关联ID" json:"rc_id" xml:"rc_id"`
 	RcType 	string  	`db:"rc_type" bson:"rc_type" comment:"关联类型" json:"rc_type" xml:"rc_type"`
 	Content	string  	`db:"content" bson:"content" comment:"博客原始内容" json:"content" xml:"content"`
 	Etype  	string  	`db:"etype" bson:"etype" comment:"编辑器类型" json:"etype" xml:"etype"`
@@ -78,10 +78,10 @@ func (this *Ocontent) Add() (pk interface{}, err error) {
 	this.Id = 0
 	pk, err = this.Param().SetSend(this).Insert()
 	if err == nil && pk != nil {
-		if v, y := pk.(uint); y {
+		if v, y := pk.(uint64); y {
 			this.Id = v
 		} else if v, y := pk.(int64); y {
-			this.Id = uint(v)
+			this.Id = uint64(v)
 		}
 	}
 	return
@@ -99,10 +99,10 @@ func (this *Ocontent) Upsert(mw func(db.Result) db.Result, args ...interface{}) 
 		this.Id = 0
 	})
 	if err == nil && pk != nil {
-		if v, y := pk.(uint); y {
+		if v, y := pk.(uint64); y {
 			this.Id = v
 		} else if v, y := pk.(int64); y {
-			this.Id = uint(v)
+			this.Id = uint64(v)
 		}
 	}
 	return 
@@ -113,3 +113,6 @@ func (this *Ocontent) Delete(mw func(db.Result) db.Result, args ...interface{}) 
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
 
+func (this *Ocontent) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}
