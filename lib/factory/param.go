@@ -459,21 +459,12 @@ func (p *Param) NewTx(ctx context.Context) (*Transaction, error) {
 	return p.factory.NewTx(ctx, p.Index)
 }
 
-func (p *Param) Tx(ctxa ...context.Context) (*Transaction, error) {
-	if p.trans != nil {
-		return p.trans, nil
-	}
-	var err error
-	var ctx context.Context
-	if len(ctxa) > 0 {
-		ctx = ctxa[0]
-	}
-	p.trans, err = p.NewTx(ctx)
-	return p.trans, err
+func (p *Param) Tx(ctxa ...context.Context) error {
+	return p.factory.Tx(p, ctxa...)
 }
 
 func (p *Param) MustTx() *Transaction {
-	trans, err := p.Tx()
+	trans, err := p.NewTx(nil)
 	if err != nil {
 		panic(err.Error())
 	}
