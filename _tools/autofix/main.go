@@ -64,13 +64,6 @@ var replaces = []*Replace{
 		nil,
 		regexp.MustCompile(`mongo[/\\]database\.go$`),
 	},
-	&Replace{`nd.sess = d.sess`,
-		`nd.sess = d.sess
-	nd.cachedCollections = d.cachedCollections
-	nd.cachedStatements = d.cachedStatements`,
-		nil,
-		regexp.MustCompile(`sqladapter[/\\]database\.go$`),
-	},
 }
 
 func main() {
