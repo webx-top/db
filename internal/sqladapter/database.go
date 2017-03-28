@@ -298,6 +298,8 @@ func (d *database) NewClone(p PartialDatabase, checkConn bool) (BaseDatabase, er
 	nd := NewBaseDatabase(p).(*database)
 	nd.name = d.name
 	nd.sess = d.sess
+	nd.cachedCollections = d.cachedCollections
+	nd.cachedStatements = d.cachedStatements
 	if checkConn {
 		if err := nd.Ping(); err != nil {
 			return nil, err
