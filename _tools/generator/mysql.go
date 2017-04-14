@@ -64,14 +64,14 @@ func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, ma
 	goFields := []string{}
 	fields := map[string]factory.FieldInfo{}
 	for _, field := range fieldsInfo {
-		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength)
+		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength, fields)
 		goFields = append(goFields, goField)
 		fields[fieldInfo.Name] = fieldInfo
 	}
 	return goFields, fields
 }
 
-func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.FieldInfo) {
+func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (string, factory.FieldInfo) {
 
 	fieldInfo := factory.FieldInfo{Options: []string{}}
 	p := strings.Index(field["Type"], `(`)
@@ -119,6 +119,30 @@ func getMySQLFieldInfo(field map[string]string, maxLength int) (string, factory.
 
 	fieldInfo.GoType = DataType(&fieldInfo)
 	fieldInfo.GoName = TableToStructName(fieldInfo.Name, ``)
+
+	//避免和默认方法名冲突，对于已经存在方法名的字段，在其名称后加后缀“V+编号”
+	if _, exists := structFuncs[fieldInfo.GoName]; exists {
+		var suffix string
+		for i := 0; ; i++ {
+			if i > 0 {
+				suffix = fmt.Sprintf(`V%d`, i)
+			} else {
+				suffix = `V`
+			}
+			exists = false
+			for _, f := range fields {
+				if f.GoName == fieldInfo.GoName+suffix {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				break
+			}
+		}
+		fieldInfo.GoName += suffix
+	}
+
 	fieldP := fmt.Sprintf(`%-*s`, maxLength, fieldInfo.GoName)
 	typeP := fmt.Sprintf(`%-8s`, fieldInfo.GoType)
 	dbTag := fieldInfo.Name
