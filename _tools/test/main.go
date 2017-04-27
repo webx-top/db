@@ -254,6 +254,15 @@ func main() {
 
 	fmt.Println(``)
 	fmt.Println(``)
+	log.Println(`测试Count：`)
+	n, err := post.Count(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Count => %d\n", n)
+
+	fmt.Println(``)
+	fmt.Println(``)
 	log.Println(`测试缓存：`)
 	recv = post.NewObjects()
 	for i := 0; i < 5; i++ {
