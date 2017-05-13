@@ -116,10 +116,12 @@ func (c *Cluster) AddMaster(databases ...db.Database) *Cluster {
 	return c
 }
 
+// AddW : Deprecated
 func (c *Cluster) AddW(databases ...db.Database) *Cluster {
 	return c.AddMaster(databases...)
 }
 
+// AddR : Deprecated
 func (c *Cluster) AddR(databases ...db.Database) *Cluster {
 	return c.AddSlave(databases...)
 }
