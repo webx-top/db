@@ -116,6 +116,14 @@ func (c *Cluster) AddMaster(databases ...db.Database) *Cluster {
 	return c
 }
 
+func (c *Cluster) AddW(databases ...db.Database) *Cluster {
+	return c.AddMaster(databases...)
+}
+
+func (c *Cluster) AddR(databases ...db.Database) *Cluster {
+	return c.AddSlave(databases...)
+}
+
 func (c *Cluster) setMasterLogger(databases ...db.Database) *Cluster {
 	for _, v := range databases {
 		v.SetLogger(DefaultMasterLog)
