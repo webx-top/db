@@ -211,8 +211,10 @@ func TestCustomQueryLogger(t *testing.T) {
 	sess := mustOpen()
 
 	sess.SetLogger(&customLogger{})
+	sess.SetLogging(true)
 	defer func() {
 		sess.SetLogger(nil)
+		sess.SetLogging(false)
 	}()
 
 	_, err := sess.Collection("artist").Find().Count()
@@ -468,7 +470,7 @@ func TestInsertIntoArtistsTable(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(4), count)
 
-	count, err = artist.Find(db.Cond{"name": "Ozzie"}).Count()
+	count, err = artist.Find(db.Cond{"name": db.Eq("Ozzie")}).Count()
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), count)
 
@@ -744,7 +746,7 @@ func TestUpdate(t *testing.T) {
 	}{}
 
 	// Getting the first artist.
-	cond := db.Cond{"id !=": 0}
+	cond := db.Cond{"id !=": db.NotEq(0)}
 	if Adapter == "ql" {
 		cond = db.Cond{"id() !=": 0}
 	}
@@ -898,10 +900,7 @@ func TestFunction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(4), total)
 
-	// Testing DISTINCT (function)
-	res = artist.Find().Select(
-		db.Func("DISTINCT", "name"),
-	)
+	res = artist.Find().Select("name")
 
 	var rowMap map[string]interface{}
 	err = res.One(&rowMap)
@@ -911,10 +910,7 @@ func TestFunction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(4), total)
 
-	// Testing DISTINCT (raw)
-	res = artist.Find().Select(
-		db.Raw("DISTINCT(name)"),
-	)
+	res = artist.Find().Select("name")
 
 	err = res.One(&rowMap)
 	assert.NoError(t, err)
@@ -1053,26 +1049,41 @@ func TestCompositeKeys(t *testing.T) {
 
 	compositeKeys := sess.Collection("composite_keys")
 
-	n := rand.Intn(100000)
+	{
+		n := rand.Intn(100000)
 
-	item := itemWithCompoundKey{
-		"ABCDEF",
-		strconv.Itoa(n),
-		"Some value",
+		item := itemWithCompoundKey{
+			"ABCDEF",
+			strconv.Itoa(n),
+			"Some value",
+		}
+
+		id, err := compositeKeys.Insert(&item)
+		assert.NoError(t, err)
+		assert.NotZero(t, id)
+
+		var item2 itemWithCompoundKey
+		assert.NotEqual(t, item2.SomeVal, item.SomeVal)
+
+		// Finding by ID
+		err = compositeKeys.Find(id).One(&item2)
+		assert.NoError(t, err)
+
+		assert.Equal(t, item2.SomeVal, item.SomeVal)
 	}
 
-	id, err := compositeKeys.Insert(&item)
-	assert.NoError(t, err)
-	assert.NotZero(t, id)
+	{
+		n := rand.Intn(100000)
 
-	var item2 itemWithCompoundKey
-	assert.NotEqual(t, item2.SomeVal, item.SomeVal)
+		item := itemWithCompoundKey{
+			"ABCDEF",
+			strconv.Itoa(n),
+			"Some value",
+		}
 
-	// Finding by ID
-	err = compositeKeys.Find(id).One(&item2)
-	assert.NoError(t, err)
-
-	assert.Equal(t, item2.SomeVal, item.SomeVal)
+		err := compositeKeys.InsertReturning(&item)
+		assert.NoError(t, err)
+	}
 
 	assert.NoError(t, cleanUpCheck(sess))
 	assert.NoError(t, sess.Close())
@@ -1479,6 +1490,222 @@ func TestBatchInsertReturningKeys(t *testing.T) {
 	assert.NoError(t, sess.Close())
 }
 
+func TestPaginator(t *testing.T) {
+	sess := mustOpen()
+
+	err := sess.Collection("artist").Truncate()
+	assert.NoError(t, err)
+
+	batch := sess.InsertInto("artist").Batch(100)
+
+	go func() {
+		defer batch.Done()
+		for i := 0; i < 999; i++ {
+			value := struct {
+				Name string `db:"name"`
+			}{fmt.Sprintf("artist-%d", i)}
+			batch.Values(value)
+		}
+	}()
+
+	err = batch.Wait()
+	assert.NoError(t, err)
+	assert.NoError(t, batch.Err())
+
+	q := sess.SelectFrom("artist")
+	if Adapter == "ql" {
+		q = sess.SelectFrom(sess.Select("id() AS id", "name").From("artist"))
+	}
+
+	const pageSize = 13
+	cursorColumn := "id"
+
+	paginator := q.Paginate(pageSize)
+
+	var zerothPage []artistType
+	err = paginator.Page(0).All(&zerothPage)
+	assert.NoError(t, err)
+	assert.Equal(t, pageSize, len(zerothPage))
+
+	var firstPage []artistType
+	err = paginator.Page(1).All(&firstPage)
+	assert.NoError(t, err)
+	assert.Equal(t, pageSize, len(firstPage))
+
+	assert.Equal(t, zerothPage, firstPage)
+
+	var secondPage []artistType
+	err = paginator.Page(2).All(&secondPage)
+	assert.NoError(t, err)
+	assert.Equal(t, pageSize, len(secondPage))
+
+	totalPages, err := paginator.TotalPages()
+	assert.NoError(t, err)
+	assert.NotZero(t, totalPages)
+	assert.Equal(t, uint(77), totalPages)
+
+	totalEntries, err := paginator.TotalEntries()
+	assert.NoError(t, err)
+	assert.NotZero(t, totalEntries)
+	assert.Equal(t, uint64(999), totalEntries)
+
+	var lastPage []artistType
+	err = paginator.Page(totalPages).All(&lastPage)
+	assert.NoError(t, err)
+	assert.Equal(t, 11, len(lastPage))
+
+	var beyondLastPage []artistType
+	err = paginator.Page(totalPages + 1).All(&beyondLastPage)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(beyondLastPage))
+
+	var hundredthPage []artistType
+	err = paginator.Page(100).All(&hundredthPage)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(hundredthPage))
+
+	for i := uint(0); i < totalPages; i++ {
+		current := paginator.Page(i + 1)
+
+		var items []artistType
+		err := current.All(&items)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(items) < 1 {
+			assert.Equal(t, totalPages+1, i)
+			break
+		}
+		for j := 0; j < len(items); j++ {
+			assert.Equal(t, fmt.Sprintf("artist-%d", int64(pageSize*int(i)+j)), items[j].Name)
+		}
+	}
+
+	paginator = paginator.Cursor(cursorColumn)
+	{
+		current := paginator.Page(1)
+		for i := 0; ; i++ {
+			var items []artistType
+			err := current.All(&items)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(items) < 1 {
+				assert.Equal(t, int(totalPages), i)
+				break
+			}
+
+			for j := 0; j < len(items); j++ {
+				assert.Equal(t, fmt.Sprintf("artist-%d", int64(pageSize*int(i)+j)), items[j].Name)
+			}
+			current = current.NextPage(items[len(items)-1].ID)
+		}
+	}
+
+	{
+		current := paginator.Page(totalPages)
+		for i := totalPages; ; i-- {
+			var items []artistType
+
+			err := current.All(&items)
+			assert.NoError(t, err)
+
+			if len(items) < 1 {
+				assert.Equal(t, uint(0), i)
+				break
+			}
+			for j := 0; j < len(items); j++ {
+				assert.Equal(t, fmt.Sprintf("artist-%d", pageSize*int(i-1)+j), items[j].Name)
+			}
+
+			current = current.PrevPage(items[0].ID)
+		}
+	}
+
+	if Adapter == "ql" {
+		t.Skip("Unsupported, see https://github.com/cznic/ql/issues/182")
+	}
+
+	{
+		result := sess.Collection("artist").Find()
+		if Adapter == "ql" {
+			result = result.Select("id() AS id", "name")
+		}
+		fifteenResults := 15
+		resultPaginator := result.Paginate(uint(fifteenResults))
+
+		count, err := resultPaginator.TotalPages()
+		assert.Equal(t, uint(67), count)
+		assert.NoError(t, err)
+
+		var items []artistType
+		fifthPage := 5
+		err = resultPaginator.Page(uint(fifthPage)).All(&items)
+		assert.NoError(t, err)
+
+		for j := 0; j < len(items); j++ {
+			assert.Equal(t, fmt.Sprintf("artist-%d", int(fifteenResults)*(fifthPage-1)+j), items[j].Name)
+		}
+
+		resultPaginator = resultPaginator.Cursor(cursorColumn).Page(1)
+		for i := 0; ; i++ {
+			var items []artistType
+
+			err = resultPaginator.All(&items)
+			assert.NoError(t, err)
+
+			if len(items) < 1 {
+				break
+			}
+
+			for j := 0; j < len(items); j++ {
+				assert.Equal(t, fmt.Sprintf("artist-%d", fifteenResults*i+j), items[j].Name)
+			}
+			resultPaginator = resultPaginator.NextPage(items[len(items)-1].ID)
+		}
+
+		resultPaginator = resultPaginator.Cursor(cursorColumn).Page(count)
+		for i := count; ; i-- {
+			var items []artistType
+
+			err = resultPaginator.All(&items)
+			assert.NoError(t, err)
+
+			if len(items) < 1 {
+				assert.Equal(t, uint(0), i)
+				break
+			}
+
+			for j := 0; j < len(items); j++ {
+				assert.Equal(t, fmt.Sprintf("artist-%d", fifteenResults*(int(i)-1)+j), items[j].Name)
+			}
+			resultPaginator = resultPaginator.PrevPage(items[0].ID)
+		}
+	}
+
+	{
+		// Testing page size 0.
+		paginator := q.Paginate(0)
+
+		totalPages, err := paginator.TotalPages()
+		assert.NoError(t, err)
+		assert.Equal(t, uint(1), totalPages)
+
+		totalEntries, err := paginator.TotalEntries()
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(999), totalEntries)
+
+		var allItems []artistType
+		err = paginator.Page(0).All(&allItems)
+		assert.NoError(t, err)
+		assert.Equal(t, totalEntries, uint64(len(allItems)))
+
+	}
+
+	assert.NoError(t, cleanUpCheck(sess))
+	assert.NoError(t, sess.Close())
+}
+
 func TestSQLBuilder(t *testing.T) {
 	sess := mustOpen()
 
@@ -1609,6 +1836,11 @@ func TestExhaustConnectionPool(t *testing.T) {
 
 	sess := mustOpen()
 
+	sess.SetLogging(true)
+	defer func() {
+		sess.SetLogging(false)
+	}()
+
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
 		tLogf("Tx %d: Pending", i)
@@ -1625,6 +1857,14 @@ func TestExhaustConnectionPool(t *testing.T) {
 				tFatal(err)
 			}
 			tLogf("Tx %d: OK (time to connect: %v)", i, time.Now().Sub(start))
+
+			if !sess.LoggingEnabled() {
+				tLogf("Expecting logging to be enabled")
+			}
+
+			if !tx.LoggingEnabled() {
+				tLogf("Expecting logging to be enabled (enabled by parent session)")
+			}
 
 			// Let's suppose that we do a bunch of complex stuff and that the
 			// transaction lasts 3 seconds.
