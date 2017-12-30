@@ -16,7 +16,11 @@ import (
 	//"github.com/webx-top/com"
 )
 
-var cfg = &config{}
+var cfg = &config{
+	SchemaConfig: &SchemaConfig{},
+	ModelConfig:  &ModelConfig{},
+}
+var configFile string
 var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
 var replaces = &map[string]string{
 	"packageName":  "",
@@ -149,15 +153,70 @@ func (this *{{structName}}) Count(mw func(db.Result) db.Result, args ...interfac
 }
 `
 
+var modelReplaces = &map[string]string{
+	"packageName":       "",
+	"imports":           "",
+	"structName":        "",
+	"schemaPackagePath": "",
+	"schemaPackageName": "",
+	"baseName":          "",
+}
+var modelBaseTemplate = `package {{packageName}}
+
+import (
+	"github.com/webx-top/echo"
+	{{imports}}
+)
+
+type {{structName}} struct {
+	echo.Context
+}
+`
+
+var modelTemplate = `package {{packageName}}
+
+import (
+	"{{schemaPackagePath}}"
+	"github.com/webx-top/echo"
+	{{imports}}
+)
+				
+func New{{structName}}(ctx echo.Context) *{{structName}} {
+	return &{{structName}}{
+		{{structName}}: &{{schemaPackageName}}.{{structName}}{},
+		{{baseName}}:   &{{baseName}}{Context: ctx},
+	}
+}
+
+type {{structName}} struct {
+	*{{schemaPackageName}}.{{structName}}
+	*{{baseName}}
+}
+
+`
+
+type SchemaConfig struct {
+	SaveDir     string `json:"saveDir"`
+	ImportPath  string `json:"importPath"`
+	PackageName string `json:"packageName"`
+}
+
+type ModelConfig struct {
+	SaveDir     string `json:"saveDir"`
+	ImportPath  string `json:"importPath"`
+	PackageName string `json:"packageName"`
+	BaseName    string `json:"baseName"`
+}
+
 type config struct {
 	Username       string          `json:"username"`
 	Password       string          `json:"password"`
 	Host           string          `json:"host"`
 	Engine         string          `json:"engine"`
 	Database       string          `json:"database"`
-	SaveDir        string          `json:"saveDir"`
 	Prefix         string          `json:"prefix"`
-	PackageName    string          `json:"packageName"`
+	SchemaConfig   *SchemaConfig   `json:"schemaConfig"`
+	ModelConfig    *ModelConfig    `json:"modelConfig"`
 	Schema         string          `json:"schema"`
 	AutoTimeFields *AutoTimeFields `json:"autoTime"`
 }
@@ -171,34 +230,48 @@ type AutoTimeFields struct {
 }
 
 func main() {
-	confFile := flag.String(`c`, ``, `-c conf.yaml`)
-	username := flag.String(`u`, `root`, `-u user`)
-	password := flag.String(`p`, ``, `-p password`)
-	host := flag.String(`h`, `localhost`, `-h host`)
-	engine := flag.String(`e`, `mysql`, `-e engine`)
-	database := flag.String(`d`, `blog`, `-d database`)
-	saveDir := flag.String(`o`, `dbschema`, `-o targetDir`)
-	prefix := flag.String(`pre`, ``, `-pre prefix`)
-	packageName := flag.String(`pkg`, `dbschema`, `-pkg packageName`)
-	schema := flag.String(`schema`, `public`, `-schema schemaName`)
+	flag.StringVar(&configFile, `c`, ``, `-c conf.yaml`)
+
+	//DBSettings
+	flag.StringVar(&cfg.Username, `u`, `root`, `-u user`)
+	flag.StringVar(&cfg.Password, `p`, ``, `-p password`)
+	flag.StringVar(&cfg.Host, `h`, `localhost`, `-h host`)
+	flag.StringVar(&cfg.Engine, `e`, `mysql`, `-e engine`)
+	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
+	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
+
+	//DBSchema
+	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
+	flag.StringVar(&cfg.SchemaConfig.PackageName, `pkg`, `dbschema`, `-pkg packageName`)
+	flag.StringVar(&cfg.SchemaConfig.SaveDir, `o`, `dbschema`, `-o targetDir`)
+
+	//Model
+	flag.StringVar(&cfg.ModelConfig.BaseName, `mbase`, `Base`, `-mbase Base`)
+	flag.StringVar(&cfg.ModelConfig.ImportPath, `mimport`, ``, `-mimport github.com/webx-top/project/app/model`)
+	flag.StringVar(&cfg.ModelConfig.SaveDir, `mo`, ``, `-mo targetDir`)
+	flag.StringVar(&cfg.ModelConfig.PackageName, `mpkg`, `model`, `-mpkg packageName`)
+
+	//Postgres schema
+	flag.StringVar(&cfg.Schema, `schema`, `public`, `-schema schemaName`)
 	autoTime := flag.String(`autoTime`, `{"update":{"*":["updated"]},"insert":{"*":["created"]}}`, `-autoTime <json-data>`)
 	flag.Parse()
 
-	cfg.Username = *username
-	cfg.Password = *password
-	cfg.Host = *host
-	cfg.Engine = *engine
-	cfg.Database = *database
-	cfg.SaveDir = *saveDir
-	cfg.Prefix = *prefix
-	cfg.PackageName = *packageName
-	cfg.Schema = *schema
-
 	var err error
-	if len(*confFile) > 0 {
-		_, err = confl.DecodeFile(*confFile, cfg)
+	if len(configFile) > 0 {
+		_, err = confl.DecodeFile(configFile, cfg)
 		if err != nil {
 			log.Fatal(err)
+		}
+	}
+	if len(cfg.ModelConfig.SaveDir) > 0 {
+		cfg.ModelConfig.SaveDir = strings.TrimSuffix(cfg.ModelConfig.SaveDir, `/`)
+		cfg.ModelConfig.SaveDir = strings.TrimSuffix(cfg.ModelConfig.SaveDir, `\`)
+		if len(cfg.ModelConfig.PackageName) == 0 {
+			cfg.ModelConfig.PackageName = filepath.Base(cfg.ModelConfig.SaveDir)
+			switch cfg.ModelConfig.PackageName {
+			case `.`, `/`, `\`:
+				cfg.ModelConfig.PackageName = `model`
+			}
 		}
 	}
 	//com.Dump(cfg)
@@ -290,7 +363,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf(`Found tables: %v`, tables)
-	err = os.MkdirAll(cfg.SaveDir, os.ModePerm)
+	err = os.MkdirAll(cfg.SchemaConfig.SaveDir, os.ModePerm)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -306,7 +379,7 @@ func main() {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
 		replaceMap := *replaces
-		replaceMap["packageName"] = cfg.PackageName
+		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
 		replaceMap["structName"] = structName
 		replaceMap["attributes"] = fieldBlock
 		replaceMap["tableName"] = noPrefixTableName
@@ -377,7 +450,7 @@ func main() {
 						continue
 					}
 					switch fieldInf.GoType {
-					case `uint`, `int`, `int64`, `uint64`:
+					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
 						beforeUpdate += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
@@ -399,7 +472,7 @@ func main() {
 			content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
 		}
 
-		saveAs := filepath.Join(cfg.SaveDir, structName) + `.go`
+		saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, structName) + `.go`
 		file, err := os.Create(saveAs)
 		if err == nil {
 			_, err = file.WriteString(content)
@@ -407,7 +480,39 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else {
-			log.Println(`Generated struct:`, structName)
+			log.Println(`Generated schema struct:`, structName)
+		}
+
+		if len(cfg.ModelConfig.PackageName) > 0 && len(cfg.ModelConfig.SaveDir) > 0 {
+			os.MkdirAll(cfg.ModelConfig.SaveDir, 0777)
+			modelFile := filepath.Join(cfg.ModelConfig.SaveDir, structName) + `.go`
+			_, err := os.Stat(modelFile)
+			if err != nil && os.IsNotExist(err) {
+				file, err := os.Create(modelFile)
+				if err == nil {
+					mr := *modelReplaces
+					baseName := `Base`
+					if len(cfg.ModelConfig.BaseName) > 0 {
+						baseName = cfg.ModelConfig.BaseName
+					}
+					mr["packageName"] = cfg.ModelConfig.PackageName
+					mr["imports"] = ""
+					mr["structName"] = structName
+					mr["baseName"] = baseName
+					mr["schemaPackagePath"] = cfg.SchemaConfig.ImportPath
+					mr["schemaPackageName"] = cfg.SchemaConfig.PackageName
+					content := modelTemplate
+					for tag, val := range mr {
+						content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
+					}
+					_, err = file.WriteString(content)
+				}
+				if err != nil {
+					log.Println(err)
+				} else {
+					log.Println(`Generated model struct:`, structName)
+				}
+			}
 		}
 
 		allFields[noPrefixTableName] = fields
@@ -427,9 +532,9 @@ func init(){
 `
 	dataContent := strings.Replace(fmt.Sprintf(`factory.Fields=%#v`+"\n", allFields), `map[string]factory.FieldInfo`, `map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:&factory.FieldInfo`, -1)
-	content = strings.Replace(content, `{{packageName}}`, cfg.PackageName, -1)
+	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
-	saveAs := filepath.Join(cfg.SaveDir, `init`) + `.go`
+	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {
 		_, err = file.WriteString(content)
@@ -438,6 +543,36 @@ func init(){
 		log.Println(err)
 	} else {
 		log.Println(`Generated init.go`)
+	}
+	if len(cfg.ModelConfig.PackageName) > 0 && len(cfg.ModelConfig.SaveDir) > 0 {
+		structName := `Base`
+		if len(cfg.ModelConfig.BaseName) > 0 {
+			structName = cfg.ModelConfig.BaseName
+		}
+		os.MkdirAll(cfg.ModelConfig.SaveDir, 0777)
+		modelFile := filepath.Join(cfg.ModelConfig.SaveDir, structName) + `.go`
+		_, err := os.Stat(modelFile)
+		if err != nil && os.IsNotExist(err) {
+			file, err := os.Create(modelFile)
+			if err == nil {
+				mr := *modelReplaces
+				mr["packageName"] = cfg.ModelConfig.PackageName
+				mr["imports"] = ""
+				mr["structName"] = structName
+				mr["schemaPackagePath"] = cfg.SchemaConfig.ImportPath
+				mr["schemaPackageName"] = cfg.SchemaConfig.PackageName
+				content := modelBaseTemplate
+				for tag, val := range mr {
+					content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
+				}
+				_, err = file.WriteString(content)
+			}
+			if err != nil {
+				log.Println(err)
+			} else {
+				log.Println(`Generated model struct:`, structName)
+			}
+		}
 	}
 
 	log.Println(`End.`)
