@@ -130,7 +130,17 @@ func (this *{{structName}}) Add() (pk interface{}, err error) {
 
 func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeUpdate}}
-	return this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Update()
+	return this.Setter(mw, args...).SetSend(this).Update()
+}
+
+func (this *{{structName}}) Setter(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
+	return this.Param().SetArgs(args...).SetMiddleware(mw)
+}
+
+func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) error {
+	return this.Setter(mw, args...).SetSend(map[string]interface{}{
+		field: value,
+	}).Update()
 }
 
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
