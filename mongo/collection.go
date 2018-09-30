@@ -29,6 +29,7 @@ import (
 	"reflect"
 
 	"github.com/webx-top/db"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
