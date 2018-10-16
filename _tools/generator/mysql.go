@@ -58,17 +58,19 @@ func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[stri
 	return fieldMaxLength, fieldsInfo
 }
 
-func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo) {
+func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo, []string) {
 
 	fieldMaxLength, fieldsInfo := getMySQLTableInfo(db, tableName)
 	goFields := []string{}
 	fields := map[string]factory.FieldInfo{}
-	for _, field := range fieldsInfo {
+	fieldNames := make([]string, len(fieldsInfo))
+	for key, field := range fieldsInfo {
 		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength, fields)
 		goFields = append(goFields, goField)
 		fields[fieldInfo.Name] = fieldInfo
+		fieldNames[key] = fieldInfo.Name
 	}
-	return goFields, fields
+	return goFields, fields, fieldNames
 }
 
 func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (string, factory.FieldInfo) {

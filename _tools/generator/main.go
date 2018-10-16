@@ -27,6 +27,7 @@ var replaces = &map[string]string{
 	"imports":      "",
 	"structName":   "",
 	"attributes":   "",
+	"reset":        "",
 	"tableName":    "",
 	"beforeInsert": "",
 	"afterInsert":  "",
@@ -160,6 +161,11 @@ func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interfa
 
 func (this *{{structName}}) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Count()
+}
+
+func (this *{{structName}}) Reset() *{{structName}} {
+{{reset}}
+	return this
 }
 `
 
@@ -382,16 +388,25 @@ func main() {
 	for _, tableName := range tables {
 		structName := TableToStructName(tableName, cfg.Prefix)
 		imports := ``
-		goFields, fields := GetTableFields(cfg.Engine, sess, tableName)
+		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")
 		noPrefixTableName := tableName
 		if hasPrefix {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
+		var resets string
+		for key, fieldName := range fieldNames {
+			f := fields[fieldName]
+			if key > 0 {
+				resets += "\n"
+			}
+			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
+		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
 		replaceMap["structName"] = structName
 		replaceMap["attributes"] = fieldBlock
+		replaceMap["reset"] = resets
 		replaceMap["tableName"] = noPrefixTableName
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
@@ -596,6 +611,25 @@ func TableToStructName(tableName string, prefix string) string {
 	return factory.ToCamleCase(tableName)
 }
 
+func ZeroValue(typ string) string {
+	switch typ {
+	case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
+		return `0`
+	case `float32`, `float64`:
+		return `0.0`
+	case `bool`:
+		return `false`
+	case `string`:
+		return "``"
+	case `byte[]`:
+		return `nil`
+	case `time.Time`:
+		return `time.Time{}`
+	default:
+		panic(`undefined zero value for ` + typ)
+	}
+}
+
 func DataType(fieldInfo *factory.FieldInfo) string {
 	switch fieldInfo.DataType {
 	case `int`, `tinyint`, `smallint`, `mediumint`:
@@ -631,7 +665,7 @@ func DataType(fieldInfo *factory.FieldInfo) string {
 	}
 }
 
-func GetTableFields(engine string, d sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo) {
+func GetTableFields(engine string, d sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo, []string) {
 	switch engine {
 	case "mymysql", "mysql":
 		fallthrough
