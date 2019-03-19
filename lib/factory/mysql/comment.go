@@ -15,7 +15,26 @@ const (
 	SQLTableComment = `SELECT TABLE_NAME,TABLE_COMMENT FROM information_schema.TABLES WHERE table_schema=? AND TABLE_NAME=?`
 	// SQLColumnComment 查询列注释的SQL
 	SQLColumnComment = "SELECT COLUMN_NAME as `field`, column_comment as `description`, DATA_TYPE as `type`, CHARACTER_MAXIMUM_LENGTH as `max_length`, CHARACTER_OCTET_LENGTH as `octet_length`, NUMERIC_PRECISION as `precision` FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema=? AND table_name=?"
+	// SQLShowCreate 查询建表语句的SQL
+	SQLShowCreate = "SHOW CREATE TABLE "
 )
+
+// CreateTableSQL 查询建表语句
+func CreateTableSQL(linkID int, dbName string, tableName string) (string, error) {
+	ctx := context.Background()
+	db := factory.NewParam(linkID).DB()
+	stmt, err := db.PrepareContext(ctx, SQLShowCreate+"`"+dbName+"`.`"+tableName+"`")
+	if err != nil {
+		return ``, err
+	}
+	recvTableName := sql.NullString{}
+	recvCreateTableSQL := sql.NullString{}
+	err = stmt.QueryRowContext(ctx, dbName, tableName).Scan(&recvTableName, &recvCreateTableSQL)
+	if err != nil {
+		return ``, err
+	}
+	return recvCreateTableSQL.String, err
+}
 
 // TableComment 查询表注释
 func TableComment(linkID int, dbName string, tableName string) (string, error) {
