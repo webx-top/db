@@ -28,5 +28,5 @@ func CleanBy(columns map[string]param.StringMap, linkID int, dbName string, tabl
 			delete(data, field)
 		}
 	}
-	return data, err
+	return data, nil
 }
