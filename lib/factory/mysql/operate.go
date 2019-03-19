@@ -58,8 +58,8 @@ func FieldExists(linkID int, tableName string, fieldName string) (bool, error) {
 	return param.String(recv.String).Int64() > 0, err
 }
 
-// MoveToNewTable 移动数据到新表
-func MoveToNewTable(linkID int, srcTableName string, destTableName string, condition string, src2DestFieldMapping ...map[string]string) (int64, error) {
+// MoveToTable 移动数据到新表
+func MoveToTable(linkID int, srcTableName string, destTableName string, condition string, src2DestFieldMapping ...map[string]string) (int64, error) {
 	sqlStr := "INSERT INTO `" + destTableName + "`"
 	var srcFields, destFields string
 	if len(src2DestFieldMapping) > 0 {
