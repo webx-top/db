@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/webx-top/com"
@@ -24,16 +25,20 @@ const (
 // CreateTableSQL 查询建表语句
 func CreateTableSQL(linkID int, dbName string, tableName string) (string, error) {
 	ctx := context.Background()
-	db := factory.NewParam(linkID).DB()
-	stmt, err := db.PrepareContext(ctx, SQLShowCreate+"`"+dbName+"`.`"+tableName+"`")
+	db := factory.NewParam().SetIndex(linkID).DB()
+	sqlStr := SQLShowCreate + "`" + dbName + "`.`" + tableName + "`"
+	stmt, err := db.PrepareContext(ctx, sqlStr)
+	if factory.Debug() {
+		fmt.Println(sqlStr)
+	}
 	if err != nil {
-		return ``, err
+		return ``, fmt.Errorf(`CreateTableSQL: %v`, err)
 	}
 	recvTableName := sql.NullString{}
 	recvCreateTableSQL := sql.NullString{}
-	err = stmt.QueryRowContext(ctx, dbName, tableName).Scan(&recvTableName, &recvCreateTableSQL)
+	err = stmt.QueryRowContext(ctx).Scan(&recvTableName, &recvCreateTableSQL)
 	if err != nil {
-		return ``, err
+		return ``, fmt.Errorf(`CreateTableSQL.Scan: %v`, err)
 	}
 	return recvCreateTableSQL.String, err
 }
@@ -41,16 +46,19 @@ func CreateTableSQL(linkID int, dbName string, tableName string) (string, error)
 // TableComment 查询表注释
 func TableComment(linkID int, dbName string, tableName string) (string, error) {
 	ctx := context.Background()
-	db := factory.NewParam(linkID).DB()
+	db := factory.NewParam().SetIndex(linkID).DB()
 	stmt, err := db.PrepareContext(ctx, SQLTableComment)
+	if factory.Debug() {
+		fmt.Println(SQLTableComment, `[`, dbName, tableName, `]`)
+	}
 	if err != nil {
-		return ``, err
+		return ``, fmt.Errorf(`TableComment: %v`, err)
 	}
 	recvTableName := sql.NullString{}
 	recvTableComment := sql.NullString{}
 	err = stmt.QueryRowContext(ctx, dbName, tableName).Scan(&recvTableName, &recvTableComment)
 	if err != nil {
-		return ``, err
+		return ``, fmt.Errorf(`TableComment.Scan: %v`, err)
 	}
 	return recvTableComment.String, err
 }
@@ -58,7 +66,7 @@ func TableComment(linkID int, dbName string, tableName string) (string, error) {
 // ColumnComment 查询表中某些列的注释
 func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...string) (map[string]param.StringMap, error) {
 	ctx := context.Background()
-	db := factory.NewParam(linkID).DB()
+	db := factory.NewParam().SetIndex(linkID).DB()
 	sqlStr := SQLColumnComment
 	if len(fieldNames) > 0 {
 		if len(fieldNames) == 1 {
@@ -71,6 +79,9 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 		}
 	}
 	stmt, err := db.PrepareContext(ctx, sqlStr)
+	if factory.Debug() {
+		fmt.Println(sqlStr, `[`, dbName, tableName, `]`)
+	}
 	if err != nil {
 		return nil, err
 	}

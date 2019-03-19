@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"regexp"
 
 	"github.com/webx-top/db/lib/factory"
@@ -20,8 +21,11 @@ func CopyTableStruct(srcLinkID int, srcDBName string, srcTableName string,
 	if err != nil {
 		return err
 	}
-	db := factory.NewParam(destLinkID).DB()
+	db := factory.NewParam().SetIndex(destLinkID).DB()
 	ddl = reTable.ReplaceAllString(ddl, "CREATE TABLE `"+destTableName+"` (")
+	if factory.Debug() {
+		fmt.Println(ddl)
+	}
 	_, err = db.Exec(ddl)
 	return err
 }
@@ -29,8 +33,11 @@ func CopyTableStruct(srcLinkID int, srcDBName string, srcTableName string,
 // TableExists 查询表是否存在
 func TableExists(linkID int, dbName string, tableName string) (bool, error) {
 	ctx := context.Background()
-	db := factory.NewParam(linkID).DB()
+	db := factory.NewParam().SetIndex(linkID).DB()
 	stmt, err := db.PrepareContext(ctx, SQLTableExists)
+	if factory.Debug() {
+		fmt.Println(SQLTableExists, `[`, dbName, tableName, `]`)
+	}
 	if err != nil {
 		return false, err
 	}
@@ -45,8 +52,11 @@ func TableExists(linkID int, dbName string, tableName string) (bool, error) {
 // FieldExists 查询表字段是否存在
 func FieldExists(linkID int, tableName string, fieldName string) (bool, error) {
 	ctx := context.Background()
-	db := factory.NewParam(linkID).DB()
+	db := factory.NewParam().SetIndex(linkID).DB()
 	stmt, err := db.PrepareContext(ctx, SQLFieldExists)
+	if factory.Debug() {
+		fmt.Println(SQLFieldExists, `[`, tableName, fieldName, `]`)
+	}
 	if err != nil {
 		return false, err
 	}
@@ -90,8 +100,11 @@ func MoveToTable(linkID int, dbName string, srcTableName string, destTableName s
 	if len(condition) > 0 {
 		sqlStr += ` WHERE ` + condition
 	}
-	db := factory.NewParam(linkID).DB()
+	db := factory.NewParam().SetIndex(linkID).DB()
 	result, err := db.Exec(sqlStr)
+	if factory.Debug() {
+		fmt.Println(sqlStr)
+	}
 	if err != nil {
 		return 0, err
 	}
@@ -104,8 +117,11 @@ func MoveToTable(linkID int, dbName string, srcTableName string, destTableName s
 		if len(condition) > 0 {
 			sqlStr += ` WHERE ` + condition
 		}
-		db := factory.NewParam(linkID).DB()
+		db := factory.NewParam().SetIndex(linkID).DB()
 		result, err := db.Exec(sqlStr)
+		if factory.Debug() {
+			fmt.Println(sqlStr)
+		}
 		if err != nil {
 			return affected, err
 		}
