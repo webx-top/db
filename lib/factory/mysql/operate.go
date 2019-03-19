@@ -59,7 +59,18 @@ func FieldExists(linkID int, tableName string, fieldName string) (bool, error) {
 }
 
 // MoveToTable 移动数据到新表
-func MoveToTable(linkID int, srcTableName string, destTableName string, condition string, src2DestFieldMapping ...map[string]string) (int64, error) {
+func MoveToTable(linkID int, dbName string, srcTableName string, destTableName string, condition string, src2DestFieldMapping ...map[string]string) (int64, error) {
+	exists, err := TableExists(linkID, dbName, destTableName)
+	if err != nil {
+		return 0, err
+	}
+	if !exists {
+		err = CopyTableStruct(linkID, dbName, srcTableName,
+			linkID, dbName, destTableName)
+		if err != nil {
+			return 0, err
+		}
+	}
 	sqlStr := "INSERT INTO `" + destTableName + "`"
 	var srcFields, destFields string
 	if len(src2DestFieldMapping) > 0 {
