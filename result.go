@@ -125,7 +125,7 @@ type Result interface {
 	Paginate(pageSize uint) Result
 
 	// Page makes the result set return results only from the page identified by
-	// pageNumber. Page numbering starts from 1.
+	// pageNumber. Page numbering starts from 0.
 	//
 	// Example:
 	//

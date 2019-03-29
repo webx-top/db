@@ -28,9 +28,9 @@ import (
 
 	"reflect"
 
-	"github.com/webx-top/db"
-	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/webx-top/db"
 )
 
 // Collection represents a mongodb collection.
@@ -173,7 +173,6 @@ func compileStatement(cond db.Cond) bson.M {
 				}
 			}
 			conds[field] = bson.M{op: value}
-
 		}
 	}
 
