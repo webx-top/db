@@ -557,8 +557,9 @@ func init(){
 }
 
 `
-	dataContent := strings.Replace(fmt.Sprintf(`factory.Fields=%#v`+"\n", allFields), `map[string]factory.FieldInfo`, `map[string]*factory.FieldInfo`, -1)
-	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:&factory.FieldInfo`, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`factory.Fields=%#v`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
+	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
+	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
