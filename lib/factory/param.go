@@ -434,22 +434,6 @@ func (p *Param) TransFrom(param *Param) *Param {
 	return p
 }
 
-func (p *Param) Begin() *Param {
-	p.trans = p.MustTx()
-	return p
-}
-
-func (p *Param) End(err error) error {
-	if p.trans == nil || p.trans.Tx == nil {
-		return nil
-	}
-	defer p.SetTrans(nil)
-	if err == nil {
-		return p.trans.Commit()
-	}
-	return p.trans.Rollback()
-}
-
 func (p *Param) GetOffset() int {
 	if p.Offset > -1 {
 		return p.Offset
@@ -477,6 +461,34 @@ func (p *Param) MustTx() *Transaction {
 		panic(err.Error())
 	}
 	return trans
+}
+
+func (p *Param) Begin() error {
+	p.trans = p.MustTx()
+	return nil
+}
+
+func (p *Param) Rollback() error {
+	t := p.T()
+	if t.Tx == nil {
+		return nil
+	}
+	return t.Rollback()
+}
+
+func (p *Param) Commit() error {
+	t := p.T()
+	if t.Tx == nil {
+		return nil
+	}
+	return t.Commit()
+}
+
+func (p *Param) End(succeed bool) error {
+	if succeed {
+		return p.Commit()
+	}
+	return p.Rollback()
 }
 
 func (p *Param) T() *Transaction {
