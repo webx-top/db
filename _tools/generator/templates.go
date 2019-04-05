@@ -150,7 +150,7 @@ func (this *{{structName}}) Reset() *{{structName}} {
 }
 
 func (this *{{structName}}) AsMap() map[string]interface{} {
-	r := map[string]interface{}
+	r := map[string]interface{}{}
 {{asMap}}
 	return r
 }
