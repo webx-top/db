@@ -41,6 +41,8 @@ type Join struct {
 type Model interface {
 	Trans() *Transaction
 	Use(trans *Transaction) Model
+	SetNamer(func(string) string) Model
+	Name_() string
 	NewParam() *Param
 	SetParam(param *Param) Model
 	Param() *Param

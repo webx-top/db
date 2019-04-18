@@ -44,6 +44,7 @@ type {{structName}} struct {
 	param   *factory.Param
 	trans	*factory.Transaction
 	objects []*{{structName}}
+	namer   func(string) string
 	
 {{attributes}}
 }
@@ -70,7 +71,19 @@ func (this *{{structName}}) NewObjects() *[]*{{structName}} {
 }
 
 func (this *{{structName}}) NewParam() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection("{{tableName}}").SetModel(this)
+	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
+}
+
+func (this *{{structName}}) SetNamer(namer func (string) string) factory.Model {
+	this.namer = namer
+	return this
+}
+
+func (this *{{structName}}) Name_() string {
+	if this.namer != nil {
+		return this.namer("{{tableName}}")
+	}
+	return "{{tableName}}"
 }
 
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
