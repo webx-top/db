@@ -170,7 +170,7 @@ func (t *Transaction) SelectList(param *Param) (func() int64, error) {
 		}
 		return cnt
 	}
-	return countFn, t.joinSelect(param, selector).All(param.ResultData)
+	return countFn, selector.All(param.ResultData)
 }
 
 func (t *Transaction) SelectCount(param *Param) (int64, error) {
