@@ -209,6 +209,11 @@ func (p *Param) SetCollection(collection string, alias ...string) *Param {
 	return p
 }
 
+func (p *Param) SetAlias(alias string) *Param {
+	p.Alias = alias
+	return p
+}
+
 func (p *Param) TableName() string {
 	if len(p.Alias) > 0 {
 		return p.cluster.Table(p.Collection) + ` ` + p.Alias
