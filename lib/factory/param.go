@@ -43,6 +43,7 @@ type Model interface {
 	Use(trans *Transaction) Model
 	SetNamer(func(string) string) Model
 	Name_() string
+	FullName_() string
 	NewParam() *Param
 	SetParam(param *Param) Model
 	Param() *Param

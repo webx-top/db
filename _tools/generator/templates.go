@@ -87,6 +87,10 @@ func (this *{{structName}}) Name_() string {
 	return "{{tableName}}"
 }
 
+func (this *{{structName}}) FullName_() string {
+	return factory.DefaultFactory.Table(this.Name_())
+}
+
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
 	this.param = param
 	return this
