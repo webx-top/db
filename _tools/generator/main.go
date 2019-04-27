@@ -81,6 +81,7 @@ func main() {
 		replaceMap["tableName"] = noPrefixTableName
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
+		replaceMap["setUpdatedAt"] = ""
 		replaceMap["beforeDelete"] = ""
 		replaceMap["afterInsert"] = ""
 
@@ -139,6 +140,7 @@ func main() {
 			}
 			if ok && len(_fieldNames) > 0 {
 				beforeUpdate := ``
+				setUpdatedAt := ``
 				newLine := ``
 				for _, _fieldName := range _fieldNames {
 					fieldInf, ok := fields[_fieldName]
@@ -148,6 +150,7 @@ func main() {
 					switch fieldInf.GoType {
 					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
 						beforeUpdate += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						setUpdatedAt += newLine + `kvset["` + _fieldName + `"] = ` + fieldInf.GoType + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
 					case `string`:
@@ -155,6 +158,7 @@ func main() {
 					}
 				}
 				replaceMap["beforeUpdate"] = beforeUpdate
+				replaceMap["setUpdatedAt"] = setUpdatedAt
 			}
 		}
 		if importTime {

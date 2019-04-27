@@ -12,6 +12,7 @@ var replaces = &map[string]string{
 	"beforeInsert": "",
 	"afterInsert":  "",
 	"beforeUpdate": "",
+	"setUpdatedAt": "",
 	"beforeDelete": "",
 }
 var structFuncs = map[string]string{
@@ -133,9 +134,14 @@ func (this *{{structName}}) Setter(mw func(db.Result) db.Result, args ...interfa
 }
 
 func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) error {
-	return this.Setter(mw, args...).SetSend(map[string]interface{}{
+	return this.SetFields(mw, map[string]interface{}{
 		field: value,
-	}).Update()
+	}, args...)
+}
+
+func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) error {
+	{{setUpdatedAt}}
+	return this.Setter(mw, args...).SetSend(kvset).Update()
 }
 
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
