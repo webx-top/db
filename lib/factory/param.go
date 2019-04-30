@@ -45,7 +45,7 @@ type Model interface {
 	Name_() string
 	SetConnID(connID int) Model
 	FullName_(connID ...int) string
-	NewModel(structName string, connID ...int) Model
+	New(structName string, connID ...int) Model
 	NewParam() *Param
 	SetParam(param *Param) Model
 	Param() *Param

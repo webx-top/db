@@ -65,7 +65,7 @@ func (this *{{structName}}) SetConnID(connID int) factory.Model {
 	return this
 }
 
-func (this *{{structName}}) NewModel(structName string, connID ...int) factory.Model {
+func (this *{{structName}}) New(structName string, connID ...int) factory.Model {
 	if len(connID) > 0 {
 		return factory.NewModel(structName,connID[0]).Use(this.trans)
 	}
