@@ -46,6 +46,7 @@ type {{structName}} struct {
 	trans	*factory.Transaction
 	objects []*{{structName}}
 	namer   func(string) string
+	connID  int
 	
 {{attributes}}
 }
@@ -56,6 +57,11 @@ func (this *{{structName}}) Trans() *factory.Transaction {
 
 func (this *{{structName}}) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
+	return this
+}
+
+func (this *{{structName}}) SetConnID(connID int) factory.Model {
+	this.connID = connID
 	return this
 }
 
@@ -72,7 +78,7 @@ func (this *{{structName}}) NewObjects() *[]*{{structName}} {
 }
 
 func (this *{{structName}}) NewParam() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
+	return factory.NewParam(factory.DefaultFactory).SetIndex(this.connID).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
 }
 
 func (this *{{structName}}) SetNamer(namer func (string) string) factory.Model {
@@ -87,11 +93,11 @@ func (this *{{structName}}) Name_() string {
 	return "{{tableName}}"
 }
 
-func (this *{{structName}}) FullName_(index ...int) string {
-	if len(index) > 0 {
-		return factory.DefaultFactory.Cluster(index[0]).Table(this.Name_())
+func (this *{{structName}}) FullName_(connID ...int) string {
+	if len(connID) > 0 {
+		return factory.DefaultFactory.Cluster(connID[0]).Table(this.Name_())
 	}
-	return factory.DefaultFactory.Cluster(0).Table(this.Name_())
+	return factory.DefaultFactory.Cluster(this.connID).Table(this.Name_())
 }
 
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
