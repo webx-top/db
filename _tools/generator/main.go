@@ -56,7 +56,7 @@ func main() {
 	hasPrefix := len(cfg.Prefix) > 0
 	for _, tableName := range tables {
 		structName := TableToStructName(tableName, cfg.Prefix)
-		modelInstancers[structName] = `func(connID int) Model { return &` + structName + `{connID: connID} }`
+		modelInstancers[structName] = `func(connID int) factory.Model { return &` + structName + `{connID: connID} }`
 		imports := ``
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")
