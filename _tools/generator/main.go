@@ -224,9 +224,11 @@ func main() {
 	dataContent := strings.Replace(fmt.Sprintf(`factory.Fields=%#v`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
+	dataContent += "\n\tfactory.Models = factory.ModelInstancers{"
 	for structName, modelInstancer := range modelInstancers {
-		dataContent += "\n\tfactory.Models[`" + structName + "`] = " + modelInstancer
+		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}
+	dataContent += "}\n"
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
