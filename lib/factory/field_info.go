@@ -4,6 +4,9 @@ import (
 	"sort"
 )
 
+type ModelInstancer func(connID int) Model
+type ModelInstancers map[string]ModelInstancer
+
 type FieldInfo struct {
 	//以下为数据库中的信息
 	Name          string   `json:"name" xml:"name" bson:"name"`                            //字段名
@@ -94,7 +97,10 @@ func (f FieldValidator) FieldLists(table string, excludeField ...string) []inter
 	return fields
 }
 
-var Fields FieldValidator = map[string]map[string]*FieldInfo{}
+var (
+	Fields FieldValidator  = map[string]map[string]*FieldInfo{}
+	Models ModelInstancers = ModelInstancers{}
+)
 
 func ExistField(table string, field string) bool {
 	return Fields.ExistField(table, field)
@@ -102,4 +108,8 @@ func ExistField(table string, field string) bool {
 
 func ExistTable(table string) bool {
 	return Fields.ExistTable(table)
+}
+
+func NewModel(structName string, connID int) Model {
+	return Models[structName](connID)
 }

@@ -52,9 +52,13 @@ func main() {
 		panic(err.Error())
 	}
 	allFields := map[string]map[string]factory.FieldInfo{}
+	modelInstancers := map[string]string{}
 	hasPrefix := len(cfg.Prefix) > 0
 	for _, tableName := range tables {
 		structName := TableToStructName(tableName, cfg.Prefix)
+		modelInstancers[structName] = `func(connID int) Model {
+			return &` + structName + `{connID: connID}
+		}`
 		imports := ``
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")
@@ -224,6 +228,9 @@ func main() {
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
+	for structName, modelInstancer := range modelInstancers {
+		content += "\nfactory.Models[" + structName + "] = " + modelInstancer
+	}
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {
