@@ -87,8 +87,11 @@ func (this *{{structName}}) Name_() string {
 	return "{{tableName}}"
 }
 
-func (this *{{structName}}) FullName_() string {
-	return factory.DefaultFactory.Table(this.Name_())
+func (this *{{structName}}) FullName_(index ...int) string {
+	if len(index) > 0 {
+		return factory.DefaultFactory.Cluster(index[0]).Table(this.Name_())
+	}
+	return factory.DefaultFactory.Cluster(0).Table(this.Name_())
 }
 
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
