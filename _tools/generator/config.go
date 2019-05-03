@@ -17,9 +17,11 @@ func parseFlag() {
 	flag.StringVar(&cfg.Host, `h`, `localhost`, `-h host`)
 	flag.StringVar(&cfg.Engine, `e`, `mysql`, `-e engine`)
 	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
+	flag.StringVar(&cfg.Charset, `charset`, `utf8`, `-charset utf8mb4`)
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
 	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
+	flag.StringVar(&cfg.Match, `backup`, ``, `-backup "./install.0.sql"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
@@ -65,6 +67,7 @@ type config struct {
 	Host           string          `json:"host"`
 	Engine         string          `json:"engine"`
 	Database       string          `json:"database"`
+	Charset        string          `json:"charset"`
 	Prefix         string          `json:"prefix"`
 	Ignore         string          `json:"ignore"`
 	Match          string          `json:"match"`
@@ -72,6 +75,7 @@ type config struct {
 	ModelConfig    *ModelConfig    `json:"modelConfig"`
 	Schema         string          `json:"schema"`
 	AutoTimeFields *AutoTimeFields `json:"autoTime"`
+	Backup         string          `json:"backup"`
 }
 
 func (cfg *config) Check() {

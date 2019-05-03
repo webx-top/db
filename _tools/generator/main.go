@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
+	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
-	//"github.com/webx-top/com"
 )
 
 func main() {
@@ -57,6 +57,7 @@ func main() {
 	hasPrefix := len(cfg.Prefix) > 0
 	hasIngore := len(cfg.Ignore) > 0
 	hasMatch := len(cfg.Match) > 0
+	validTables := []string{}
 	for _, tableName := range tables {
 		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
 			fmt.Println(`Ignore the table:`, tableName)
@@ -66,6 +67,7 @@ func main() {
 			fmt.Println(`Ignore the table:`, tableName)
 			continue
 		}
+		validTables = append(validTables, tableName)
 		structName := TableToStructName(tableName, cfg.Prefix)
 		modelInstancers[structName] = `func(connID int) factory.Model { return &` + structName + `{connID: connID} }`
 		imports := ``
@@ -281,6 +283,19 @@ func main() {
 				log.Println(`Generated model struct:`, structName)
 			}
 		}
+	}
+
+	if len(cfg.Backup) > 0 {
+		log.Println(`Starting backup:`, validTables)
+		cmdString := genBackupCommand(cfg, validTables)
+		params := com.ParseArgs(cmdString)
+		bufOut, bufErr, err := com.ExecCmd(params[0], params[1:]...)
+
+		if err != nil {
+			log.Println(`Failed to backup:`, err)
+		}
+		log.Println(bufOut)
+		log.Println(bufErr)
 	}
 
 	log.Println(`End.`)

@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
 var replaces = &map[string]string{
 	"packageName":  "",
@@ -251,3 +253,30 @@ func init(){
 }
 
 `
+
+var backupCommand = `mysqldump -d {$db_name} -h{$db_host} -P{$db_port} -u{$db_username} -p{$db_password} --default-character-set={$db_charset} --single-transaction --tables {$db_tables}`
+
+func genBackupCommand(cfg *config, tables []string) string {
+	var port, host string
+	if p := strings.LastIndex(cfg.Host, `:`); p > 0 {
+		host = cfg.Host[0:p]
+		port = cfg.Host[p+1:]
+	} else {
+		host = cfg.Host
+	}
+	mp := map[string]string{
+		`{$db_name}`:     cfg.Database,
+		`{$db_host}`:     host,
+		`{$db_port}`:     port,
+		`{$db_username}`: cfg.Username,
+		`{$db_password}`: cfg.Password,
+		`{$db_charset}`:  cfg.Charset,
+	}
+	c := backupCommand
+	for k, v := range mp {
+		c = strings.ReplaceAll(c, k, v)
+	}
+	t := strings.Join(tables, ` `)
+	c = strings.ReplaceAll(c, `{$db_tables}`, t)
+	return c
+}
