@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -289,13 +290,18 @@ func main() {
 		log.Println(`Starting backup:`, validTables)
 		cmdString := genBackupCommand(cfg, validTables)
 		params := com.ParseArgs(cmdString)
-		bufOut, bufErr, err := com.ExecCmd(params[0], params[1:]...)
-
+		fp, err := os.Create(cfg.Backup)
 		if err != nil {
 			log.Println(`Failed to backup:`, err)
 		}
-		log.Println(bufOut)
-		log.Println(bufErr)
+		defer fp.Close()
+		cmd := exec.Command(params[0], params[1:]...)
+		cmd.Dir = ``
+		cmd.Stdout = fp
+		err = cmd.Run()
+		if err != nil {
+			log.Println(`Failed to backup:`, err)
+		}
 	}
 
 	log.Println(`End.`)

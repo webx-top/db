@@ -278,6 +278,5 @@ func genBackupCommand(cfg *config, tables []string) string {
 	}
 	t := strings.Join(tables, ` `)
 	c = strings.ReplaceAll(c, `{$db_tables}`, t)
-	c += ` > ` + cfg.Backup
 	return c
 }
