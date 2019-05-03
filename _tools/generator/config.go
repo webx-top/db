@@ -18,6 +18,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Engine, `e`, `mysql`, `-e engine`)
 	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
+	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
@@ -64,6 +65,7 @@ type config struct {
 	Engine         string          `json:"engine"`
 	Database       string          `json:"database"`
 	Prefix         string          `json:"prefix"`
+	Ignore         string          `json:"ignore"`
 	SchemaConfig   *SchemaConfig   `json:"schemaConfig"`
 	ModelConfig    *ModelConfig    `json:"modelConfig"`
 	Schema         string          `json:"schema"`

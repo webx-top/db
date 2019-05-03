@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/admpub/confl"
@@ -54,7 +55,12 @@ func main() {
 	allFields := map[string]map[string]factory.FieldInfo{}
 	modelInstancers := map[string]string{}
 	hasPrefix := len(cfg.Prefix) > 0
+	hasIngore := len(cfg.Ignore) > 0
 	for _, tableName := range tables {
+		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
+			fmt.Println(`Ignore the table:`, tableName)
+			continue
+		}
 		structName := TableToStructName(tableName, cfg.Prefix)
 		modelInstancers[structName] = `func(connID int) factory.Model { return &` + structName + `{connID: connID} }`
 		imports := ``
