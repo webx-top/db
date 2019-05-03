@@ -21,7 +21,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
 	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
-	flag.StringVar(&cfg.Match, `backup`, ``, `-backup "./install.0.sql"`)
+	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
