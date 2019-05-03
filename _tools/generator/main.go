@@ -67,6 +67,9 @@ func main() {
 			continue
 		}
 		validTables = append(validTables, tableName)
+		if !cfg.NotGenerated {
+			continue
+		}
 		structName := TableToStructName(tableName, cfg.Prefix)
 		modelInstancers[structName] = `func(connID int) factory.Model { return &` + structName + `{connID: connID} }`
 		imports := ``
@@ -231,7 +234,11 @@ func main() {
 
 		allFields[noPrefixTableName] = fields
 	}
-
+	if cfg.NotGenerated {
+		execBackupCommand(cfg, validTables)
+		log.Println(`End.`)
+		return
+	}
 	content := initFileTemplate
 	dataContent := strings.Replace(fmt.Sprintf(`factory.FieldRegister(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
