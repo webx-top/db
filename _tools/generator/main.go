@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
+	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
@@ -59,11 +60,11 @@ func main() {
 	validTables := []string{}
 	for _, tableName := range tables {
 		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
-			fmt.Println(`Ignore the table:`, tableName)
+			log.Println(`Ignore the table:`, tableName)
 			continue
 		}
 		if hasMatch && !regexp.MustCompile(cfg.Match).MatchString(tableName) {
-			fmt.Println(`Ignore the table:`, tableName)
+			log.Println(`Ignore the table:`, tableName)
 			continue
 		}
 		validTables = append(validTables, tableName)
@@ -235,6 +236,7 @@ func main() {
 		allFields[noPrefixTableName] = fields
 	}
 	if cfg.NotGenerated {
+		com.Dump(cfg)
 		execBackupCommand(cfg, validTables)
 		log.Println(`End.`)
 		return

@@ -21,7 +21,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
 	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
-	flag.BoolVar(&cfg.NotGenerated, `notGenerated`, false, `-notGenerated false`)
+	flag.BoolVar(&cfg.NotGenerated, `notGenerated`, false, `-notGenerated=true`)
 	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql"`)
 
 	//DBSchema
