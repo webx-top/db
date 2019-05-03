@@ -98,9 +98,23 @@ func (f FieldValidator) FieldLists(table string, excludeField ...string) []inter
 }
 
 var (
-	Fields FieldValidator  = map[string]map[string]*FieldInfo{}
+	// Fields {table:{field:FieldInfo}}
+	Fields FieldValidator = map[string]map[string]*FieldInfo{}
+	// Models {StructName:ModelInstancer}
 	Models ModelInstancers = ModelInstancers{}
 )
+
+func FieldRegister(tables map[string]map[string]*FieldInfo) {
+	for table, info := range tables {
+		Fields[table] = info
+	}
+}
+
+func ModelRegister(instancers map[string]ModelInstancer) {
+	for structName, instancer := range instancers {
+		Models[structName] = instancer
+	}
+}
 
 func ExistField(table string, field string) bool {
 	return Fields.ExistField(table, field)

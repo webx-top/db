@@ -232,14 +232,14 @@ func main() {
 	}
 
 	content := initFileTemplate
-	dataContent := strings.Replace(fmt.Sprintf(`factory.Fields=%#v`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`factory.FieldRegister(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
-	dataContent += "\n\tfactory.Models = factory.ModelInstancers{"
+	dataContent += "\n\tfactory.ModelRegister(factory.ModelInstancers{"
 	for structName, modelInstancer := range modelInstancers {
 		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}
-	dataContent += "}\n"
+	dataContent += "})\n"
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
