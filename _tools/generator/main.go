@@ -67,7 +67,7 @@ func main() {
 			continue
 		}
 		validTables = append(validTables, tableName)
-		if !cfg.NotGenerated {
+		if cfg.NotGenerated {
 			continue
 		}
 		structName := TableToStructName(tableName, cfg.Prefix)
