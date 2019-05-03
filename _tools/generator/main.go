@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
-	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
@@ -236,7 +235,6 @@ func main() {
 		allFields[noPrefixTableName] = fields
 	}
 	if cfg.NotGenerated {
-		com.Dump(cfg)
 		execBackupCommand(cfg, validTables)
 		log.Println(`End.`)
 		return
