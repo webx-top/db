@@ -19,6 +19,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
+	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
@@ -66,6 +67,7 @@ type config struct {
 	Database       string          `json:"database"`
 	Prefix         string          `json:"prefix"`
 	Ignore         string          `json:"ignore"`
+	Match          string          `json:"match"`
 	SchemaConfig   *SchemaConfig   `json:"schemaConfig"`
 	ModelConfig    *ModelConfig    `json:"modelConfig"`
 	Schema         string          `json:"schema"`

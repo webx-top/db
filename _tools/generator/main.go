@@ -56,8 +56,13 @@ func main() {
 	modelInstancers := map[string]string{}
 	hasPrefix := len(cfg.Prefix) > 0
 	hasIngore := len(cfg.Ignore) > 0
+	hasMatch := len(cfg.Match) > 0
 	for _, tableName := range tables {
 		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
+			fmt.Println(`Ignore the table:`, tableName)
+			continue
+		}
+		if hasMatch && !regexp.MustCompile(cfg.Match).MatchString(tableName) {
 			fmt.Println(`Ignore the table:`, tableName)
 			continue
 		}
