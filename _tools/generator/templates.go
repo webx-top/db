@@ -1,6 +1,14 @@
 package main
 
-import "strings"
+import (
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
+	"regexp"
+	"strings"
+)
 
 var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
 var replaces = &map[string]string{
@@ -254,9 +262,25 @@ func init(){
 
 `
 
-var backupCommand = `mysqldump -d {$db_name} -h{$db_host} -P{$db_port} -u{$db_username} -p{$db_password} --default-character-set={$db_charset} --single-transaction --tables {$db_tables}`
+/*
+mysqldump 参数说明：
+-d 			结构(--no-data:不导出任何数据，只导出数据库表结构)
+-t 			数据(--no-create-info:只导出数据，而不添加CREATE TABLE 语句)
+-n 			(--no-create-db:只导出数据，而不添加CREATE DATABASE 语句）
+-R 			(--routines:导出存储过程以及自定义函数)
+-E 			(--events:导出事件)
+--triggers 	(默认导出触发器，使用--skip-triggers屏蔽导出)
+-B 			(--databases:导出数据库列表，单个库时可省略）
+--tables 	表列表（单个表时可省略）
+*/
 
-func genBackupCommand(cfg *config, tables []string) string {
+var cleanRegExp = regexp.MustCompile(` AUTO_INCREMENT=[0-9]*\s*`)
+
+func execBackupCommand(cfg *config, tables []string) {
+	if len(cfg.Backup) == 0 || len(tables) == 0 {
+		return
+	}
+	log.Println(`Starting backup:`, tables)
 	var port, host string
 	if p := strings.LastIndex(cfg.Host, `:`); p > 0 {
 		host = cfg.Host[0:p]
@@ -264,19 +288,44 @@ func genBackupCommand(cfg *config, tables []string) string {
 	} else {
 		host = cfg.Host
 	}
-	mp := map[string]string{
-		`{$db_name}`:     cfg.Database,
-		`{$db_host}`:     host,
-		`{$db_port}`:     port,
-		`{$db_username}`: cfg.Username,
-		`{$db_password}`: cfg.Password,
-		`{$db_charset}`:  cfg.Charset,
+	if len(port) == 0 {
+		port = `3306`
 	}
-	c := backupCommand
-	for k, v := range mp {
-		c = strings.ReplaceAll(c, k, v)
+	args := []string{
+		"--default-character-set=" + cfg.Charset,
+		"--single-transaction",
+		"--opt",
+		"-d", //加上此参数代表只导出表结构，不导出数据
+		"-h" + host,
+		"-P" + port,
+		"-u" + cfg.Username,
+		"-p" + cfg.Password,
+		cfg.Database,
 	}
-	t := strings.Join(tables, ` `)
-	c = strings.ReplaceAll(c, `{$db_tables}`, t)
-	return c
+	args = append(args, tables...)
+	cmd := exec.Command("mysqldump", args...)
+	fp, err := os.Create(cfg.Backup)
+	if err != nil {
+		log.Println(`Failed to backup:`, err)
+	}
+	defer fp.Close()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(`Failed to backup:`, err)
+	}
+	if err := cmd.Start(); err != nil {
+		log.Fatal(`Failed to backup:`, err)
+	}
+	if _, err := io.Copy(fp, stdout); err != nil {
+		log.Fatal(`Failed to backup:`, err)
+	}
+	b, err := ioutil.ReadFile(cfg.Backup)
+	if err != nil {
+		log.Fatal(err)
+	}
+	b = cleanRegExp.ReplaceAll(b, []byte(` `))
+	err = ioutil.WriteFile(cfg.Backup, b, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

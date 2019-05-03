@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/admpub/confl"
-	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
@@ -286,23 +284,7 @@ func main() {
 		}
 	}
 
-	if len(cfg.Backup) > 0 {
-		log.Println(`Starting backup:`, validTables)
-		cmdString := genBackupCommand(cfg, validTables)
-		params := com.ParseArgs(cmdString)
-		fp, err := os.Create(cfg.Backup)
-		if err != nil {
-			log.Println(`Failed to backup:`, err)
-		}
-		defer fp.Close()
-		cmd := exec.Command(params[0], params[1:]...)
-		cmd.Dir = ``
-		cmd.Stdout = fp
-		err = cmd.Run()
-		if err != nil {
-			log.Println(`Failed to backup:`, err)
-		}
-	}
+	execBackupCommand(cfg, validTables)
 
 	log.Println(`End.`)
 }
