@@ -475,9 +475,14 @@ func (p *Param) MustTx() *Transaction {
 	return trans
 }
 
-func (p *Param) Begin() error {
+func (p *Param) Begin() (err error) {
+	p.trans, err = p.NewTx(nil)
+	return
+}
+
+func (p *Param) MustBegin() *Param {
 	p.trans = p.MustTx()
-	return nil
+	return p
 }
 
 func (p *Param) Rollback() error {
