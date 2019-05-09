@@ -101,8 +101,29 @@ var (
 	// Fields {table:{field:FieldInfo}}
 	Fields FieldValidator = map[string]map[string]*FieldInfo{}
 	// Models {StructName:ModelInstancer}
-	Models ModelInstancers = ModelInstancers{}
+	Models = ModelInstancers{}
+	// TableNamers {table:NewName}
+	TableNamers = map[string]func(obj interface{}) string{}
+	// DefaultTableNamer default
+	DefaultTableNamer = func(table string) func(obj interface{}) string {
+		return func(obj interface{}) string {
+			return table
+		}
+	}
 )
+
+func TableNamerRegister(namers map[string]func(obj interface{}) string) {
+	for table, namer := range namers {
+		TableNamers[table] = namer
+	}
+}
+
+func TableNamerGet(table string) func(obj interface{}) string {
+	if namer, ok := TableNamers[table]; ok {
+		return namer
+	}
+	return DefaultTableNamer(table)
+}
 
 func FieldRegister(tables map[string]map[string]*FieldInfo) {
 	for table, info := range tables {

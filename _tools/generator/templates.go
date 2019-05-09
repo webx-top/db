@@ -107,7 +107,7 @@ func (this *{{structName}}) Name_() string {
 	if this.namer != nil {
 		return this.namer("{{tableName}}")
 	}
-	return "{{tableName}}"
+	return factory.TableNamerGet("{{tableName}}")(this)
 }
 
 func (this *{{structName}}) FullName_(connID ...int) string {
