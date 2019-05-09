@@ -62,6 +62,7 @@ type Model interface {
 }
 
 type Param struct {
+	ctx                    context.Context
 	factory                *Factory
 	Index                  int //数据库对象元素所在的索引位置
 	ReadOrWrite            int
@@ -130,6 +131,15 @@ func (p *Param) Setter() *Setting {
 func (p *Param) SetIndex(index int) *Param {
 	p.Index = index
 	return p
+}
+
+func (p *Param) SetContext(ctx context.Context) *Param {
+	p.ctx = ctx
+	return p
+}
+
+func (p *Param) Context() context.Context {
+	return p.ctx
 }
 
 func (p *Param) SetModel(model Model) *Param {
