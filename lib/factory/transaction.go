@@ -22,8 +22,7 @@ func (t *Transaction) Database(param *Param) db.Database {
 		param.cluster = t.Cluster
 	}
 	if t.Tx != nil {
-		return param.cluster.Master()
-		//return t.Tx
+		return t.Tx
 	}
 	if param.ReadOrWrite == R {
 		return param.cluster.Slave()
