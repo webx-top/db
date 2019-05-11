@@ -181,6 +181,25 @@ func main() {
 		if importTime {
 			imports += "\n\t" + `"time"`
 		}
+		beforeUpdate := ``
+		setUpdatedAt := ``
+		newLine := ``
+		for _fieldName, fieldInf := range fields {
+			switch fieldInf.GoType {
+			case `string`:
+				if len(fieldInf.DefaultValue) > 0 {
+					beforeUpdate += newLine + `if len(this.` + fieldInf.GoName + `) == 0 { this.` + fieldInf.GoName + ` = "` + fieldInf.DefaultValue + `" }`
+					setUpdatedAt += newLine + `if val, ok := kvset["` + _fieldName + `"]; ok && val != nil { if v, ok := val.(string); ok && len(v) == 0 { kvset["` + _fieldName + `"] = "` + fieldInf.DefaultValue + `" } }`
+					newLine = "\n\t"
+				}
+			}
+		}
+		if len(beforeUpdate) > 0 {
+			replaceMap["beforeUpdate"] += newLine + beforeUpdate
+		}
+		if len(setUpdatedAt) > 0 {
+			replaceMap["setUpdatedAt"] = newLine + setUpdatedAt
+		}
 
 		replaceMap["imports"] = imports
 
