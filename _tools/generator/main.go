@@ -181,6 +181,7 @@ func main() {
 		if importTime {
 			imports += "\n\t" + `"time"`
 		}
+		beforeInsert := ``
 		beforeUpdate := ``
 		setUpdatedAt := ``
 		newLine := ``
@@ -188,11 +189,16 @@ func main() {
 			switch fieldInf.GoType {
 			case `string`:
 				if len(fieldInf.DefaultValue) > 0 {
-					beforeUpdate += newLine + `if len(this.` + fieldInf.GoName + `) == 0 { this.` + fieldInf.GoName + ` = "` + fieldInf.DefaultValue + `" }`
+					setDefault := newLine + `if len(this.` + fieldInf.GoName + `) == 0 { this.` + fieldInf.GoName + ` = "` + fieldInf.DefaultValue + `" }`
+					beforeUpdate += setDefault
+					beforeInsert += setDefault
 					setUpdatedAt += newLine + `if val, ok := kvset["` + _fieldName + `"]; ok && val != nil { if v, ok := val.(string); ok && len(v) == 0 { kvset["` + _fieldName + `"] = "` + fieldInf.DefaultValue + `" } }`
 					newLine = "\n\t"
 				}
 			}
+		}
+		if len(beforeInsert) > 0 {
+			replaceMap["beforeInsert"] += newLine + beforeInsert
 		}
 		if len(beforeUpdate) > 0 {
 			replaceMap["beforeUpdate"] += newLine + beforeUpdate
