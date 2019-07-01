@@ -18,6 +18,7 @@ var replaces = &map[string]string{
 	"attributes":   "",
 	"reset":        "",
 	"asMap":        "",
+	"asRow":        "",
 	"tableName":    "",
 	"beforeInsert": "",
 	"afterInsert":  "",
@@ -171,6 +172,9 @@ func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string,
 
 func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) error {
 	{{setUpdatedAt}}
+	if err := factory.BatchValidate("{{tableName}}", kvset); err != nil {
+		return err
+	}
 	return this.Setter(mw, args...).SetSend(kvset).Update()
 }
 
@@ -202,6 +206,23 @@ func (this *{{structName}}) AsMap() map[string]interface{} {
 	r := map[string]interface{}{}
 {{asMap}}
 	return r
+}
+
+func (this *{{structName}}) AsRow() map[string]interface{} {
+	r := map[string]interface{}{}
+{{asRow}}
+	return r
+}
+
+func (this *{{structName}}) BatchValidate(kvset map[string]interface{}) error {
+	if kvset == nil {
+		kvset = this.AsRow()
+	}
+	return factory.BatchValidate("{{tableName}}", kvset)
+}
+
+func (this *{{structName}}) Validate(field string, value interface{}) error {
+	return factory.Validate("{{tableName}}", field, value)
 }
 
 `

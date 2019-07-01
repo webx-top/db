@@ -239,3 +239,11 @@ func ExistTable(table string) bool {
 func NewModel(structName string, connID int) Model {
 	return Models[structName](connID)
 }
+
+func Validate(table string, field string, value interface{}) error {
+	return Fields.Validate(table, field, value)
+}
+
+func BatchValidate(table string, row map[string]interface{}) error {
+	return Fields.BatchValidate(table, row)
+}

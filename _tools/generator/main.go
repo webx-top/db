@@ -79,7 +79,7 @@ func main() {
 		if hasPrefix {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
-		var resets, asMap string
+		var resets, asMap, asRow string
 		for key, fieldName := range fieldNames {
 			f := fields[fieldName]
 			if key > 0 {
@@ -88,6 +88,7 @@ func main() {
 			}
 			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
 			asMap += `	r["` + f.GoName + `"] = this.` + f.GoName
+			asRow += `	r["` + f.Name + `"] = this.` + f.GoName
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
@@ -95,6 +96,7 @@ func main() {
 		replaceMap["attributes"] = fieldBlock
 		replaceMap["reset"] = resets
 		replaceMap["asMap"] = asMap
+		replaceMap["asRow"] = asRow
 		replaceMap["tableName"] = noPrefixTableName
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
