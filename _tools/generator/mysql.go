@@ -7,6 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/webx-top/echo/param"
+
+	"github.com/webx-top/com"
+
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
@@ -83,6 +87,7 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 		pr := strings.Index(field["Type"], `)`)
 		if pr > -1 {
 			opts := field["Type"][p+1 : pr]
+			var isNum bool
 			if len(opts) > 0 {
 				var err error
 				if opts[0] == '\'' {
@@ -101,6 +106,7 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 						if err != nil {
 							panic(err)
 						}
+						isNum = true
 					}
 				} else {
 					fieldInfo.MaxSize, err = strconv.Atoi(opts)
@@ -111,6 +117,19 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 			}
 			if vs := strings.Split(field["Type"][pr:], ` `); len(vs) > 1 && vs[1] == `unsigned` {
 				fieldInfo.Unsigned = true
+			}
+			if isNum {
+				numStr := strings.Repeat(`9`, fieldInfo.MaxSize)
+				if fieldInfo.Precision > 0 {
+					end := fieldInfo.MaxSize - fieldInfo.Precision //(4,2): 9999=>99.99
+					numStr = numStr[:end] + `.` + numStr[end:]
+				}
+				fieldInfo.Max = param.AsFloat64(numStr)
+				if fieldInfo.Unsigned {
+					fieldInfo.Min = 0
+				} else {
+					fieldInfo.Min = fieldInfo.Max * -1
+				}
 			}
 		}
 	} else {
@@ -185,6 +204,54 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 			}
 		}
 	}
+	if rg, ok := mysqlNumericRange[fieldInfo.DataType]; ok {
+		if fieldInfo.Unsigned {
+			fieldInfo.Min = rg.Unsigned.Min
+			fieldInfo.Max = rg.Unsigned.Max
+		} else {
+			fieldInfo.Min = rg.Signed.Min
+			fieldInfo.Max = rg.Signed.Max
+		}
+		maxSize := len(fmt.Sprint(fieldInfo.Max))
+		if maxSize > fieldInfo.MaxSize {
+			fieldInfo.Max = com.Float64(strings.Repeat(`9`, fieldInfo.MaxSize))
+			if fieldInfo.Min < 0 {
+				fieldInfo.Min = fieldInfo.Max * -1
+			}
+		}
+	}
 	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, fieldInfo.Name, fieldInfo.Name)
 	return fieldBlock, fieldInfo
+}
+
+type NumericRange struct {
+	Min float64
+	Max float64
+}
+type NumericRanges struct {
+	Unsigned *NumericRange
+	Signed   *NumericRange
+}
+
+var mysqlNumericRange = map[string]*NumericRanges{
+	`tinyint`: {
+		Unsigned: &NumericRange{Min: 0, Max: 255},
+		Signed:   &NumericRange{Min: -128, Max: 127},
+	},
+	`smallint`: {
+		Unsigned: &NumericRange{Min: 0, Max: 65535},
+		Signed:   &NumericRange{Min: -32768, Max: 32767},
+	},
+	`mediumint`: {
+		Unsigned: &NumericRange{Min: 0, Max: 16777215},
+		Signed:   &NumericRange{Min: -8388608, Max: 8388607},
+	},
+	`int`: {
+		Unsigned: &NumericRange{Min: 0, Max: 4294967295},
+		Signed:   &NumericRange{Min: -2147483648, Max: 2147483647},
+	},
+	`bigint`: {
+		Unsigned: &NumericRange{Min: 0, Max: 18446744073709551615},
+		Signed:   &NumericRange{Min: -9233372036854775808, Max: 9233372036854775807},
+	},
 }
