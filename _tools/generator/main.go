@@ -85,6 +85,7 @@ func main() {
 			if key > 0 {
 				resets += "\n"
 				asMap += "\n"
+				asRow += "\n"
 			}
 			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
 			asMap += `	r["` + f.GoName + `"] = this.` + f.GoName

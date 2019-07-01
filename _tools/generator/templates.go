@@ -172,9 +172,6 @@ func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string,
 
 func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) error {
 	{{setUpdatedAt}}
-	if err := factory.BatchValidate("{{tableName}}", kvset); err != nil {
-		return err
-	}
 	return this.Setter(mw, args...).SetSend(kvset).Update()
 }
 
