@@ -41,7 +41,7 @@ func (t *Transaction) DB(param *Param) *sql.DB {
 	panic(db.ErrUnsupported)
 }
 
-func (t *Transaction) SQLBuidler(param *Param) sqlbuilder.SQLBuilder {
+func (t *Transaction) SQLBuilder(param *Param) sqlbuilder.SQLBuilder {
 	if db, ok := t.Database(param).(sqlbuilder.SQLBuilder); ok {
 		return db
 	}
@@ -78,7 +78,7 @@ func (t *Transaction) QueryTo(param *Param) (sqlbuilder.Iterator, error) {
 	if err != nil {
 		return nil, err
 	}
-	iter := sqlbuilder.NewIterator(t.SQLBuidler(param), rows)
+	iter := sqlbuilder.NewIterator(t.SQLBuilder(param), rows)
 	if param.ResultData != nil {
 		err = iter.All(param.ResultData)
 	}
