@@ -111,7 +111,7 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			sel := builder.Select().From(table).Where(db.Cond{
+			sel := builder.SelectFrom(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
 			})
 			if chains := builder.RelationMap(); chains != nil {
@@ -139,7 +139,7 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 			if err != nil {
 				return err
 			}
-			sel := builder.Select().From(table).Where(db.Cond{
+			sel := builder.SelectFrom(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
 			})
 			if chains := builder.RelationMap(); chains != nil {
@@ -198,7 +198,7 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			sel := builder.Select().From(table).Where(db.Cond{
+			sel := builder.SelectFrom(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
 			})
 			if chains := builder.RelationMap(); chains != nil {
@@ -249,7 +249,7 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			if err != nil {
 				return err
 			}
-			sel := b.Select().From(table).Where(db.Cond{
+			sel := b.SelectFrom(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
 			})
 			if chains := builder.RelationMap(); chains != nil {
