@@ -157,7 +157,7 @@ type SQLBuilder interface {
 	IteratorContext(ctx context.Context, query interface{}, args ...interface{}) Iterator
 
 	Relation(name string, fn BuilderChainFunc) SQLBuilder //[SWH|+]
-	RelationMap() map[string]BuilderChainFunc               //[SWH|+]
+	RelationMap() map[string]BuilderChainFunc             //[SWH|+]
 }
 
 // Selector represents a SELECT statement.

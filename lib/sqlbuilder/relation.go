@@ -10,7 +10,7 @@ import (
 	"github.com/webx-top/db"
 )
 
-type BuilderChainFunc func(SQLBuilder) SQLBuilder
+type BuilderChainFunc func(Selector) Selector
 
 func (b *sqlBuilder) Relation(name string, fn BuilderChainFunc) SQLBuilder {
 	if b.relationMap == nil {
@@ -105,21 +105,21 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 		// if field type is slice then one-to-many ,eg: []*Struct
 		if field.Type.Kind() == reflect.Slice {
 			foreignModel = reflect.New(field.Type)
-			b := builder
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
-					b = chainFn(b)
-				}
-			}
 			table, err := TableName(foreignModel.Interface())
 			if err != nil {
 				return err
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			err = b.Select().From(table).Where(db.Cond{
+			sel := builder.Select().From(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
-			}).All(foreignModel.Interface())
+			})
+			if chains := builder.RelationMap(); chains != nil {
+				if chainFn, ok := chains[name]; ok {
+					sel = chainFn(sel)
+				}
+			}
+			err = sel.All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
@@ -135,20 +135,19 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 		} else {
 			// If field type is struct the one-to-one,eg: *Struct
 			foreignModel = reflect.New(field.Type.Elem())
-
-			b := builder
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
-					b = chainFn(b)
-				}
-			}
 			table, err := TableName(foreignModel.Interface())
 			if err != nil {
 				return err
 			}
-			err = b.Select().From(table).Where(db.Cond{
+			sel := builder.Select().From(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
-			}).All(foreignModel.Interface())
+			})
+			if chains := builder.RelationMap(); chains != nil {
+				if chainFn, ok := chains[name]; ok {
+					sel = chainFn(sel)
+				}
+			}
+			err = sel.All(foreignModel.Interface())
 			// If one-to-one NoRows is not an error that needs to be terminated
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
@@ -193,23 +192,21 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 		// if field type is slice then one to many ,eg: []*Struct
 		if field.Type.Kind() == reflect.Slice {
 			foreignModel = reflect.New(field.Type)
-
-			b := builder
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
-					b = chainFn(b)
-				}
-			}
-
 			table, err := TableName(foreignModel.Interface())
 			if err != nil {
 				return err
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			err = b.Select().From(table).Where(db.Cond{
+			sel := builder.Select().From(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
-			}).All(foreignModel.Interface())
+			})
+			if chains := builder.RelationMap(); chains != nil {
+				if chainFn, ok := chains[name]; ok {
+					sel = chainFn(sel)
+				}
+			}
+			err = sel.All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
@@ -247,19 +244,20 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			fi := reflect.New(reflect.SliceOf(foreignModel.Type()))
 
 			b := builder
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
-					b = chainFn(b)
-				}
-			}
 
 			table, err := TableName(foreignModel.Interface())
 			if err != nil {
 				return err
 			}
-			err = b.Select().From(table).Where(db.Cond{
+			sel := b.Select().From(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
-			}).All(foreignModel.Interface())
+			})
+			if chains := builder.RelationMap(); chains != nil {
+				if chainFn, ok := chains[name]; ok {
+					sel = chainFn(sel)
+				}
+			}
+			err = sel.All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
