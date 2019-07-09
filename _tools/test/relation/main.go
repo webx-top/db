@@ -21,7 +21,7 @@ var settings = mysql.ConnectionURL{
 
 type GroupAndVHost struct {
 	*dbschema.VhostGroup
-	Vhosts []*dbschema.Vhost `db:"-" relation:"id,group_id"`
+	Vhosts []*dbschema.Vhost `db:",relation=group_id:id"`
 }
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 	factory.AddDB(c)
 	rows := []*GroupAndVHost{}
 	err = c.SelectFrom(`vhost_group`).Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
-		return sel.OrderBy(`-id`).Limit(3)
+		return sel.OrderBy(`-id`)
 	}).All(&rows)
 	if err != nil {
 		panic(err)
@@ -44,7 +44,7 @@ func main() {
 
 	rows2 := []*GroupAndVHost{}
 	err = c.Collection(`vhost_group`).Find().Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
-		return sel.OrderBy(`-id`).Limit(2)
+		return sel.OrderBy(`id`)
 	}).All(&rows2)
 	if err != nil {
 		panic(err)

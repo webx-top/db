@@ -12,6 +12,11 @@ import (
 
 type BuilderChainFunc func(Selector) Selector
 
+const (
+	ForeignKeyIndex = 1
+	PrimaryKeyIndex = 0
+)
+
 func (b *sqlBuilder) Relation(name string, fn BuilderChainFunc) SQLBuilder {
 	if b.relationMap == nil {
 		b.relationMap = make(map[string]BuilderChainFunc)
@@ -29,22 +34,22 @@ func (sel *selector) Relation(name string, fn BuilderChainFunc) Selector {
 	return sel
 }
 
-func eachField(t reflect.Type, fn func(field reflect.StructField, val string, name string, relations []string) error) error {
-	for i := 0; i < t.NumField(); i++ {
-		val := t.Field(i).Tag.Get("relation")
-		name := t.Field(i).Name
-		field := t.Field(i)
-
-		if len(val) > 0 && val != "-" {
-			relations := strings.SplitN(val, ",", 2)
-			if len(relations) != 2 {
-				return fmt.Errorf("relation tag error, length must 2,but get %v", relations)
-			}
-
-			err := fn(field, val, name, relations)
-			if err != nil {
-				return err
-			}
+func eachField(t reflect.Type, fn func(field reflect.StructField, relations []string) error) error {
+	typeMap := mapper.TypeMap(t)
+	for _, fieldInfo := range typeMap.Index {
+		//fmt.Println(`==>`, fieldInfo.Name, fieldInfo.Embedded, com.Dump(fieldInfo.Options, false))
+		// `db:",relation=PrimaryKey:ForeignKey"`
+		rel, ok := fieldInfo.Options[`relation`]
+		if !ok || len(rel) == 0 || rel == `-` {
+			continue
+		}
+		relations := strings.SplitN(rel, `:`, 2)
+		if len(relations) != 2 {
+			return fmt.Errorf("Wrong relation option, length must 2, but get %v. Reference format: `db:\",relation=PrimaryKey:ForeignKey\"`", relations)
+		}
+		err := fn(fieldInfo.Field, relations)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -100,26 +105,28 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 	refVal := reflect.Indirect(reflect.ValueOf(data))
 	t := refVal.Type()
 
-	return eachField(t, func(field reflect.StructField, val string, name string, relations []string) error {
+	return eachField(t, func(field reflect.StructField, relations []string) error {
+		name := field.Name
 		var foreignModel reflect.Value
 		// if field type is slice then one-to-many ,eg: []*Struct
 		if field.Type.Kind() == reflect.Slice {
 			foreignModel = reflect.New(field.Type)
-			table, err := TableName(foreignModel.Interface())
+			foreignIV := foreignModel.Interface()
+			table, err := TableName(foreignIV)
 			if err != nil {
 				return err
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
 			sel := builder.SelectFrom(table).Where(db.Cond{
-				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
+				relations[PrimaryKeyIndex]: mapper.FieldByName(refVal, relations[ForeignKeyIndex]).Interface(),
 			})
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
-			err = sel.All(foreignModel.Interface())
+			err = sel.All(foreignIV)
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
@@ -135,19 +142,20 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 		} else {
 			// If field type is struct the one-to-one,eg: *Struct
 			foreignModel = reflect.New(field.Type.Elem())
-			table, err := TableName(foreignModel.Interface())
+			foreignIV := foreignModel.Interface()
+			table, err := TableName(foreignIV)
 			if err != nil {
 				return err
 			}
 			sel := builder.SelectFrom(table).Where(db.Cond{
-				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
+				relations[PrimaryKeyIndex]: mapper.FieldByName(refVal, relations[ForeignKeyIndex]).Interface(),
 			})
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
-			err = sel.All(foreignModel.Interface())
+			err = sel.All(foreignIV)
 			// If one-to-one NoRows is not an error that needs to be terminated
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
@@ -174,13 +182,14 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 	// get the struct field in slice
 	t := reflect.Indirect(refVal.Index(0)).Type()
 
-	return eachField(t, func(field reflect.StructField, val string, name string, relations []string) error {
+	return eachField(t, func(field reflect.StructField, relations []string) error {
+		name := field.Name
 		relVals := make([]interface{}, 0)
 		relValsMap := make(map[interface{}]interface{}, 0)
 
 		// get relation field values and unique
 		for j := 0; j < l; j++ {
-			v := mapper.FieldByName(refVal.Index(j), relations[0]).Interface()
+			v := mapper.FieldByName(refVal.Index(j), relations[ForeignKeyIndex]).Interface()
 			relValsMap[v] = nil
 		}
 
@@ -192,21 +201,22 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 		// if field type is slice then one to many ,eg: []*Struct
 		if field.Type.Kind() == reflect.Slice {
 			foreignModel = reflect.New(field.Type)
-			table, err := TableName(foreignModel.Interface())
+			foreignIV := foreignModel.Interface()
+			table, err := TableName(foreignIV)
 			if err != nil {
 				return err
 			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
 			sel := builder.SelectFrom(table).Where(db.Cond{
-				relations[1]: db.In(relVals),
+				relations[PrimaryKeyIndex]: db.In(relVals),
 			})
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
-			err = sel.All(foreignModel.Interface())
+			err = sel.All(foreignIV)
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
@@ -216,24 +226,27 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			// Combine relation data as a one-to-many relation
 			// For example, if there are multiple images under an article
 			// we use the article ID to associate the images, map[1][]*Images
-			for n := 0; n < reflect.Indirect(foreignModel).Len(); n++ {
+			mlen := reflect.Indirect(foreignModel).Len()
+			for n := 0; n < mlen; n++ {
 				val := reflect.Indirect(foreignModel).Index(n)
-				fid := mapper.FieldByName(val, relations[1])
-				if _, has := fmap[fid.Interface()]; !has {
-					fmap[fid.Interface()] = reflect.New(reflect.SliceOf(field.Type.Elem())).Elem()
+				fid := mapper.FieldByName(val, relations[PrimaryKeyIndex])
+				fv := fid.Interface()
+				if _, has := fmap[fv]; !has {
+					fmap[fv] = reflect.New(reflect.SliceOf(field.Type.Elem())).Elem()
 				}
-				fmap[fid.Interface()] = reflect.Append(fmap[fid.Interface()], val)
+				fmap[fv] = reflect.Append(fmap[fv], val)
 			}
 
 			// Set the result to the model
 			for j := 0; j < l; j++ {
-				fid := mapper.FieldByName(refVal.Index(j), relations[0])
+				v := refVal.Index(j)
+				fid := mapper.FieldByName(v, relations[ForeignKeyIndex])
 				if value, has := fmap[fid.Interface()]; has {
-					reflect.Indirect(refVal.Index(j)).FieldByName(name).Set(value)
+					reflect.Indirect(v).FieldByName(name).Set(value)
 				} else {
 					// If relation data is empty, must set empty slice
 					// Otherwise, the JSON result will be null instead of []
-					reflect.Indirect(refVal.Index(j)).FieldByName(name).Set(reflect.MakeSlice(field.Type, 0, 0))
+					reflect.Indirect(v).FieldByName(name).Set(reflect.MakeSlice(field.Type, 0, 0))
 				}
 			}
 		} else {
@@ -243,38 +256,40 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			// Batch get field values, but must new slice []*Struct
 			fi := reflect.New(reflect.SliceOf(foreignModel.Type()))
 
-			b := builder
-
-			table, err := TableName(foreignModel.Interface())
+			foreignIV := foreignModel.Interface()
+			table, err := TableName(foreignIV)
 			if err != nil {
 				return err
 			}
-			sel := b.SelectFrom(table).Where(db.Cond{
-				relations[1]: db.In(relVals),
+			sel := builder.SelectFrom(table).Where(db.Cond{
+				relations[PrimaryKeyIndex]: db.In(relVals),
 			})
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
-			err = sel.All(foreignModel.Interface())
+			err = sel.All(foreignIV)
 			if err != nil && err != db.ErrNoMoreRows {
 				return err
 			}
 
 			// Combine relation data as a one-to-one relation
 			fmap := make(map[interface{}]reflect.Value)
-			for n := 0; n < reflect.Indirect(fi).Len(); n++ {
-				val := reflect.Indirect(fi).Index(n)
-				fid := mapper.FieldByName(val, relations[1])
+			fval := reflect.Indirect(fi)
+			mlen := fval.Len()
+			for n := 0; n < mlen; n++ {
+				val := fval.Index(n)
+				fid := mapper.FieldByName(val, relations[PrimaryKeyIndex])
 				fmap[fid.Interface()] = val
 			}
 
 			// Set the result to the model
 			for j := 0; j < l; j++ {
-				fid := mapper.FieldByName(refVal.Index(j), relations[0])
+				v := refVal.Index(j)
+				fid := mapper.FieldByName(v, relations[ForeignKeyIndex])
 				if value, has := fmap[fid.Interface()]; has {
-					reflect.Indirect(refVal.Index(j)).FieldByName(name).Set(value)
+					reflect.Indirect(v).FieldByName(name).Set(value)
 				}
 			}
 		}
