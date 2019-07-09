@@ -31,9 +31,9 @@ import (
 	"encoding/json"
 
 	"github.com/webx-top/db"
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/webx-top/db/internal/immutable"
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type resultQuery struct {
