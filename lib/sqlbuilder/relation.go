@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/admpub/errors"
+	"github.com/webx-top/com"
 	"github.com/webx-top/db"
 )
 
@@ -48,6 +50,51 @@ func eachField(t reflect.Type, fn func(field reflect.StructField, val string, na
 	return nil
 }
 
+type Name_ interface {
+	Name_() string
+}
+
+var (
+	ErrUnableDetermineTableName = errors.New(`Unable to determine table name`)
+	TableName                   = DefaultTableName
+)
+
+func DefaultTableName(data interface{}, retry ...bool) (string, error) {
+	switch m := data.(type) {
+	case Name_:
+		return m.Name_(), nil
+	default:
+		if len(retry) > 0 && retry[0] {
+			return ``, ErrUnableDetermineTableName
+		}
+	}
+	value := reflect.ValueOf(data)
+	if value.IsNil() {
+		return ``, errors.WithMessagef(errors.New("model argument cannot be nil pointer passed"), `%T`, data)
+	}
+	tp := reflect.Indirect(value).Type()
+	if tp.Kind() == reflect.Interface {
+		tp = reflect.Indirect(value).Elem().Type()
+	}
+
+	if tp.Kind() != reflect.Slice {
+		return ``, fmt.Errorf("model argument must slice, but get %T", data)
+	}
+
+	tpEl := tp.Elem()
+	//Compatible with []*Struct or []Struct
+	if tpEl.Kind() == reflect.Ptr {
+		tpEl = tpEl.Elem()
+	}
+	//fmt.Printf("[TableName] %s ========>%[1]T, %[1]v\n", tpEl.Name(), reflect.New(tpEl).Interface())
+	name, err := DefaultTableName(reflect.New(tpEl).Interface(), true)
+	if err == ErrUnableDetermineTableName {
+		name = com.SnakeCase(tpEl.Name())
+		err = nil
+	}
+	return name, err
+}
+
 // RelationOne is get the associated relational data for a single piece of data
 func RelationOne(builder SQLBuilder, data interface{}) error {
 	refVal := reflect.Indirect(reflect.ValueOf(data))
@@ -64,9 +111,13 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 					b = chainFn(b)
 				}
 			}
+			table, err := TableName(foreignModel.Interface())
+			if err != nil {
+				return err
+			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			err := b.Select().Where(db.Cond{
+			err = b.Select().From(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
 			}).All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {
@@ -91,8 +142,11 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 					b = chainFn(b)
 				}
 			}
-
-			err := b.Select().Where(db.Cond{
+			table, err := TableName(foreignModel.Interface())
+			if err != nil {
+				return err
+			}
+			err = b.Select().From(table).Where(db.Cond{
 				relations[1]: mapper.FieldByName(refVal, relations[0]).Interface(),
 			}).All(foreignModel.Interface())
 			// If one-to-one NoRows is not an error that needs to be terminated
@@ -147,9 +201,13 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 				}
 			}
 
+			table, err := TableName(foreignModel.Interface())
+			if err != nil {
+				return err
+			}
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
-			err := b.Select().Where(db.Cond{
+			err = b.Select().From(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
 			}).All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {
@@ -195,7 +253,11 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 				}
 			}
 
-			err := b.Select().Where(db.Cond{
+			table, err := TableName(foreignModel.Interface())
+			if err != nil {
+				return err
+			}
+			err = b.Select().From(table).Where(db.Cond{
 				relations[1]: db.In(relVals),
 			}).All(foreignModel.Interface())
 			if err != nil && err != db.ErrNoMoreRows {

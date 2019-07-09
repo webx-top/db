@@ -38,12 +38,14 @@ func (t *Transaction) DB(param *Param) *sql.DB {
 	if db, ok := t.Driver(param).(*sql.DB); ok {
 		return db
 	}
-	panic(db.ErrUnsupported.Error())
-	return nil
+	panic(db.ErrUnsupported)
 }
 
 func (t *Transaction) SQLBuidler(param *Param) sqlbuilder.SQLBuilder {
-	return t.Database(param)
+	if db, ok := t.Database(param).(sqlbuilder.SQLBuilder); ok {
+		return db
+	}
+	panic(db.ErrUnsupported)
 }
 
 func (t *Transaction) Result(param *Param) db.Result {
@@ -76,7 +78,7 @@ func (t *Transaction) QueryTo(param *Param) (sqlbuilder.Iterator, error) {
 	if err != nil {
 		return nil, err
 	}
-	iter := sqlbuilder.NewIterator(t.SQLBuilder(param), rows)
+	iter := sqlbuilder.NewIterator(t.SQLBuidler(param), rows)
 	if param.ResultData != nil {
 		err = iter.All(param.ResultData)
 	}
