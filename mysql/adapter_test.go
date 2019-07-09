@@ -189,7 +189,7 @@ func getStats(sess sqlbuilder.Database) (map[string]int, error) {
 		Value        int    `db:"Value"`
 	}
 
-	iter := sqlbuilder.NewIterator(res)
+	iter := sqlbuilder.NewIterator(sess, res)
 	for iter.Next(&result) {
 		stats[result.VariableName] = result.Value
 	}
