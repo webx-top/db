@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
+	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
 	"github.com/webx-top/echo"
 )
@@ -29,7 +30,9 @@ func main() {
 	}
 	factory.AddDB(c)
 	rows := []*GroupAndVHost{}
-	err = c.SelectFrom(`vhost_group`).All(&rows)
+	err = c.SelectFrom(`vhost_group`).Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
+		return sel.OrderBy(`-id`)
+	}).All(&rows)
 	if err != nil {
 		panic(err)
 	}
