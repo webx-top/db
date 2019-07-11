@@ -101,8 +101,8 @@ const (
       {{if defined .Table}}
         FROM {{.Table | compile}}
 
-        {{if defined .IndexColumn}}
-          FORCE INDEX({{.IndexColumn | compile}})
+        {{if defined .ForceIndex}}
+          FORCE INDEX({{.ForceIndex | compile}})
         {{end}}
 
       {{end}}

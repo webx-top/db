@@ -87,6 +87,9 @@ const (
 
 	adapterSelectLayout = `
     SELECT
+      {{if defined .ForceIndex}}
+        /*+  INDEX({{.ForceIndex | compile}})  */
+      {{end}}
       {{if .Distinct}}
         DISTINCT
       {{end}}

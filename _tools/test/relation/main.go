@@ -44,7 +44,7 @@ func main() {
 
 	rows2 := []*GroupAndVHost{}
 	err = c.Collection(`vhost_group`).Find().Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
-		return sel.OrderBy(`id`)
+		return sel.OrderBy(`id`) //.ForceIndex(`group_id`)
 	}).All(&rows2)
 	if err != nil {
 		panic(err)
