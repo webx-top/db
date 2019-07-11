@@ -26,15 +26,15 @@ var replaces = []*Replace{
 		regexp.MustCompile("([\\s]+op \\= \\`\\$gte\\`[\\s]+)"),
 		regexp.MustCompile(`mongo[/\\]collection\.go$`),
 	},
-	&Replace{"conds[chunks[0]] = bson.M{op: value}",
+	&Replace{"conds[field] = bson.M{op: value}",
 		`
-			if v, y := conds[chunks[0]]; y {
+			if v, y := conds[field]; y {
 				if bsonM, ok := v.(bson.M); ok {
 					bsonM[op] = value
 					continue
 				}
 			}
-			conds[chunks[0]] = bson.M{op: value}
+			conds[field] = bson.M{op: value}
 `,
 		nil,
 		regexp.MustCompile(`mongo[/\\]collection\.go$`),
