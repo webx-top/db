@@ -100,6 +100,11 @@ const (
 
       {{if defined .Table}}
         FROM {{.Table | compile}}
+
+        {{if defined .IndexColumn}}
+          INDEXED BY {{.IndexColumn | compile}}
+        {{end}}
+
       {{end}}
 
       {{.Joins | compile}}

@@ -24,6 +24,7 @@ type Statement struct {
 	Joins        Fragment
 	Where        Fragment
 	Returning    Fragment
+	IndexColumn  Fragment //[SWH|+] force index
 
 	Limit
 	Offset
