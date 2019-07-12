@@ -33,7 +33,12 @@ const connectionScheme = `file`
 // ConnectionURL implements a QL connection struct.
 type ConnectionURL struct {
 	Database string
+	Prefix   string //[SWH|+]
 	Options  map[string]string
+}
+
+func (c ConnectionURL) GetPrefix() string {
+	return c.Prefix
 }
 
 func (c ConnectionURL) String() (s string) {
