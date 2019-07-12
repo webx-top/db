@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/webx-top/db"
+	mgo "gopkg.in/mgo.v2"
 )
 
 // Adapter holds the name of the mongodb adapter.
