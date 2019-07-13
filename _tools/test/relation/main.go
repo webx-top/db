@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/admpub/nging/application/dbschema"
+	"github.com/admpub/null"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
@@ -69,4 +70,19 @@ func main() {
 		panic(err)
 	}
 	echo.Dump(rows2)
+
+	//验证map方式是否正常==============================
+	row2 := null.StringMap{}
+	err = c.SelectFrom(`vhost_group`).One(&row2)
+	if err != nil {
+		panic(err)
+	}
+	echo.Dump(row2)
+
+	rows3 := null.StringMapSlice{}
+	err = c.SelectFrom(`vhost_group`).Limit(2).All(&rows3)
+	if err != nil {
+		panic(err)
+	}
+	echo.Dump(rows3)
 }
