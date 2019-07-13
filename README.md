@@ -10,6 +10,7 @@ Forked by upper/db
 4. 新增[lib/factory](https://github.com/webx-top/db/tree/master/lib/factory)包
 5. 增加MySQL数据库结构体生成工具（安装命令：`go install github.com/webx-top/_tools/generator`，使用命令`generator -h`查看用法）
 
+[查看文档](http://www.admpub.com:8080/upper-db-manual/en/)
 
 <p align="center">
   <img src="https://upper.io/db.v3/images/gopher.svg" width="256" />
