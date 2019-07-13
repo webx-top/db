@@ -41,7 +41,7 @@ func parseFlag() {
 	//Time
 	flag.StringVar(&autoTime, `autoTime`, `{"update":{"*":["updated"]},"insert":{"*":["created"]}}`, `-autoTime <json-data>`)
 
-	flag.StringVar(&cfg.EncFieldFormat, `enc`, `table`, `-enc table|field`)
+	flag.StringVar(&cfg.EncFieldFormat, `enc`, ``, `-enc "json:table;xml:table"`)
 	flag.Parse()
 }
 
@@ -65,22 +65,23 @@ type ModelConfig struct {
 }
 
 type config struct {
-	Username       string          `json:"username"`
-	Password       string          `json:"password"`
-	Host           string          `json:"host"`
-	Engine         string          `json:"engine"`
-	Database       string          `json:"database"`
-	Charset        string          `json:"charset"`
-	Prefix         string          `json:"prefix"`
-	Ignore         string          `json:"ignore"`
-	Match          string          `json:"match"`
-	SchemaConfig   *SchemaConfig   `json:"schemaConfig"`
-	ModelConfig    *ModelConfig    `json:"modelConfig"`
-	Schema         string          `json:"schema"`
-	NotGenerated   bool            `json:"notGenerated"`
-	AutoTimeFields *AutoTimeFields `json:"autoTime"`
-	Backup         string          `json:"backup"`
-	EncFieldFormat string          `json:"encFieldFormat"`
+	Username        string          `json:"username"`
+	Password        string          `json:"password"`
+	Host            string          `json:"host"`
+	Engine          string          `json:"engine"`
+	Database        string          `json:"database"`
+	Charset         string          `json:"charset"`
+	Prefix          string          `json:"prefix"`
+	Ignore          string          `json:"ignore"`
+	Match           string          `json:"match"`
+	SchemaConfig    *SchemaConfig   `json:"schemaConfig"`
+	ModelConfig     *ModelConfig    `json:"modelConfig"`
+	Schema          string          `json:"schema"`
+	NotGenerated    bool            `json:"notGenerated"`
+	AutoTimeFields  *AutoTimeFields `json:"autoTime"`
+	Backup          string          `json:"backup"`
+	EncFieldFormat  string          `json:"encFieldFormat"`
+	encFieldFormats map[string]string
 }
 
 func (cfg *config) Check() {
@@ -99,6 +100,42 @@ func (cfg *config) Check() {
 	if cfg.AutoTimeFields == nil && len(autoTime) > 0 {
 		cfg.AutoTimeFields = &AutoTimeFields{}
 		cfg.AutoTimeFields.Parse(autoTime)
+	}
+
+	cfg.parseEnc()
+}
+
+func (cfg *config) FieldEncodeType(typ string) string {
+	r, y := cfg.encFieldFormats[typ]
+	if !y {
+		r = `table`
+	}
+	return r
+}
+
+func (cfg *config) parseEnc() {
+	if cfg.encFieldFormats != nil {
+		return
+	}
+	cfg.encFieldFormats = map[string]string{}
+	if len(cfg.EncFieldFormat) == 0 {
+		return
+	}
+	for _, item := range strings.Split(cfg.EncFieldFormat, `;`) {
+		item = strings.TrimSpace(item)
+		if len(item) == 0 {
+			continue
+		}
+		var k, v string
+		kv := strings.SplitN(item, `:`, 2)
+		switch len(kv) {
+		case 2:
+			v = strings.TrimSpace(kv[1])
+			fallthrough
+		case 1:
+			k = strings.TrimSpace(kv[0])
+		}
+		cfg.encFieldFormats[k] = v
 	}
 }
 

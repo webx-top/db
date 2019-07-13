@@ -218,11 +218,21 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 			}
 		}
 	}
-	encodedField := fieldInfo.Name
-	if len(cfg.EncFieldFormat) > 0 && cfg.EncFieldFormat != `table` {
-		encodedField = fieldInfo.GoName
+	jsonTag := fieldInfo.Name
+	xmlTag := fieldInfo.Name
+	if cfg.FieldEncodeType(`json`) != `table` {
+		jsonTag = fieldInfo.GoName
 	}
-	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, encodedField, encodedField)
+	if cfg.FieldEncodeType(`xml`) != `table` {
+		xmlTag = fieldInfo.GoName
+	}
+	if cfg.FieldEncodeType(`bson`) != `table` {
+		bsonTag = fieldInfo.GoName
+	}
+	if cfg.FieldEncodeType(`db`) != `table` {
+		dbTag = fieldInfo.GoName
+	}
+	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, jsonTag, xmlTag)
 	return fieldBlock, fieldInfo
 }
 
