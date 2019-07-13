@@ -33,6 +33,7 @@ func main() {
 	}
 	factory.AddDB(c)
 	rows := []*GroupAndVHost{}
+	//Relation 是可选的，用于增加额外条件
 	err = c.SelectFrom(`vhost_group`).Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
 		return sel.OrderBy(`-id`)
 	}).All(&rows)
