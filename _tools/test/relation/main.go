@@ -20,9 +20,14 @@ var settings = mysql.ConnectionURL{
 	Password: "root",
 }
 
-type GroupAndVHost struct {
+type GroupAndVHosts struct {
 	*dbschema.VhostGroup
 	Vhosts []*dbschema.Vhost `db:",relation=id:group_id"` //relation=<外键>:<vhost的主键>
+}
+
+type GroupAndVHost struct {
+	*dbschema.VhostGroup
+	Vhost *dbschema.Vhost `db:",relation=id:group_id"` //relation=<外键>:<vhost的主键>
 }
 
 func main() {
@@ -32,9 +37,20 @@ func main() {
 		panic(err)
 	}
 	factory.AddDB(c)
+	row := &GroupAndVHost{}
+	err = c.SelectFrom(`vhost_group`).Relation(`Vhost`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
+		return sel.OrderBy(`-id`)
+	}).One(row)
+	if err != nil {
+		panic(err)
+	}
+	echo.Dump(row)
+
+	fmt.Println(`===========================================`)
+
 	rows := []*GroupAndVHost{}
 	//Relation 是可选的，用于增加额外条件
-	err = c.SelectFrom(`vhost_group`).Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
+	err = c.SelectFrom(`vhost_group`).Relation(`Vhost`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
 		return sel.OrderBy(`-id`)
 	}).All(&rows)
 	if err != nil {
@@ -44,7 +60,7 @@ func main() {
 
 	fmt.Println(`===========================================`)
 
-	rows2 := []*GroupAndVHost{}
+	rows2 := []*GroupAndVHosts{}
 	err = c.Collection(`vhost_group`).Find().Relation(`Vhosts`, func(sel sqlbuilder.Selector) sqlbuilder.Selector {
 		return sel.OrderBy(`id`) //.ForceIndex(`group_id`)
 	}).All(&rows2)
