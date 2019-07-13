@@ -40,6 +40,8 @@ func parseFlag() {
 
 	//Time
 	flag.StringVar(&autoTime, `autoTime`, `{"update":{"*":["updated"]},"insert":{"*":["created"]}}`, `-autoTime <json-data>`)
+
+	flag.StringVar(&cfg.EncFieldFormat, `enc`, `table`, `-enc table|field`)
 	flag.Parse()
 }
 
@@ -78,6 +80,7 @@ type config struct {
 	NotGenerated   bool            `json:"notGenerated"`
 	AutoTimeFields *AutoTimeFields `json:"autoTime"`
 	Backup         string          `json:"backup"`
+	EncFieldFormat string          `json:"encFieldFormat"`
 }
 
 func (cfg *config) Check() {

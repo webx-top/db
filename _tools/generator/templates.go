@@ -314,29 +314,48 @@ func execBackupCommand(cfg *config, tables []string) {
 		cfg.Database,
 	}
 	args = append(args, tables...)
-	cmd := exec.Command("mysqldump", args...)
-	fp, err := os.Create(cfg.Backup)
-	if err != nil {
-		log.Println(`Failed to backup:`, err)
+	var structFile, dataFile string
+	files := strings.SplitN(cfg.Backup, `|`, 2)
+	switch len(files) {
+	case 2:
+		dataFile = strings.TrimSpace(files[1])
+		fallthrough
+	case 1:
+		structFile = strings.TrimSpace(files[0])
 	}
-	defer fp.Close()
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(`Failed to backup:`, err)
-	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(`Failed to backup:`, err)
-	}
-	if _, err := io.Copy(fp, stdout); err != nil {
-		log.Fatal(`Failed to backup:`, err)
-	}
-	b, err := ioutil.ReadFile(cfg.Backup)
-	if err != nil {
-		log.Fatal(err)
-	}
-	b = cleanRegExp.ReplaceAll(b, []byte(` `))
-	err = ioutil.WriteFile(cfg.Backup, b, 0666)
-	if err != nil {
-		log.Fatal(err)
+	for index, saveFile := range []string{structFile, dataFile} {
+		if len(saveFile) == 0 {
+			continue
+		}
+		if index > 0 {
+			args[3] = `-t` //导出数据
+		}
+		cmd := exec.Command("mysqldump", args...)
+		fp, err := os.Create(saveFile)
+		if err != nil {
+			log.Println(`Failed to backup:`, err)
+		}
+		defer fp.Close()
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Fatal(`Failed to backup:`, err)
+		}
+		if err := cmd.Start(); err != nil {
+			log.Fatal(`Failed to backup:`, err)
+		}
+		if _, err := io.Copy(fp, stdout); err != nil {
+			log.Fatal(`Failed to backup:`, err)
+		}
+		if index == 0 {
+			b, err := ioutil.ReadFile(saveFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			b = cleanRegExp.ReplaceAll(b, []byte(` `))
+			err = ioutil.WriteFile(saveFile, b, 0666)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	}
 }

@@ -7,12 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/webx-top/echo/param"
-
 	"github.com/webx-top/com"
-
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
+	"github.com/webx-top/echo/param"
 )
 
 func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[string]string) {
@@ -220,7 +218,11 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 			}
 		}
 	}
-	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, fieldInfo.Name, fieldInfo.Name)
+	encodedField := fieldInfo.Name
+	if len(cfg.EncFieldFormat) > 0 && cfg.EncFieldFormat != `table` {
+		encodedField = fieldInfo.GoName
+	}
+	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, encodedField, encodedField)
 	return fieldBlock, fieldInfo
 }
 
