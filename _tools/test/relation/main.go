@@ -22,12 +22,12 @@ var settings = mysql.ConnectionURL{
 
 type GroupAndVHosts struct {
 	*dbschema.VhostGroup
-	Vhosts []*dbschema.Vhost `db:",relation=id:group_id"` //relation=<外键>:<vhost的主键>
+	Vhosts []*dbschema.Vhost `db:"-,relation=id:group_id"` //relation=<外键>:<vhost的主键>
 }
 
 type GroupAndVHost struct {
 	*dbschema.VhostGroup
-	Vhost *dbschema.Vhost `db:",relation=id:group_id"` //relation=<外键>:<vhost的主键>
+	Vhost *dbschema.Vhost `db:"-,relation=id:group_id"` //relation=<外键>:<vhost的主键>
 }
 
 func main() {
@@ -45,6 +45,7 @@ func main() {
 		panic(err)
 	}
 	echo.Dump(row)
+	return
 
 	fmt.Println(`===========================================`)
 
