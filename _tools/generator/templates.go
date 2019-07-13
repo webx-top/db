@@ -104,11 +104,19 @@ func (this *{{structName}}) SetNamer(namer func (string) string) factory.Model {
 	return this
 }
 
+func (this *{{structName}}) Short_() string {
+	return "{{tableName}}"
+}
+
+func (this *{{structName}}) Struct_() string {
+	return "{{structName}}"
+}
+
 func (this *{{structName}}) Name_() string {
 	if this.namer != nil {
-		return this.namer("{{tableName}}")
+		return this.namer(this.Short_())
 	}
-	return factory.TableNamerGet("{{tableName}}")(this)
+	return factory.TableNamerGet(this.Short_())(this)
 }
 
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
@@ -208,11 +216,11 @@ func (this *{{structName}}) BatchValidate(kvset map[string]interface{}) error {
 	if kvset == nil {
 		kvset = this.AsRow()
 	}
-	return factory.BatchValidate("{{tableName}}", kvset)
+	return factory.BatchValidate(this.Short_(), kvset)
 }
 
 func (this *{{structName}}) Validate(field string, value interface{}) error {
-	return factory.Validate("{{tableName}}", field, value)
+	return factory.Validate(this.Short_(), field, value)
 }
 
 `
