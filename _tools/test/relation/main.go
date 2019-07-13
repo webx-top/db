@@ -22,7 +22,7 @@ var settings = mysql.ConnectionURL{
 
 type GroupAndVHost struct {
 	*dbschema.VhostGroup
-	Vhosts []*dbschema.Vhost `db:",relation=id:group_id"`
+	Vhosts []*dbschema.Vhost `db:",relation=id:group_id"` //relation=<外键>:<vhost的主键>
 }
 
 func main() {
