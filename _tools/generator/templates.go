@@ -155,8 +155,7 @@ func (this *{{structName}}) GroupByKey(keyField string, inputRows ...[]*{{struct
 	for _, row := range rows {
 		dmap := row.AsMap()
 		vkey := fmt.Sprint(dmap[keyField])
-		v, y := r[vkey]
-		if !y {
+		if _, y := r[vkey]; !y {
 			r[vkey] = []*{{structName}}{}
 		}
 		r[vkey] = append(r[vkey], row)
