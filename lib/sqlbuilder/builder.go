@@ -463,12 +463,14 @@ func columnFragments(columns []interface{}, prefixx ...string) ([]exql.Fragment,
 			args = append(args, a...)
 		case exql.Fragment:
 			f[i] = v
+		case db.TableName: //[SWH|+]
+			f[i] = exql.ColumnWithName(prefix + v.TableName())
 		case string:
-			f[i] = exql.ColumnWithName(prefix + v)
+			f[i] = exql.ColumnWithName(v)
 		case int:
 			f[i] = exql.RawValue(fmt.Sprintf("%v", v))
 		case interface{}:
-			f[i] = exql.ColumnWithName(prefix + fmt.Sprintf("%v", v))
+			f[i] = exql.ColumnWithName(fmt.Sprintf("%v", v))
 		default:
 			return nil, nil, fmt.Errorf("unexpected argument type %T for Select() argument", v)
 		}

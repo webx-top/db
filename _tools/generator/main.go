@@ -268,6 +268,7 @@ func main() {
 		return
 	}
 	content := initFileTemplate
+	content = strings.Replace(content, `{{prefix}}`, cfg.Prefix, -1)
 	dataContent := strings.Replace(fmt.Sprintf(`factory.FieldRegister(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
@@ -278,6 +279,7 @@ func main() {
 	dataContent += "})\n"
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
+
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {

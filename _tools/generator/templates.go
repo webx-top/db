@@ -116,9 +116,9 @@ func (this *{{structName}}) Struct_() string {
 
 func (this *{{structName}}) Name_() string {
 	if this.namer != nil {
-		return this.namer(this.Short_())
+		return WithPrefix(this.namer(this.Short_()))
 	}
-	return factory.TableNamerGet(this.Short_())(this)
+	return WithPrefix(factory.TableNamerGet(this.Short_())(this))
 }
 
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
@@ -311,6 +311,10 @@ package {{packageName}}
 import (
 	"github.com/webx-top/db/lib/factory"
 )
+
+var WithPrefix = func(tableName string) string {
+	return "{{prefix}}" + tableName
+} 
 
 func init(){
 	{{initCode}}
