@@ -17,7 +17,6 @@ var settings = mysql.ConnectionURL{
 	Host:     "localhost",
 	Database: "nging",
 	User:     "root",
-	//Prefix:   "t_",
 	Password: "root",
 }
 

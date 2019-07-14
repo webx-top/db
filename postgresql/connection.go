@@ -99,15 +99,10 @@ type ConnectionURL struct {
 	Host     string
 	Socket   string
 	Database string
-	Prefix   string //[SWH|+]
 	Options  map[string]string
 }
 
 var escaper = strings.NewReplacer(` `, `\ `, `'`, `\'`, `\`, `\\`)
-
-func (c ConnectionURL) GetPrefix() string {
-	return c.Prefix
-}
 
 // String reassembles the parsed PostgreSQL connection URL into a valid DSN.
 func (c ConnectionURL) String() (s string) {

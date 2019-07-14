@@ -104,36 +104,25 @@ type exprDB interface {
 type sqlBuilder struct {
 	sess        exprDB
 	t           *templateWithUtils
-	prefix      string                      //[SWH|+]
 	relationMap map[string]BuilderChainFunc //[SWH|+]
 }
 
 // WithSession returns a query builder that is bound to the given database session.
-func WithSession(sess interface{}, t *exql.Template, prefixx ...string) SQLBuilder {
+func WithSession(sess interface{}, t *exql.Template) SQLBuilder {
 	if sqlDB, ok := sess.(*sql.DB); ok {
 		sess = sqlDB
-	}
-	var prefix string
-	if len(prefixx) > 0 {
-		prefix = prefixx[0]
 	}
 	return &sqlBuilder{
 		sess:        sess.(exprDB), // Let it panic, it will show the developer an informative error.
 		t:           newTemplateWithUtils(t),
-		prefix:      prefix,
 		relationMap: map[string]BuilderChainFunc{},
 	}
 }
 
 // WithTemplate returns a builder that is based on the given template.
-func WithTemplate(t *exql.Template, prefixx ...string) SQLBuilder {
-	var prefix string
-	if len(prefixx) > 0 {
-		prefix = prefixx[0]
-	}
+func WithTemplate(t *exql.Template) SQLBuilder {
 	return &sqlBuilder{
 		t:           newTemplateWithUtils(t),
-		prefix:      prefix,
 		relationMap: map[string]BuilderChainFunc{},
 	}
 }
@@ -253,16 +242,6 @@ func (b *sqlBuilder) Update(table string) Updater {
 		builder: b,
 	}
 	return qu.setTable(table)
-}
-
-// Prefix [SWH|+] table prefix
-func (b *sqlBuilder) Prefix() string {
-	return b.prefix
-}
-
-// Prefix [SWH|+] table prefix
-func (b *sqlBuilder) TableName(table string) string {
-	return b.prefix + table
 }
 
 // Mapper [SWH|+] For external use
@@ -425,14 +404,10 @@ func extractArguments(fragments []interface{}) []interface{} {
 	return args
 }
 
-func columnFragments(columns []interface{}, prefixx ...string) ([]exql.Fragment, []interface{}, error) {
+func columnFragments(columns []interface{}) ([]exql.Fragment, []interface{}, error) {
 	l := len(columns)
 	f := make([]exql.Fragment, l)
 	args := []interface{}{}
-	var prefix string
-	if len(prefixx) > 0 {
-		prefix = prefixx[0]
-	}
 
 	for i := 0; i < l; i++ {
 		switch v := columns[i].(type) {
@@ -463,8 +438,6 @@ func columnFragments(columns []interface{}, prefixx ...string) ([]exql.Fragment,
 			args = append(args, a...)
 		case exql.Fragment:
 			f[i] = v
-		case db.TableName: //[SWH|+]
-			f[i] = exql.ColumnWithName(prefix + v.TableName())
 		case string:
 			f[i] = exql.ColumnWithName(v)
 		case int:
