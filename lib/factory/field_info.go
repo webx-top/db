@@ -142,20 +142,12 @@ func (f FieldValidator) ExistTable(table string) bool {
 }
 
 func (f FieldValidator) FieldList(table string, excludeField ...string) []string {
-	fields := []string{}
+	var fields []string
 	if tb, ok := f[table]; ok {
 		for field := range tb {
-			var exists bool
-			for _, ex := range excludeField {
-				if field == ex {
-					exists = true
-					break
-				}
+			if !com.InSlice(field, excludeField) {
+				fields = append(fields, field)
 			}
-			if exists {
-				continue
-			}
-			fields = append(fields, field)
 		}
 	}
 	return fields
@@ -177,20 +169,12 @@ func (f FieldValidator) SortedFieldLists(table string, excludeField ...string) [
 }
 
 func (f FieldValidator) FieldLists(table string, excludeField ...string) []interface{} {
-	fields := []interface{}{}
+	var fields []interface{}
 	if tb, ok := f[table]; ok {
 		for field := range tb {
-			var exists bool
-			for _, ex := range excludeField {
-				if field == ex {
-					exists = true
-					break
-				}
+			if !com.InSlice(field, excludeField) {
+				fields = append(fields, field)
 			}
-			if exists {
-				continue
-			}
-			fields = append(fields, field)
 		}
 	}
 	return fields
