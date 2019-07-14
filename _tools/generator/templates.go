@@ -142,6 +142,42 @@ func (this *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result,
 	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
+func (this *{{structName}}) GroupByKey(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
+	var rows []*{{structName}}
+	if len(inputRows) > 0 {
+		rows = inputRows[0]
+	} else {
+		rows = this.Objects()
+	}
+	r := map[string][]*{{structName}}{}
+	for _, row := range rows {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		v, y := r[vkey]
+		if !y {
+			r[vkey] = []*{{structName}}{}
+		}
+		r[vkey] = append(r[vkey], row)
+	}
+	return r
+}
+
+func (this *{{structName}}) AsKV(keyField string, valueField string, inputRows ...[]*{{structName}}) map[string]interface{} {
+	var rows []*{{structName}}
+	if len(inputRows) > 0 {
+		rows = inputRows[0]
+	} else {
+		rows = this.Objects()
+	}
+	r := map[string]interface{}{}
+	for _, row := range rows {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = dmap[valueField]
+	}
+	return r
+}
+
 func (this *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = this.NewObjects()
@@ -236,6 +272,8 @@ var modelReplaces = &map[string]string{
 var modelBaseTemplate = `package {{packageName}}
 
 import (
+	"fmt"
+
 	"github.com/webx-top/echo"
 	{{imports}}
 )
