@@ -17,9 +17,15 @@ type Profile struct {
 	Mobile string `db:"mobile"`
 }
 
+type Group struct {
+	Discount float64 `db:"discount"`
+	Name     string  `db:"name"`
+}
+
 type Data struct {
 	User    *User
-	Profile *Profile
+	Profile *Profile `db:"profile"`
+	Group   *Group   `db:",alias=g"`
 }
 
 func TestFind(t *testing.T) {
@@ -40,4 +46,16 @@ func TestFind(t *testing.T) {
 	assert.True(t, exists)
 	_, exists = fieldInfo.Options[`pk`]
 	assert.True(t, exists)
+
+	fieldPath, exists := typeMap.FindTableField(`User.Id`)
+	assert.True(t, exists)
+	assert.Equal(t, `User.id`, fieldPath)
+
+	fieldPath, exists = typeMap.FindTableField(`Profile.Email`)
+	assert.True(t, exists)
+	assert.Equal(t, `profile.email`, fieldPath)
+
+	fieldPath, exists = typeMap.FindTableField(`group.discount`)
+	assert.True(t, exists)
+	assert.Equal(t, `g.discount`, fieldPath)
 }
