@@ -1,6 +1,7 @@
 package reflectx
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,4 +59,25 @@ func TestFind(t *testing.T) {
 	fieldPath, exists = typeMap.FindTableField(`group.discount`, true)
 	assert.True(t, exists)
 	assert.Equal(t, `g.discount`, fieldPath)
+
+}
+
+func TestFindMap(t *testing.T) {
+	mapper := NewMapper(`db`)
+	data := &Data{}
+	typeMap := mapper.StructMap(data)
+	tableFields, pk := typeMap.FindTableFieldByMap(map[string]map[string]interface{}{
+		`user`: {
+			`id`: nil,
+		},
+		`profile`: {
+			`mobile`: nil,
+		},
+	}, true)
+	assert.Equal(t, `User.id`, pk)
+	for field := range tableFields {
+		fmt.Println(`field:`, field)
+	}
+	assert.Equal(t, `Id`, tableFields[`User.id`].Field.Name)
+	assert.Equal(t, `Mobile`, tableFields[`profile.mobile`].Field.Name)
 }

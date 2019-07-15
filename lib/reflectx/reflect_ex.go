@@ -11,6 +11,46 @@ func (m *Mapper) StructMap(bean interface{}) *StructMap {
 	return m.TypeMap(reflect.ValueOf(bean).Type())
 }
 
+func (f *FieldInfo) Find(field string, isStructField bool) (found *FieldInfo) {
+	for _, fieldInfo := range f.Children {
+		if fieldInfo == nil {
+			continue
+		}
+		var equal bool
+		if isStructField {
+			equal = fieldInfo.Field.Name == field
+		} else {
+			equal = fieldInfo.Name == field
+		}
+		if equal {
+			found = fieldInfo
+			break
+		}
+	}
+	return
+}
+
+func (f *FieldInfo) FindTableField(field string, isStructField bool, aliasOptionName string) (tableField string, found *FieldInfo) {
+	for _, fieldInfo := range f.Children {
+		if fieldInfo == nil {
+			continue
+		}
+		var equal bool
+		if isStructField {
+			equal = fieldInfo.Field.Name == field
+		} else {
+			equal = fieldInfo.Name == field
+		}
+		//fmt.Println(fieldInfo.Field.Name, `[=]`, field)
+		if equal {
+			tableField = getTableFieldName(fieldInfo, aliasOptionName)
+			found = fieldInfo
+			break
+		}
+	}
+	return
+}
+
 // Find Find("user.profile")
 func (f StructMap) Find(fieldPath string, isStructField bool) (tree *FieldInfo, exists bool) {
 	tree = f.Tree
@@ -21,24 +61,8 @@ func (f StructMap) Find(fieldPath string, isStructField bool) (tree *FieldInfo, 
 		if isStructField {
 			field = strings.Title(field)
 		}
-		var found bool
-		for _, fieldInfo := range tree.Children {
-			if fieldInfo == nil {
-				continue
-			}
-			var equal bool
-			if isStructField {
-				equal = fieldInfo.Field.Name == field
-			} else {
-				equal = fieldInfo.Name == field
-			}
-			if equal {
-				tree = fieldInfo
-				found = true
-				break
-			}
-		}
-		if !found {
+		tree = tree.Find(field, isStructField)
+		if tree == nil {
 			return nil, false
 		}
 		exists = true
@@ -46,7 +70,7 @@ func (f StructMap) Find(fieldPath string, isStructField bool) (tree *FieldInfo, 
 	return
 }
 
-func joinTableFieldPath(fieldInfo *FieldInfo, aliasOptionName string, tableFieldPath string) string {
+func getTableFieldName(fieldInfo *FieldInfo, aliasOptionName string) string {
 	alias, _ := fieldInfo.Options[aliasOptionName]
 	if len(alias) == 0 {
 		if len(fieldInfo.Name) > 0 {
@@ -55,8 +79,7 @@ func joinTableFieldPath(fieldInfo *FieldInfo, aliasOptionName string, tableField
 			alias = fieldInfo.Field.Name
 		}
 	}
-	tableFieldPath += `.` + alias
-	return tableFieldPath
+	return alias
 }
 
 // FindTableField Find("User.Profile")
@@ -76,29 +99,58 @@ func (f StructMap) FindTableField(fieldPath string, isStructField bool, aliasOpt
 		if isStructField {
 			field = strings.Title(field)
 		}
-		var found bool
-		for _, fieldInfo := range tree.Children {
-			if fieldInfo == nil {
-				continue
-			}
-			var equal bool
-			if isStructField {
-				equal = fieldInfo.Field.Name == field
-			} else {
-				equal = fieldInfo.Name == field
-			}
-			if equal {
-				tableFieldPath = joinTableFieldPath(fieldInfo, aliasOptionName, tableFieldPath)
-				tree = fieldInfo
-				found = true
-				break
-			}
-		}
-		if !found {
+		var tableField string
+		tableField, tree = tree.FindTableField(field, isStructField, aliasOptionName)
+		if tree == nil {
 			return strings.TrimPrefix(tableFieldPath, `.`), false
 		}
+		tableFieldPath += `.` + tableField
 		exists = true
 	}
 	tableFieldPath = strings.TrimPrefix(tableFieldPath, `.`)
+	return
+}
+
+func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interface{}, isStructField bool, aliasOptionNames ...string) (tableFieldPaths map[string]*FieldInfo, pk string) {
+	tree := f.Tree
+	var aliasOptionName string
+	if len(aliasOptionNames) > 0 {
+		aliasOptionName = aliasOptionNames[0]
+	}
+	if len(aliasOptionName) == 0 {
+		aliasOptionName = `alias`
+	}
+	tableFieldPaths = map[string]*FieldInfo{}
+	for parent, fields := range fieldPaths {
+		if len(parent) == 0 {
+			continue
+		}
+		if isStructField {
+			parent = strings.Title(parent)
+		}
+		parentTree := tree
+		parent, parentTree = parentTree.FindTableField(parent, isStructField, aliasOptionName)
+		if parentTree == nil {
+			continue
+		}
+		for field := range fields {
+			if len(field) == 0 {
+				tableFieldPaths[parent] = parentTree
+				continue
+			}
+			if isStructField {
+				field = strings.Title(field)
+			}
+			var info *FieldInfo
+			field, info = parentTree.FindTableField(field, isStructField, aliasOptionName)
+			if info == nil {
+				continue
+			}
+			if _, exists := info.Options[`pk`]; exists {
+				pk = parent + `.` + field
+			}
+			tableFieldPaths[parent+`.`+field] = info
+		}
+	}
 	return
 }
