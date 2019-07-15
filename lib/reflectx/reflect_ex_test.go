@@ -74,10 +74,12 @@ func TestFindMap(t *testing.T) {
 			`mobile`: nil,
 		},
 	}, true)
-	assert.Equal(t, `User.id`, pk)
+	assert.Equal(t, `User.id`, pk[0])
 	for field := range tableFields {
 		fmt.Println(`field:`, field)
 	}
-	assert.Equal(t, `Id`, tableFields[`User.id`].Field.Name)
-	assert.Equal(t, `Mobile`, tableFields[`profile.mobile`].Field.Name)
+	assert.Equal(t, `Id`, tableFields[`User.id`].FieldInfo.Field.Name)
+	assert.Equal(t, nil, tableFields[`User.id`].RawData)
+	assert.Equal(t, []string{`user`, `id`}, tableFields[`User.id`].RawPath)
+	assert.Equal(t, `Mobile`, tableFields[`profile.mobile`].FieldInfo.Field.Name)
 }
