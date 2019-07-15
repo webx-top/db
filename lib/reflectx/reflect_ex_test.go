@@ -33,29 +33,29 @@ func TestFind(t *testing.T) {
 	data := &Data{}
 	typeMap := mapper.StructMap(data)
 
-	_, exists := typeMap.Find(`user.name`)
+	_, exists := typeMap.Find(`user.name`, true)
 	assert.True(t, exists)
 
-	_, exists = typeMap.Find(`user.age`)
+	_, exists = typeMap.Find(`user.age`, true)
 	assert.True(t, exists)
 
-	_, exists = typeMap.Find(`user.no`)
+	_, exists = typeMap.Find(`user.no`, true)
 	assert.False(t, exists)
 
-	fieldInfo, exists := typeMap.Find(`User.Id`)
+	fieldInfo, exists := typeMap.Find(`User.Id`, true)
 	assert.True(t, exists)
 	_, exists = fieldInfo.Options[`pk`]
 	assert.True(t, exists)
 
-	fieldPath, exists := typeMap.FindTableField(`User.Id`)
+	fieldPath, exists := typeMap.FindTableField(`User.Id`, true)
 	assert.True(t, exists)
 	assert.Equal(t, `User.id`, fieldPath)
 
-	fieldPath, exists = typeMap.FindTableField(`Profile.Email`)
+	fieldPath, exists = typeMap.FindTableField(`Profile.Email`, true)
 	assert.True(t, exists)
 	assert.Equal(t, `profile.email`, fieldPath)
 
-	fieldPath, exists = typeMap.FindTableField(`group.discount`)
+	fieldPath, exists = typeMap.FindTableField(`group.discount`, true)
 	assert.True(t, exists)
 	assert.Equal(t, `g.discount`, fieldPath)
 }
