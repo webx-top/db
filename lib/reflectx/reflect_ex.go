@@ -111,7 +111,13 @@ func (f StructMap) FindTableField(fieldPath string, isStructField bool, aliasOpt
 	return
 }
 
-func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interface{}, isStructField bool, aliasOptionNames ...string) (tableFieldPaths map[string]*FieldInfo, pk string) {
+type FindResult struct {
+	RawData   interface{}
+	FieldInfo *FieldInfo
+	RawPath   []string
+}
+
+func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interface{}, isStructField bool, aliasOptionNames ...string) (tableFieldPaths map[string]*FindResult, pk []string) {
 	tree := f.Tree
 	var aliasOptionName string
 	if len(aliasOptionNames) > 0 {
@@ -120,11 +126,12 @@ func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interfac
 	if len(aliasOptionName) == 0 {
 		aliasOptionName = `alias`
 	}
-	tableFieldPaths = map[string]*FieldInfo{}
+	tableFieldPaths = map[string]*FindResult{}
 	for parent, fields := range fieldPaths {
 		if len(parent) == 0 {
 			continue
 		}
+		parentRaw := parent
 		if isStructField {
 			parent = strings.Title(parent)
 		}
@@ -133,11 +140,16 @@ func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interfac
 		if parentTree == nil {
 			continue
 		}
-		for field := range fields {
+		for field, rawData := range fields {
 			if len(field) == 0 {
-				tableFieldPaths[parent] = parentTree
+				tableFieldPaths[parent] = &FindResult{
+					RawData:   rawData,
+					FieldInfo: parentTree,
+					RawPath:   []string{parentRaw, field},
+				}
 				continue
 			}
+			fieldRaw := field
 			if isStructField {
 				field = strings.Title(field)
 			}
@@ -147,9 +159,13 @@ func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interfac
 				continue
 			}
 			if _, exists := info.Options[`pk`]; exists {
-				pk = parent + `.` + field
+				pk = append(pk, parent+`.`+field)
 			}
-			tableFieldPaths[parent+`.`+field] = info
+			tableFieldPaths[parent+`.`+field] = &FindResult{
+				RawData:   rawData,
+				FieldInfo: info,
+				RawPath:   []string{parentRaw, fieldRaw},
+			}
 		}
 	}
 	return
