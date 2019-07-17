@@ -12,6 +12,9 @@ func (m *Mapper) StructMap(bean interface{}) *StructMap {
 }
 
 func (f *FieldInfo) Find(field string, isStructField bool) (found *FieldInfo) {
+	if isStructField {
+		field = strings.Title(field)
+	}
 	for _, fieldInfo := range f.Children {
 		if fieldInfo == nil {
 			continue
@@ -31,6 +34,9 @@ func (f *FieldInfo) Find(field string, isStructField bool) (found *FieldInfo) {
 }
 
 func (f *FieldInfo) FindTableField(field string, isStructField bool, aliasOptionName string) (tableField string, found *FieldInfo) {
+	if isStructField {
+		field = strings.Title(field)
+	}
 	for _, fieldInfo := range f.Children {
 		if fieldInfo == nil {
 			continue
@@ -57,9 +63,6 @@ func (f StructMap) Find(fieldPath string, isStructField bool) (tree *FieldInfo, 
 	for _, field := range strings.Split(fieldPath, `.`) {
 		if len(field) == 0 {
 			return nil, false
-		}
-		if isStructField {
-			field = strings.Title(field)
 		}
 		tree = tree.Find(field, isStructField)
 		if tree == nil {
@@ -96,9 +99,6 @@ func (f StructMap) FindTableField(fieldPath string, isStructField bool, aliasOpt
 		if len(field) == 0 {
 			return strings.TrimPrefix(tableFieldPath, `.`), false
 		}
-		if isStructField {
-			field = strings.Title(field)
-		}
 		var tableField string
 		tableField, tree = tree.FindTableField(field, isStructField, aliasOptionName)
 		if tree == nil {
@@ -132,9 +132,6 @@ func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interfac
 			continue
 		}
 		parentRaw := parent
-		if isStructField {
-			parent = strings.Title(parent)
-		}
 		parentTree := tree
 		parent, parentTree = parentTree.FindTableField(parent, isStructField, aliasOptionName)
 		if parentTree == nil {
@@ -150,9 +147,6 @@ func (f StructMap) FindTableFieldByMap(fieldPaths map[string]map[string]interfac
 				continue
 			}
 			fieldRaw := field
-			if isStructField {
-				field = strings.Title(field)
-			}
 			var info *FieldInfo
 			field, info = parentTree.FindTableField(field, isStructField, aliasOptionName)
 			if info == nil {
