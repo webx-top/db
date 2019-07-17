@@ -144,7 +144,7 @@ func (this *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result,
 	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
-func (this *{{structName}}) GroupByKey(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
+func (this *{{structName}}) GroupBy(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
 	var rows []*{{structName}}
 	if len(inputRows) > 0 {
 		rows = inputRows[0]
@@ -159,6 +159,22 @@ func (this *{{structName}}) GroupByKey(keyField string, inputRows ...[]*{{struct
 			r[vkey] = []*{{structName}}{}
 		}
 		r[vkey] = append(r[vkey], row)
+	}
+	return r
+}
+
+func (this *{{structName}}) KeyBy(keyField string, inputRows ...[]*{{structName}}) map[string]*{{structName}} {
+	var rows []*{{structName}}
+	if len(inputRows) > 0 {
+		rows = inputRows[0]
+	} else {
+		rows = this.Objects()
+	}
+	r := map[string]*{{structName}}{}
+	for _, row := range rows {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = row
 	}
 	return r
 }
