@@ -354,6 +354,7 @@ func execBackupCommand(cfg *config, tables []string) {
 	args := []string{
 		"--default-character-set=" + cfg.Charset,
 		"--single-transaction",
+		"--set-gtid-purged=OFF",
 		"--opt",
 		"-d", //加上此参数代表只导出表结构，不导出数据
 		"-h" + host,
@@ -377,7 +378,7 @@ func execBackupCommand(cfg *config, tables []string) {
 			continue
 		}
 		if index > 0 {
-			args[3] = `-t` //导出数据
+			args[4] = `-t` //导出数据
 		}
 		cmd := exec.Command("mysqldump", args...)
 		fp, err := os.Create(saveFile)
