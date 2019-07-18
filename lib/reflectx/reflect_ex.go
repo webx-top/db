@@ -5,10 +5,26 @@ import (
 	"strings"
 )
 
+// ReflectSliceElem *[]struct / []struct / *[]*struct / []*struct
+func ReflectSliceElem(bean interface{}) reflect.Type {
+	itemV := reflect.ValueOf(bean)
+	itemT := itemV.Type()
+	if itemT.Kind() == reflect.Ptr {
+		itemT = itemT.Elem()
+	}
+	if itemT.Kind() == reflect.Slice {
+		itemT = itemT.Elem()
+		if itemT.Kind() == reflect.Ptr {
+			itemT = itemT.Elem()
+		}
+	}
+	return itemT
+}
+
 // StructMap returns a mapping of field strings to int slices representing
 // the traversal down the struct to reach the field.
 func (m *Mapper) StructMap(bean interface{}) *StructMap {
-	return m.TypeMap(reflect.ValueOf(bean).Type())
+	return m.TypeMap(ReflectSliceElem(bean))
 }
 
 func (f *FieldInfo) Find(field string, isStructField bool) (found *FieldInfo) {
