@@ -53,9 +53,10 @@ func IsRangeField(keywords string) bool {
 	return len(searchIDRule.FindString(keywords)) > 0
 }
 
-func SearchFields(fields []string, keywords string, idFields ...string) db.Compound {
+func SearchFields(fields []string, keywords string, idFields ...string) []db.Compound {
+	cd := db.Compounds{}
 	if len(keywords) == 0 || len(fields) == 0 {
-		return db.Cond{}
+		return cd
 	}
 	var idField string
 	if len(idFields) > 0 {
@@ -65,7 +66,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) db.Compo
 	if len(idField) > 0 {
 		switch {
 		case IsCompareField(keywords):
-			return CompareField(idField, keywords)
+			return cd.Add(CompareField(idField, keywords)).V()
 		case IsRangeField(keywords):
 			return RangeField(idField, keywords)
 		}
@@ -76,9 +77,9 @@ func SearchFields(fields []string, keywords string, idFields ...string) db.Compo
 		paragraphs = append(paragraphs, paragraph)
 		return ""
 	})
-	cond := db.Compounds{}
 	kws := searchMultiKwRule.Split(keywords, -1)
 	kws = append(kws, paragraphs...)
+	cond := db.Compounds{}
 	for _, v := range kws {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
@@ -102,9 +103,9 @@ func SearchFields(fields []string, keywords string, idFields ...string) db.Compo
 			}
 			_cond.Add(c.Or())
 		}
-		cond.Add(_cond.And())
+		cond.Add(_cond...)
 	}
-	return cond.Or()
+	return cd.Add(cond.Or()).V()
 }
 
 // SearchField 搜索某个字段
@@ -112,9 +113,10 @@ func SearchFields(fields []string, keywords string, idFields ...string) db.Compo
 // @param keywords 关键词
 // @param idFields 如要搜索id字段需要提供id字段名
 // @author swh <swh@admpub.com>
-func SearchField(field string, keywords string, idFields ...string) db.Compound {
+func SearchField(field string, keywords string, idFields ...string) []db.Compound {
+	cd := db.Compounds{}
 	if len(keywords) == 0 || len(field) == 0 {
-		return nil
+		return cd
 	}
 	var idField string
 	if len(idFields) > 0 {
@@ -124,7 +126,7 @@ func SearchField(field string, keywords string, idFields ...string) db.Compound 
 	if len(idField) > 0 {
 		switch {
 		case IsCompareField(keywords):
-			return CompareField(idField, keywords)
+			return cd.Add(CompareField(idField, keywords)).V()
 		case IsRangeField(keywords):
 			return RangeField(idField, keywords)
 		}
@@ -139,7 +141,6 @@ func SearchField(field string, keywords string, idFields ...string) db.Compound 
 	kws = append(kws, paragraphs...)
 	if strings.Contains(field, ",") {
 		fs := strings.Split(field, ",")
-		cd := db.Compounds{}
 		for _, v := range kws {
 			v = strings.TrimSpace(v)
 			if len(v) == 0 {
@@ -163,11 +164,10 @@ func SearchField(field string, keywords string, idFields ...string) db.Compound 
 				}
 				_cond.Add(c.Or())
 			}
-			cd.Add(_cond.And())
+			cd.Add(_cond...)
 		}
-		return cd.And()
+		return cd
 	}
-	cd := db.Compounds{}
 	for _, v := range kws {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
@@ -186,12 +186,13 @@ func SearchField(field string, keywords string, idFields ...string) db.Compound 
 		v = com.AddSlashes(v, '_', '%')
 		cd.AddKV(field, v)
 	}
-	return cd.And()
+	return cd
 }
 
-func RangeField(idField string, keywords string) db.Compound {
+func RangeField(idField string, keywords string) []db.Compound {
+	cd := db.Compounds{}
 	if len(keywords) == 0 || len(idField) == 0 {
-		return db.Cond{}
+		return cd
 	}
 	keywords = strings.TrimSpace(keywords)
 	kws := splitMultiIDRule.Split(keywords, -1)
@@ -224,7 +225,7 @@ func RangeField(idField string, keywords string) db.Compound {
 			cond.AddKV(idField, v)
 		}
 	}
-	return cond.Or()
+	return cd.Add(cond.Or()).V()
 }
 
 func EqField(field string, keywords string) db.Compound {
@@ -239,9 +240,10 @@ func EqField(field string, keywords string) db.Compound {
 // 生成日期范围条件
 // @param field 字段名。支持搜索多个字段，各个字段之间用半角逗号“,”隔开
 // @param keywords 关键词
-func GenDateRange(field string, keywords string) db.Compound {
+func GenDateRange(field string, keywords string) []db.Compound {
+	cond := db.Compounds{}
 	if len(keywords) == 0 || len(field) == 0 {
-		return db.Cond{}
+		return cond
 	}
 	var skwd, skwdExt string
 	dataRange := strings.Split(keywords, ` - `)
@@ -249,7 +251,6 @@ func GenDateRange(field string, keywords string) db.Compound {
 	if len(dataRange) > 1 {
 		skwdExt = dataRange[1]
 	}
-	cond := db.Compounds{}
 	//日期范围
 	dateBegin := com.StrToTime(skwd + ` 00:00:00`)
 	cond.AddKV(field, db.Gte(dateBegin))
@@ -257,5 +258,5 @@ func GenDateRange(field string, keywords string) db.Compound {
 		dateEnd := com.StrToTime(skwd + ` 23:59:59`)
 		cond.AddKV(field, db.Lte(dateEnd))
 	}
-	return cond.And()
+	return cond
 }
