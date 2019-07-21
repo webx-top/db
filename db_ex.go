@@ -104,7 +104,7 @@ var EmptyCond = Cond{}
 
 func (c *Compounds) And(compounds ...Compound) Compound {
 	c.Add(compounds...)
-	switch len(*c) {
+	switch c.Size() {
 	case 0:
 		return EmptyCond
 	case 1:
@@ -116,7 +116,7 @@ func (c *Compounds) And(compounds ...Compound) Compound {
 
 func (c *Compounds) Or(compounds ...Compound) Compound {
 	c.Add(compounds...)
-	switch len(*c) {
+	switch c.Size() {
 	case 0:
 		return EmptyCond
 	case 1:
