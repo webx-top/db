@@ -42,7 +42,7 @@ func CompareField(idField string, keywords string) db.Compound {
 	case `=`:
 		return db.Cond{idField: keywords[1:]}
 	}
-	return db.Cond{}
+	return db.EmptyCond
 }
 
 func IsCompareField(keywords string) bool {
@@ -53,8 +53,8 @@ func IsRangeField(keywords string) bool {
 	return len(searchIDRule.FindString(keywords)) > 0
 }
 
-func SearchFields(fields []string, keywords string, idFields ...string) []db.Compound {
-	cd := db.Compounds{}
+func SearchFields(fields []string, keywords string, idFields ...string) *db.Compounds {
+	cd := db.NewCompounds()
 	if len(keywords) == 0 || len(fields) == 0 {
 		return cd
 	}
@@ -66,7 +66,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) []db.Com
 	if len(idField) > 0 {
 		switch {
 		case IsCompareField(keywords):
-			return cd.Add(CompareField(idField, keywords)).V()
+			return cd.Add(CompareField(idField, keywords))
 		case IsRangeField(keywords):
 			return RangeField(idField, keywords)
 		}
@@ -79,7 +79,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) []db.Com
 	})
 	kws := searchMultiKwRule.Split(keywords, -1)
 	kws = append(kws, paragraphs...)
-	cond := db.Compounds{}
+	cond := db.NewCompounds()
 	for _, v := range kws {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
@@ -95,7 +95,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) []db.Com
 			v = com.AddSlashes(v, '_', '%')
 			values = append(values, v)
 		}
-		_cond := db.Compounds{}
+		_cond := db.NewCompounds()
 		for _, f := range fields {
 			c := db.Compounds{}
 			for _, val := range values {
@@ -103,9 +103,9 @@ func SearchFields(fields []string, keywords string, idFields ...string) []db.Com
 			}
 			_cond.Add(c.Or())
 		}
-		cond.Add(_cond...)
+		cond.Add(*_cond...)
 	}
-	return cd.Add(cond.Or()).V()
+	return cd.Add(cond.Or())
 }
 
 // SearchField 搜索某个字段
@@ -113,8 +113,8 @@ func SearchFields(fields []string, keywords string, idFields ...string) []db.Com
 // @param keywords 关键词
 // @param idFields 如要搜索id字段需要提供id字段名
 // @author swh <swh@admpub.com>
-func SearchField(field string, keywords string, idFields ...string) []db.Compound {
-	cd := db.Compounds{}
+func SearchField(field string, keywords string, idFields ...string) *db.Compounds {
+	cd := db.NewCompounds()
 	if len(keywords) == 0 || len(field) == 0 {
 		return cd
 	}
@@ -126,7 +126,7 @@ func SearchField(field string, keywords string, idFields ...string) []db.Compoun
 	if len(idField) > 0 {
 		switch {
 		case IsCompareField(keywords):
-			return cd.Add(CompareField(idField, keywords)).V()
+			return cd.Add(CompareField(idField, keywords))
 		case IsRangeField(keywords):
 			return RangeField(idField, keywords)
 		}
@@ -156,7 +156,7 @@ func SearchField(field string, keywords string, idFields ...string) []db.Compoun
 				v = com.AddSlashes(v, '_', '%')
 				values = append(values, v)
 			}
-			_cond := db.Compounds{}
+			_cond := db.NewCompounds()
 			for _, f := range fs {
 				c := db.Compounds{}
 				for _, val := range values {
@@ -164,7 +164,7 @@ func SearchField(field string, keywords string, idFields ...string) []db.Compoun
 				}
 				_cond.Add(c.Or())
 			}
-			cd.Add(_cond...)
+			cd.Add(*_cond...)
 		}
 		return cd
 	}
@@ -189,14 +189,14 @@ func SearchField(field string, keywords string, idFields ...string) []db.Compoun
 	return cd
 }
 
-func RangeField(idField string, keywords string) []db.Compound {
-	cd := db.Compounds{}
+func RangeField(idField string, keywords string) *db.Compounds {
+	cd := db.NewCompounds()
 	if len(keywords) == 0 || len(idField) == 0 {
 		return cd
 	}
 	keywords = strings.TrimSpace(keywords)
 	kws := splitMultiIDRule.Split(keywords, -1)
-	cond := db.Compounds{}
+	cond := db.NewCompounds()
 	for _, v := range kws {
 		length := len(v)
 		if length < 1 {
@@ -225,7 +225,7 @@ func RangeField(idField string, keywords string) []db.Compound {
 			cond.AddKV(idField, v)
 		}
 	}
-	return cd.Add(cond.Or()).V()
+	return cd.Add(cond.Or())
 }
 
 func EqField(field string, keywords string) db.Compound {
@@ -240,8 +240,8 @@ func EqField(field string, keywords string) db.Compound {
 // 生成日期范围条件
 // @param field 字段名。支持搜索多个字段，各个字段之间用半角逗号“,”隔开
 // @param keywords 关键词
-func GenDateRange(field string, keywords string) []db.Compound {
-	cond := db.Compounds{}
+func GenDateRange(field string, keywords string) *db.Compounds {
+	cond := db.NewCompounds()
 	if len(keywords) == 0 || len(field) == 0 {
 		return cond
 	}
