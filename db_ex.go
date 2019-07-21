@@ -88,6 +88,13 @@ func (c *Compounds) Add(compounds ...Compound) *Compounds {
 	return c
 }
 
+func (c *Compounds) From(from *Compounds) *Compounds {
+	if from.Size() == 0 {
+		return c
+	}
+	return c.Add(from.V()...)
+}
+
 func (c *Compounds) Slice() []Compound {
 	return *c
 }
