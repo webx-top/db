@@ -32,6 +32,9 @@ func DBIRegister(dbi *DBI, keys ...string) {
 	if len(keys) > 0 {
 		key = keys[0]
 	}
+	if _, y := databases[key]; y {
+		panic(`DBI key already exists, please do not duplicate registrations`)
+	}
 	databases[key] = dbi
 }
 
