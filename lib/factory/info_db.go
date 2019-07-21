@@ -49,3 +49,8 @@ type DBI struct {
 	// TableNamers {table:NewName}
 	TableNamers TableNamers
 }
+
+func (d *DBI) TableName(structName string) string {
+	tableName, _ := d.StructToTable[structName]
+	return tableName
+}
