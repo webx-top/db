@@ -72,7 +72,6 @@ func main() {
 		}
 		structName := TableToStructName(tableName, cfg.Prefix)
 		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{connID: connID} })`
-		struct2table[structName] = tableName
 		imports := ``
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")
