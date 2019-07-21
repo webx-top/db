@@ -96,14 +96,30 @@ func (c *Compounds) V() []Compound {
 	return c.Slice()
 }
 
+var EmptyCond = Cond{}
+
 func (c *Compounds) And(compounds ...Compound) Compound {
 	c.Add(compounds...)
-	return And(*c...)
+	switch len(*c) {
+	case 0:
+		return EmptyCond
+	case 1:
+		return (*c)[0]
+	default:
+		return And(*c...)
+	}
 }
 
 func (c *Compounds) Or(compounds ...Compound) Compound {
 	c.Add(compounds...)
-	return Or(*c...)
+	switch len(*c) {
+	case 0:
+		return EmptyCond
+	case 1:
+		return (*c)[0]
+	default:
+		return Or(*c...)
+	}
 }
 
 type TableName interface {
