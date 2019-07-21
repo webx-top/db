@@ -96,6 +96,10 @@ func (c *Compounds) V() []Compound {
 	return c.Slice()
 }
 
+func (c *Compounds) Size() int {
+	return len(*c)
+}
+
 var EmptyCond = Cond{}
 
 func (c *Compounds) And(compounds ...Compound) Compound {
