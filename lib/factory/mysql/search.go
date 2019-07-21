@@ -97,7 +97,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) *db.Comp
 		}
 		_cond := db.NewCompounds()
 		for _, f := range fields {
-			c := db.Compounds{}
+			c := db.NewCompounds()
 			for _, val := range values {
 				c.AddKV(f, db.Like(val))
 			}
@@ -158,7 +158,7 @@ func SearchField(field string, keywords string, idFields ...string) *db.Compound
 			}
 			_cond := db.NewCompounds()
 			for _, f := range fs {
-				c := db.Compounds{}
+				c := db.NewCompounds()
 				for _, val := range values {
 					c.AddKV(f, db.Like(val))
 				}
@@ -175,7 +175,7 @@ func SearchField(field string, keywords string, idFields ...string) *db.Compound
 		}
 		if strings.Contains(v, "||") {
 			vals := strings.Split(v, "||")
-			cond := db.Compounds{}
+			cond := db.NewCompounds()
 			for _, val := range vals {
 				val = com.AddSlashes(val, '_', '%')
 				cond.AddKV(field, db.Like(val))
