@@ -40,8 +40,6 @@ func NewDBI() *DBI {
 
 // DBI 数据库信息
 type DBI struct {
-	// 结构体名与表名对照
-	StructToTable map[string]string
 	// Fields {table:{field:FieldInfo}}
 	Fields FieldValidator
 	// Models {StructName:ModelInstancer}
@@ -51,6 +49,9 @@ type DBI struct {
 }
 
 func (d *DBI) TableName(structName string) string {
-	tableName, _ := d.StructToTable[structName]
-	return tableName
+	m, ok := d.Models[structName]
+	if ok {
+		return m.Short
+	}
+	return ``
 }

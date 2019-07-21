@@ -35,7 +35,7 @@ func FieldFind(table string, field string) (*FieldInfo, bool) {
 }
 
 // ModelRegister 模型构造函数登记
-func ModelRegister(instancers map[string]ModelInstancer) {
+func ModelRegister(instancers map[string]*ModelInstancer) {
 	DBIGet().Models.Register(instancers)
 }
 
@@ -51,7 +51,7 @@ func ExistTable(table string) bool {
 
 // NewModel 模型实例化
 func NewModel(structName string, connID int) Model {
-	return DBIGet().Models[structName](connID)
+	return DBIGet().Models[structName].Make(connID)
 }
 
 // Validate 验证值是否符合数据库要求
