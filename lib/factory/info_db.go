@@ -31,10 +31,9 @@ func DBIExists(key string) bool {
 
 func NewDBI() *DBI {
 	return &DBI{
-		StructToTable: map[string]string{},
-		Fields:        map[string]map[string]*FieldInfo{},
-		Models:        ModelInstancers{},
-		TableNamers:   map[string]func(obj interface{}) string{},
+		Fields:      map[string]map[string]*FieldInfo{},
+		Models:      ModelInstancers{},
+		TableNamers: map[string]func(obj interface{}) string{},
 	}
 }
 
