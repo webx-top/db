@@ -9,6 +9,62 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
+// DefaultDBKey 默认数据库标识
+const DefaultDBKey = `default`
+
+var (
+	// DefaultTableNamer default
+	DefaultTableNamer = func(table string) func(obj interface{}) string {
+		return func(obj interface{}) string {
+			return table
+		}
+	}
+	// DefaultDBI default
+	DefaultDBI = NewDBI()
+
+	databases = map[string]*DBI{
+		DefaultDBKey: DefaultDBI,
+	}
+)
+
+func DBIRegister(dbi *DBI, keys ...string) {
+	key := DefaultDBKey
+	if len(keys) > 0 {
+		key = keys[0]
+	}
+	databases[key] = dbi
+}
+
+func DBIGet(keys ...string) *DBI {
+	if len(keys) > 0 {
+		return databases[keys[0]]
+	}
+	return databases[DefaultDBKey]
+}
+
+func NewDBI() *DBI {
+	return &DBI{
+		StructToTable: map[string]string{},
+		Fields:        map[string]map[string]*FieldInfo{},
+		Models:        ModelInstancers{},
+		TableNamers:   map[string]func(obj interface{}) string{},
+	}
+}
+
+// DBI 数据库信息
+type DBI struct {
+	// 结构体名与表名对照
+	StructToTable map[string]string
+	// Fields {table:{field:FieldInfo}}
+	Fields FieldValidator
+	// Models {StructName:ModelInstancer}
+	Models ModelInstancers
+	// TableNamers {table:NewName}
+	TableNamers TableNamers
+}
+
+type TableNamers map[string]func(obj interface{}) string
+
 // ModelInstancer 模型实例化
 type ModelInstancer func(connID int) Model
 
@@ -195,76 +251,85 @@ func (f FieldValidator) FieldLists(table string, excludeField ...string) []inter
 	return fields
 }
 
-var (
-	// Fields {table:{field:FieldInfo}}
-	Fields FieldValidator = map[string]map[string]*FieldInfo{}
-	// Models {StructName:ModelInstancer}
-	Models = ModelInstancers{}
-	// TableNamers {table:NewName}
-	TableNamers = map[string]func(obj interface{}) string{}
-	// DefaultTableNamer default
-	DefaultTableNamer = func(table string) func(obj interface{}) string {
-		return func(obj interface{}) string {
-			return table
-		}
-	}
-)
-
-// TableNamerRegister 注册表名称生成器(表名不带前缀)
-func TableNamerRegister(namers map[string]func(obj interface{}) string) {
+// Register 注册表名称生成器(表名不带前缀)
+func (t TableNamers) Register(namers map[string]func(obj interface{}) string) {
 	for table, namer := range namers {
-		TableNamers[table] = namer
+		t[table] = namer
 	}
 }
 
-// TableNamerGet 获取表名称生成器(表名不带前缀)
-func TableNamerGet(table string) func(obj interface{}) string {
-	if namer, ok := TableNamers[table]; ok {
+// Get 获取表名称生成器(表名不带前缀)
+func (t TableNamers) Get(table string) func(obj interface{}) string {
+	if namer, ok := t[table]; ok {
 		return namer
 	}
 	return DefaultTableNamer(table)
 }
 
+// Register 注册字段信息(表名不带前缀)
+func (f FieldValidator) Register(tables map[string]map[string]*FieldInfo) {
+	for table, info := range tables {
+		f[table] = info
+	}
+}
+
+// Register 模型构造函数登记
+func (m ModelInstancers) Register(instancers map[string]ModelInstancer) {
+	for structName, instancer := range instancers {
+		m[structName] = instancer
+	}
+}
+
+// =========================================
+// Default
+// =========================================
+
+// TableNamerRegister 注册表名称生成器(表名不带前缀)
+func TableNamerRegister(namers map[string]func(obj interface{}) string) {
+	DBIGet().TableNamers.Register(namers)
+}
+
+// TableNamerGet 获取表名称生成器(表名不带前缀)
+func TableNamerGet(table string) func(obj interface{}) string {
+	return DBIGet().TableNamers.Get(table)
+}
+
 // FieldRegister 注册字段信息(表名不带前缀)
 func FieldRegister(tables map[string]map[string]*FieldInfo) {
-	for table, info := range tables {
-		Fields[table] = info
-	}
+	DBIGet().Fields.Register(tables)
 }
 
 // FieldFind 获取字段信息(表名不带前缀)
 func FieldFind(table string, field string) (*FieldInfo, bool) {
-	return Fields.Find(table, field)
+	return DBIGet().Fields.Find(table, field)
 }
 
 // ModelRegister 模型构造函数登记
 func ModelRegister(instancers map[string]ModelInstancer) {
-	for structName, instancer := range instancers {
-		Models[structName] = instancer
-	}
+	DBIGet().Models.Register(instancers)
 }
 
 // ExistField 字段是否存在(表名不带前缀)
 func ExistField(table string, field string) bool {
-	return Fields.ExistField(table, field)
+	return DBIGet().Fields.ExistField(table, field)
 }
 
 // ExistTable 表是否存在(表名不带前缀)
 func ExistTable(table string) bool {
-	return Fields.ExistTable(table)
+	return DBIGet().Fields.ExistTable(table)
 }
 
 // NewModel 模型实例化
 func NewModel(structName string, connID int) Model {
-	return Models[structName](connID)
+	return DBIGet().Models[structName](connID)
 }
 
 // Validate 验证值是否符合数据库要求
 func Validate(table string, field string, value interface{}) error {
-	return Fields.Validate(table, field, value)
+	return DBIGet().Fields.Validate(table, field, value)
 }
 
 // BatchValidate 批量验证值是否符合数据库要求
 func BatchValidate(table string, row map[string]interface{}) error {
-	return Fields.BatchValidate(table, row)
+	return DBIGet().Fields.BatchValidate(table, row)
 }
