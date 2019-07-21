@@ -103,7 +103,7 @@ func SearchFields(fields []string, keywords string, idFields ...string) *db.Comp
 			}
 			_cond.Add(c.Or())
 		}
-		cond.Add(*_cond...)
+		cond.From(_cond)
 	}
 	return cd.Add(cond.Or())
 }
@@ -164,7 +164,7 @@ func SearchField(field string, keywords string, idFields ...string) *db.Compound
 				}
 				_cond.Add(c.Or())
 			}
-			cd.Add(*_cond...)
+			cd.From(_cond)
 		}
 		return cd
 	}
