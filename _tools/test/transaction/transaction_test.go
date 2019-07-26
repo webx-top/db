@@ -50,10 +50,6 @@ func TestTransaction(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = param2.Rollback(ctx)
-	if err != nil {
-		panic(err)
-	}
 	verifyResult(t, `Y`)
 	_ = c
 }
