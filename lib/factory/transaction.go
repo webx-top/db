@@ -22,7 +22,10 @@ func (t *Transaction) Database(param *Param) db.Database {
 		param.cluster = t.Cluster
 	}
 	if t.Tx != nil {
-		return t.Tx
+		if _, ok := t.Tx.Driver().(*sql.Tx); ok {
+			return t.Tx
+		}
+		t.Tx = nil
 	}
 	if param.ReadOnly {
 		return param.cluster.Slave()
