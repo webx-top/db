@@ -20,6 +20,8 @@ func Connect() db.Database {
 	if err != nil {
 		panic(err)
 	}
-	factory.AddDB(c)
+	cluster := factory.NewCluster()
+	cluster.AddMaster(c)
+	factory.AddCluster(cluster)
 	return c
 }
