@@ -76,10 +76,21 @@ func TestFindMap(t *testing.T) {
 	}, true)
 	assert.Equal(t, `User.id`, pk[0])
 	for field := range tableFields {
-		fmt.Println(`field:`, field)
+		fmt.Println(`table field:`, field)
 	}
 	assert.Equal(t, `Id`, tableFields[`User.id`].FieldInfo.Field.Name)
 	assert.Equal(t, nil, tableFields[`User.id`].RawData)
 	assert.Equal(t, []string{`user`, `id`}, tableFields[`User.id`].RawPath)
 	assert.Equal(t, `Mobile`, tableFields[`profile.mobile`].FieldInfo.Field.Name)
+}
+
+func TestSlice(t *testing.T) {
+	mapper := NewMapper(`db`)
+	data := &[]*Data{}
+	typeMap := mapper.StructMap(data)
+	assert.Equal(t, `Data`, typeMap.Tree.Name)
+	assert.Equal(t, []int(nil), typeMap.Tree.Index)
+	assert.Nil(t, typeMap.Tree.Parent)
+	assert.Equal(t, ``, typeMap.Tree.Path)
+	assert.Equal(t, `Data`, typeMap.Tree.Zero.Type().Name())
 }
