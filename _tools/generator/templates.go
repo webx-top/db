@@ -2,19 +2,20 @@ package main
 
 var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
 var replaces = &map[string]string{
-	"packageName":  "",
-	"imports":      "",
-	"structName":   "",
-	"attributes":   "",
-	"reset":        "",
-	"asMap":        "",
-	"asRow":        "",
-	"tableName":    "",
-	"beforeInsert": "",
-	"afterInsert":  "",
-	"beforeUpdate": "",
-	"setUpdatedAt": "",
-	"beforeDelete": "",
+	"packageName":   "",
+	"imports":       "",
+	"structName":    "",
+	"structComment": "",
+	"attributes":    "",
+	"reset":         "",
+	"asMap":         "",
+	"asRow":         "",
+	"tableName":     "",
+	"beforeInsert":  "",
+	"afterInsert":   "",
+	"beforeUpdate":  "",
+	"setUpdatedAt":  "",
+	"beforeDelete":  "",
 }
 var structFuncs = map[string]string{
 	`Trans`:         `Trans`,
@@ -54,6 +55,7 @@ import (
 	{{imports}}
 )
 
+// {{structName}} {{structComment}}
 type {{structName}} struct {
 	param   *factory.Param
 	trans	*factory.Transaction

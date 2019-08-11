@@ -76,3 +76,12 @@ func GetTableFields(engine string, d sqlbuilder.Database, tableName string) ([]s
 		return getMySQLTableFields(d, tableName)
 	}
 }
+
+func GetTableComment(engine string, d sqlbuilder.Database, tableName string) (string, error) {
+	switch engine {
+	case "mymysql", "mysql":
+		fallthrough
+	default:
+		return getMySQLTableComment(d, tableName)
+	}
+}

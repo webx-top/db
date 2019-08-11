@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
+	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
@@ -71,8 +72,12 @@ func main() {
 			continue
 		}
 		structName := TableToStructName(tableName, cfg.Prefix)
-		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{connID: connID} })`
-		imports := ``
+		structComment, err := GetTableComment(cfg.Engine, sess, tableName)
+		if err != nil {
+			panic(err)
+		}
+		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{connID: connID} },"` + com.AddSlashes(structComment, '"') + `")`
+		var imports string
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")
 		noPrefixTableName := tableName
@@ -94,6 +99,7 @@ func main() {
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
 		replaceMap["structName"] = structName
+		replaceMap["structComment"] = structComment
 		replaceMap["attributes"] = fieldBlock
 		replaceMap["reset"] = resets
 		replaceMap["asMap"] = asMap

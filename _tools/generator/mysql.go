@@ -14,9 +14,24 @@ import (
 
 	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
+	mySQLUtil "github.com/webx-top/db/lib/factory/mysql"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/echo/param"
 )
+
+func getMySQLTableComment(d sqlbuilder.Database, tableName string) (string, error) {
+	row, err := d.QueryRow(mySQLUtil.SQLTableComment, d.Name(), tableName)
+	if err != nil {
+		return ``, err
+	}
+	recvTableName := sql.NullString{}
+	recvTableComment := sql.NullString{}
+	err = row.Scan(&recvTableName, &recvTableComment)
+	if err != nil {
+		return ``, fmt.Errorf(`TableComment.Scan: %v`, err)
+	}
+	return recvTableComment.String, err
+}
 
 func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[string]string) {
 	rows, err := d.Query("SHOW FULL COLUMNS FROM `" + tableName + "`")
