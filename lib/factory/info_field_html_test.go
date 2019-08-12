@@ -16,20 +16,20 @@ func TestFieldHTML(t *testing.T) {
 		"type":        {Name: "type", DataType: "enum", Unsigned: false, PrimaryKey: false, AutoIncrement: false, Min: 0, Max: 0, Precision: 0, MaxSize: 0, Options: []string{"newsid", "prodid", "text", "url", "html", "image", "video", "audio", "file", "json", "list"}, DefaultValue: "text", Comment: "值类型(list-以半角逗号分隔的值列表)", GoType: "string", GoName: "Type"},
 	}
 	options := echo.H{}
-	r := fields[`description`].HTML(`value:description`, options)
+	r := fields[`description`].FormInput(`value:description`, options)
 	assert.Equal(
 		t,
 		`<input type="text" class="form-control" name="description" value="value:description" maxlength="255" />`,
 		string(r),
 	)
-	r = fields[`content`].HTML(`content:123`, options)
+	r = fields[`content`].FormInput(`content:123`, options)
 	assert.Equal(
 		t,
-		`<textarea class="form-control" name="content"  maxlength="2550">content:123</textarea>`,
+		`<textarea class="form-control" name="content" maxlength="2550">content:123</textarea>`,
 		string(r),
 	)
 
-	r = fields[`disabled`].HTML(`N`, options)
+	r = fields[`disabled`].FormInput(`N`, options)
 	assert.Equal(
 		t,
 		`<div class="radio radio-primary radio-inline">
@@ -40,14 +40,14 @@ func TestFieldHTML(t *testing.T) {
 		string(r),
 	)
 
-	r = fields[`sort`].HTML(`5000`, options)
+	r = fields[`sort`].FormInput(`5000`, options)
 	assert.Equal(
 		t,
 		`<input type="number" class="form-control" name="sort" value="5000" maxlength="10" max="9.999999999e&#43;09" min="-9.999999999e&#43;09" />`,
 		string(r),
 	)
 
-	r = fields[`type`].HTML(`video`, options)
+	r = fields[`type`].FormInput(`video`, options)
 	//panic(`[` + string(r) + `]`)
 	assert.Equal(
 		t,
