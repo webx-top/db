@@ -64,7 +64,7 @@ func TableComment(linkID int, dbName string, tableName string) (string, error) {
 }
 
 // ColumnComment 查询表中某些列的注释
-func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...string) (map[string]param.StringMap, error) {
+func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...string) (map[string]param.StringMap, []string, error) {
 	ctx := context.Background()
 	db := factory.NewParam().SetIndex(linkID).DB()
 	sqlStr := SQLColumnComment
@@ -83,16 +83,16 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 		fmt.Println(sqlStr, `[`, dbName, tableName, `]`)
 	}
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	results := map[string]param.StringMap{}
 	rows, err := stmt.QueryContext(ctx, dbName, tableName)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	cols, err := rows.Columns()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	indexes := make(map[string]int, len(cols))
 	for idx, col := range cols {
@@ -105,7 +105,7 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 		}
 		err := rows.Scan(recv...)
 		if err != nil {
-			return results, err
+			return results, cols, err
 		}
 		result := param.StringMap{}
 		for col, idx := range indexes {
@@ -113,5 +113,5 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 		}
 		results[result.String(`field`)] = result
 	}
-	return results, err
+	return results, cols, err
 }
