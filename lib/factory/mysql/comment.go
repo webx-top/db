@@ -98,6 +98,7 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 	for idx, col := range cols {
 		indexes[col] = idx
 	}
+	fields := []string{}
 	for rows.Next() {
 		recv := make([]interface{}, len(cols))
 		for idx := range cols {
@@ -105,13 +106,15 @@ func ColumnComment(linkID int, dbName string, tableName string, fieldNames ...st
 		}
 		err := rows.Scan(recv...)
 		if err != nil {
-			return results, cols, err
+			return results, fields, err
 		}
 		result := param.StringMap{}
 		for col, idx := range indexes {
 			result[col] = param.String(recv[idx].(*sql.NullString).String)
 		}
-		results[result.String(`field`)] = result
+		field := result.String(`field`)
+		results[field] = result
+		fields = append(fields, field)
 	}
-	return results, cols, err
+	return results, fields, err
 }
