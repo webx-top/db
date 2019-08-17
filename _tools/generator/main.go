@@ -58,6 +58,7 @@ func main() {
 	hasIngore := len(cfg.Ignore) > 0
 	hasMatch := len(cfg.Match) > 0
 	validTables := []string{}
+	columns := map[string][]string{}
 	for _, tableName := range tables {
 		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
 			log.Println(`Ignore the table:`, tableName)
@@ -84,6 +85,7 @@ func main() {
 		if hasPrefix {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
+		columns[noPrefixTableName] = fieldNames
 		var resets, asMap, asRow string
 		for key, fieldName := range fieldNames {
 			f := fields[fieldName]
@@ -275,10 +277,12 @@ func main() {
 	}
 	content := initFileTemplate
 	content = strings.Replace(content, `{{prefix}}`, cfg.Prefix, -1)
-	dataContent := strings.Replace(fmt.Sprintf(`factory.FieldRegister(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
+	content = strings.Replace(content, `{{dbKey}}`, cfg.DBKey, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`DBI.Fields.Register(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
-	dataContent += "\n\tfactory.ModelRegister(factory.ModelInstancers{"
+	dataContent += "\n\t" + fmt.Sprintf(`DBI.Columns=%#v`, columns) + "\n"
+	dataContent += "\n\tDBI.Model.Register(factory.ModelInstancers{"
 	for structName, modelInstancer := range modelInstancers {
 		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}

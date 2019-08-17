@@ -332,9 +332,12 @@ import (
 
 var WithPrefix = func(tableName string) string {
 	return "{{prefix}}" + tableName
-} 
+}
+
+var DBI = factory.NewDBI()
 
 func init(){
+	factory.DBIRegister(DBI,"{{dbKey}}")
 	{{initCode}}
 }
 

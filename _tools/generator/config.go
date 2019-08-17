@@ -6,6 +6,8 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/webx-top/db/lib/factory"
 )
 
 func parseFlag() {
@@ -17,6 +19,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Host, `h`, `localhost`, `-h host`)
 	flag.StringVar(&cfg.Engine, `e`, `mysql`, `-e engine`)
 	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
+	flag.StringVar(&cfg.DBKey, `k`, factory.DefaultDBKey, `-d default`)
 	flag.StringVar(&cfg.Charset, `charset`, `utf8`, `-charset utf8mb4`)
 	flag.StringVar(&cfg.Prefix, `pre`, ``, `-pre prefix`)
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
@@ -81,6 +84,7 @@ type config struct {
 	AutoTimeFields  *AutoTimeFields `json:"autoTime"`
 	Backup          string          `json:"backup"`
 	EncFieldFormat  string          `json:"encFieldFormat"`
+	DBKey           string          `json:"dbKey"`
 	encFieldFormats map[string]string
 }
 
