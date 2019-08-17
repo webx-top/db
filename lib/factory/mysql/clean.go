@@ -7,7 +7,7 @@ import (
 
 // Clean 清理掉表中不存在的字段
 func Clean(linkID int, dbName string, tableName string, data echo.H, excludeFields ...string) (echo.H, error) {
-	columns, err := ColumnComment(linkID, dbName, tableName)
+	columns, _, err := ColumnComment(linkID, dbName, tableName)
 	if err != nil {
 		return data, err
 	}
