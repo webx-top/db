@@ -288,6 +288,11 @@ func main() {
 	}
 	dataContent += "})\n"
 	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
+	if cfg.DBKey != factory.DefaultDBKey {
+		dataContent = `factory.DBIRegister(DBI,"` + cfg.DBKey + `")` + "\n\t" + dataContent
+	} else {
+		content = strings.Replace(content, `factory.NewDBI()`, `factory.DefaultDBI`, -1)
+	}
 	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
 
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`

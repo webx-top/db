@@ -337,7 +337,6 @@ var WithPrefix = func(tableName string) string {
 var DBI = factory.NewDBI()
 
 func init(){
-	factory.DBIRegister(DBI,"{{dbKey}}")
 	{{initCode}}
 }
 
