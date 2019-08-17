@@ -282,7 +282,7 @@ func main() {
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
 	dataContent += "\n\t" + fmt.Sprintf(`DBI.Columns=%#v`, columns) + "\n"
-	dataContent += "\n\tDBI.Model.Register(factory.ModelInstancers{"
+	dataContent += "\n\tDBI.Models.Register(factory.ModelInstancers{"
 	for structName, modelInstancer := range modelInstancers {
 		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}
