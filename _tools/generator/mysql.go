@@ -151,7 +151,9 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 			}
 		}
 	} else {
-		if vs := strings.Split(field["Type"], ` `); len(vs) > 1 && vs[1] == `unsigned` {
+		vs := strings.Split(field["Type"], ` `)
+		fieldInfo.DataType = vs[0]
+		if len(vs) > 1 && vs[1] == `unsigned` {
 			fieldInfo.Unsigned = true
 		}
 	}
