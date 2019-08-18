@@ -19,13 +19,13 @@ func TestFieldHTML(t *testing.T) {
 	r := fields[`description`].FormInput(`value:description`, options)
 	assert.Equal(
 		t,
-		`<input type="text" class="form-control" name="description" value="value:description" maxlength="255" />`,
+		`<input type="text" class="form-control" name="description" value="value:description" maxlength="255" />`+"\n",
 		string(r),
 	)
 	r = fields[`content`].FormInput(`content:123`, options)
 	assert.Equal(
 		t,
-		`<textarea class="form-control" name="content" maxlength="2550">content:123</textarea>`,
+		`<textarea class="form-control" name="content" maxlength="2550">content:123</textarea>`+"\n",
 		string(r),
 	)
 
@@ -34,16 +34,17 @@ func TestFieldHTML(t *testing.T) {
 		t,
 		`<div class="radio radio-primary radio-inline">
 		<input type="radio" value="Y" name="disabled" id="disabled-Y"> <label for="disabled-Y">Y</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="N" name="disabled" id="disabled-N" checked="checked"> <label for="disabled-N">N</label>
-	</div>`,
+	</div>`+"\n",
 		string(r),
 	)
 
 	r = fields[`sort`].FormInput(`5000`, options)
 	assert.Equal(
 		t,
-		`<input type="number" class="form-control" name="sort" value="5000" maxlength="10" max="9.999999999e&#43;09" min="-9.999999999e&#43;09" />`,
+		`<input type="number" class="form-control" name="sort" value="5000" maxlength="10" max="9.999999999e&#43;09" min="-9.999999999e&#43;09" />`+"\n",
 		string(r),
 	)
 
@@ -53,27 +54,47 @@ func TestFieldHTML(t *testing.T) {
 		t,
 		`<div class="radio radio-primary radio-inline">
 		<input type="radio" value="newsid" name="type" id="type-newsid"> <label for="type-newsid">newsid</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="prodid" name="type" id="type-prodid"> <label for="type-prodid">prodid</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="text" name="type" id="type-text"> <label for="type-text">text</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="url" name="type" id="type-url"> <label for="type-url">url</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="html" name="type" id="type-html"> <label for="type-html">html</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="image" name="type" id="type-image"> <label for="type-image">image</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="video" name="type" id="type-video" checked="checked"> <label for="type-video">video</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="audio" name="type" id="type-audio"> <label for="type-audio">audio</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="file" name="type" id="type-file"> <label for="type-file">file</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="json" name="type" id="type-json"> <label for="type-json">json</label>
-	</div><div class="radio radio-primary radio-inline">
+	</div>
+<div class="radio radio-primary radio-inline">
 		<input type="radio" value="list" name="type" id="type-list"> <label for="type-list">list</label>
-	</div>`,
+	</div>`+"\n",
+		string(r),
+	)
+
+	options = echo.H{
+		`maker`: true,
+	}
+	r = fields[`description`].FormInput(`value:description`, options)
+	assert.Equal(
+		t,
+		`<input type="text" class="form-control" name="description" value="{{Form `+"`"+`description`+"`"+`}}" maxlength="255" />`+"\n",
 		string(r),
 	)
 }
