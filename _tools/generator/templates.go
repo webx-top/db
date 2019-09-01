@@ -283,7 +283,7 @@ func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.M
 				vv = value[0]
 			}
 			switch kk {
-				{{setCase}}
+{{setCase}}
 			}
 	}
 	r := map[string]interface{}{}
