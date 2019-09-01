@@ -263,7 +263,7 @@ func (this *{{structName}}) AsMap() map[string]interface{} {
 	return r
 }
 
-func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.Model {
+func (this *{{structName}}) Set(key interface{}, value ...interface{}) {
 	switch k := key.(type) {
 		case map[string]interface{}:
 			for kk, vv := range k {
@@ -286,7 +286,6 @@ func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.M
 {{setCase}}
 			}
 	}
-	return this
 }
 
 func (this *{{structName}}) AsRow() map[string]interface{} {
