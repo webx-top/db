@@ -10,6 +10,7 @@ var replaces = &map[string]string{
 	"reset":         "",
 	"asMap":         "",
 	"asRow":         "",
+	"setCase":       "",
 	"tableName":     "",
 	"beforeInsert":  "",
 	"afterInsert":   "",
@@ -52,6 +53,7 @@ import (
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
+	"github.com/webx-top/echo/param"
 	{{imports}}
 )
 
@@ -256,6 +258,34 @@ func (this *{{structName}}) Reset() *{{structName}} {
 }
 
 func (this *{{structName}}) AsMap() map[string]interface{} {
+	r := map[string]interface{}{}
+{{asMap}}
+	return r
+}
+
+func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.Model {
+	switch k := key.(type) {
+		case map[string]interface{}:
+			for kk, vv := range k {
+				this.Set(kk, vv)
+			}
+		default:
+			var (
+				kk string
+				vv interface{}
+			)
+			if k, y := key.(string); y {
+				kk = k
+			} else {
+				kk = fmt.Sprint(key)
+			}
+			if len(value) > 0 {
+				vv = value[0]
+			}
+			switch kk {
+				{{setCase}}
+			}
+	}
 	r := map[string]interface{}{}
 {{asMap}}
 	return r

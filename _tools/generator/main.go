@@ -86,17 +86,23 @@ func main() {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
 		columns[noPrefixTableName] = fieldNames
-		var resets, asMap, asRow string
+		var resets, asMap, asRow, setCase string
 		for key, fieldName := range fieldNames {
 			f := fields[fieldName]
 			if key > 0 {
 				resets += "\n"
 				asMap += "\n"
 				asRow += "\n"
+				setCase += "\n"
 			}
 			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
 			asMap += `	r["` + f.GoName + `"] = this.` + f.GoName
 			asRow += `	r["` + f.Name + `"] = this.` + f.GoName
+			goTypeName := f.GoType
+			if goTypeName == `byte[]` {
+				goTypeName = `bytes`
+			}
+			setCase += `				case "` + f.GoName + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
@@ -106,6 +112,7 @@ func main() {
 		replaceMap["reset"] = resets
 		replaceMap["asMap"] = asMap
 		replaceMap["asRow"] = asRow
+		replaceMap["setCase"] = setCase
 		replaceMap["tableName"] = noPrefixTableName
 		replaceMap["beforeInsert"] = ""
 		replaceMap["beforeUpdate"] = ""
