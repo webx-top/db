@@ -286,8 +286,6 @@ func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.M
 {{setCase}}
 			}
 	}
-	r := map[string]interface{}{}
-{{asMap}}
 	return r
 }
 
