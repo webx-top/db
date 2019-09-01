@@ -286,7 +286,7 @@ func (this *{{structName}}) Set(key interface{}, value ...interface{}) factory.M
 {{setCase}}
 			}
 	}
-	return r
+	return this
 }
 
 func (this *{{structName}}) AsRow() map[string]interface{} {
