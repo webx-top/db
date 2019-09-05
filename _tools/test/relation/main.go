@@ -5,6 +5,7 @@ import (
 
 	"github.com/admpub/nging/application/dbschema"
 	"github.com/admpub/null"
+	dbschemax "github.com/admpub/webx/application/dbschema"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/_tools/test/settings"
@@ -25,6 +26,21 @@ type GroupAndVHost struct {
 type JoinData struct {
 	Group *dbschema.VhostGroup
 	Vhost *dbschema.Vhost
+}
+
+type MovieWithCategory struct {
+	*dbschemax.OfficialMovieItem
+	TypeList []*dbschemax.OfficialMovieType `db:",relation=id:types|split"`
+}
+
+func testMultiOne2many2(c db.Database) {
+	rows2 := []*MovieWithCategory{}
+	err := c.Collection(`official_movie_item`).Find().All(&rows2)
+	if err != nil {
+		panic(err)
+	}
+	echo.Dump(rows2)
+
 }
 
 func testJoin(c db.Database) {
@@ -89,6 +105,8 @@ func testMap(c db.Database) {
 func main() {
 	c := settings.Connect()
 
+	testMultiOne2many2(c)
+	return
 	testJoin(c)
 	return
 	testOne2one(c)
