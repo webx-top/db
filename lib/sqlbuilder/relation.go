@@ -146,6 +146,11 @@ func buildCond(refVal reflect.Value, relations []string, pipes []Pipe) interface
 	fieldName := relations[ForeignKeyIndex]
 	rFieldName := relations[RelationKeyIndex]
 	fieldValue := mapper.FieldByName(refVal, rFieldName).Interface()
+	if len(pipes) == 0 {
+		return db.Cond{
+			fieldName: fieldValue,
+		}
+	}
 	for _, pipe := range pipes {
 		fieldValue = pipe(fieldValue)
 	}
@@ -249,18 +254,25 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 		fieldName := relations[ForeignKeyIndex]
 		rFieldName := relations[RelationKeyIndex]
 		// get relation field values and unique
-		for j := 0; j < l; j++ {
-			v := mapper.FieldByName(refVal.Index(j), rFieldName).Interface()
-			for _, pipe := range pipes {
-				v = pipe(v)
+		if len(pipes) == 0 {
+			for j := 0; j < l; j++ {
+				v := mapper.FieldByName(refVal.Index(j), rFieldName).Interface()
+				relValsMap[v] = nil
 			}
-			if vs, ok := v.([]interface{}); ok {
-				for _, vv := range vs {
-					relValsMap[vv] = nil
+		} else {
+			for j := 0; j < l; j++ {
+				v := mapper.FieldByName(refVal.Index(j), rFieldName).Interface()
+				for _, pipe := range pipes {
+					v = pipe(v)
 				}
-				continue
+				if vs, ok := v.([]interface{}); ok {
+					for _, vv := range vs {
+						relValsMap[vv] = nil
+					}
+					continue
+				}
+				relValsMap[v] = nil
 			}
-			relValsMap[v] = nil
 		}
 
 		for k := range relValsMap {
