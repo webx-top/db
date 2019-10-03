@@ -240,7 +240,7 @@ func (this *{{structName}}) Add() (pk interface{}, err error) {
 	pk, err = this.Param().SetSend(this).Insert()
 	{{afterInsert}}
 	if err == nil {
-		err = DBI.EventFire("created", this, mw, args...)
+		err = DBI.EventFire("created", this, nil)
 	}
 	return
 }
@@ -286,7 +286,7 @@ func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interfa
 		}
 	},func(){
 		{{beforeInsert}}
-		if err = DBI.EventFire("creating", this, mw, args...); err != nil {
+		if err = DBI.EventFire("creating", this, nil); err != nil {
 			return
 		}
 	})
@@ -295,7 +295,7 @@ func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interfa
 		if pk == nil {
 			err = DBI.EventFire("updated", this, mw, args...)
 		} else {
-			err = DBI.EventFire("created", this, mw, args...)
+			err = DBI.EventFire("created", this, nil)
 		}
 	} 
 	return 
