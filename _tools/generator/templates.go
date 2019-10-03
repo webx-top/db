@@ -282,14 +282,10 @@ func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[st
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
 	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func() error {
 		{{beforeUpdate}}
-		if err = DBI.EventFire("updating", this, mw, args...); err != nil {
-			return err
-		}
+		return DBI.EventFire("updating", this, mw, args...)
 	}, func() error {
 		{{beforeInsert}}
-		if err = DBI.EventFire("creating", this, nil); err != nil {
-			return err
-		}
+		return DBI.EventFire("creating", this, nil)
 	})
 	{{afterInsert}}
 	if err == nil {
