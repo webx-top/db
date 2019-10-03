@@ -280,15 +280,15 @@ func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[st
 }
 
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
-	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
+	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func() error {
 		{{beforeUpdate}}
 		if err = DBI.EventFire("updating", this, mw, args...); err != nil {
-			return
+			return err
 		}
-	},func(){
+	}, func() error {
 		{{beforeInsert}}
 		if err = DBI.EventFire("creating", this, nil); err != nil {
-			return
+			return err
 		}
 	})
 	{{afterInsert}}
