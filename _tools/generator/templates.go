@@ -54,6 +54,7 @@ import (
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
+	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/param"
 	{{imports}}
 )
@@ -85,6 +86,7 @@ type {{structName}} struct {
 	objects []*{{structName}}
 	namer   func(string) string
 	connID  int
+	context echo.Context
 	
 {{attributes}}
 }
@@ -96,6 +98,15 @@ func (this *{{structName}}) Trans() *factory.Transaction {
 func (this *{{structName}}) Use(trans *factory.Transaction) factory.Model {
 	this.trans = trans
 	return this
+}
+
+func (this *{{structName}}) SetContext(ctx echo.Context) factory.Model {
+	this.context = ctx
+	return this
+}
+
+func (this *{{structName}}) Context() echo.Context {
+	return this.context
 }
 
 func (this *{{structName}}) SetConnID(connID int) factory.Model {
