@@ -10,6 +10,7 @@ var replaces = &map[string]string{
 	"reset":         "",
 	"asMap":         "",
 	"asRow":         "",
+	"fromMapCase":   "",
 	"setCase":       "",
 	"tableName":     "",
 	"beforeInsert":  "",
@@ -57,6 +58,26 @@ import (
 	{{imports}}
 )
 
+type Slice_{{structName}} []*{{structName}}
+
+func (s Slice_{{structName}}) Range(fn func(m factory.Model) error ) error {
+	for _, v := range s {
+		if err := fn(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s Slice_{{structName}}) RangeRaw(fn func(m *{{structName}}) error ) error {
+	for _, v := range s {
+		if err := fn(v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // {{structName}} {{structComment}}
 type {{structName}} struct {
 	param   *factory.Param
@@ -96,7 +117,11 @@ func (this *{{structName}}) Objects() []*{{structName}} {
 	return this.objects[:]
 }
 
-func (this *{{structName}}) NewObjects() *[]*{{structName}} {
+func (this *{{structName}}) NewObjects() factory.Ranger {
+	return &Slice_{{structName}}{}
+}
+
+func (this *{{structName}}) InitObjects() *[]*{{structName}} {
 	this.objects = []*{{structName}}{}
 	return &this.objects
 }
@@ -143,7 +168,7 @@ func (this *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{
 
 func (this *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
-		recv = this.NewObjects()
+		recv = this.InitObjects()
 	}
 	return this.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
@@ -201,20 +226,30 @@ func (this *{{structName}}) AsKV(keyField string, valueField string, inputRows .
 
 func (this *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
-		recv = this.NewObjects()
+		recv = this.InitObjects()
 	}
 	return this.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
 }
 
 func (this *{{structName}}) Add() (pk interface{}, err error) {
 	{{beforeInsert}}
+	err = DBI.EventFire("creating", this, nil)
+	if err != nil {
+		return
+	}
 	pk, err = this.Param().SetSend(this).Insert()
 	{{afterInsert}}
+	if err == nil {
+		err = DBI.EventFire("created", this, nil)
+	}
 	return
 }
 
 func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	{{beforeUpdate}}
+	if err := DBI.EventFire("updating", this, mw, args...); err != nil {
+		return err
+	}
 	return this.Setter(mw, args...).SetSend(this).Update()
 }
 
@@ -244,6 +279,9 @@ func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interfa
 }
 
 func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
+	if err := DBI.EventFire("deleting", this, mw, args...); err != nil {
+		return err
+	}
 	{{beforeDelete}}
 	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
 }
@@ -261,6 +299,14 @@ func (this *{{structName}}) AsMap() map[string]interface{} {
 	r := map[string]interface{}{}
 {{asMap}}
 	return r
+}
+
+func (this *{{structName}}) FromMap(rows map[string]interface{}) {
+	for key, value := range rows {
+		switch key {
+{{fromMapCase}}
+		}
+	}
 }
 
 func (this *{{structName}}) Set(key interface{}, value ...interface{}) {
