@@ -240,50 +240,76 @@ func (this *{{structName}}) Add() (pk interface{}, err error) {
 	pk, err = this.Param().SetSend(this).Insert()
 	{{afterInsert}}
 	if err == nil {
-		err = DBI.EventFire("created", this, nil)
+		err = DBI.EventFire("created", this, mw, args...)
 	}
 	return
 }
 
-func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
+func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	{{beforeUpdate}}
-	if err := DBI.EventFire("updating", this, mw, args...); err != nil {
-		return err
+	if err = DBI.EventFire("updating", this, mw, args...); err != nil {
+		return
 	}
-	return this.Setter(mw, args...).SetSend(this).Update()
+	if err = this.Setter(mw, args...).SetSend(this).Update(); err != nil {
+		return
+	}
+	return DBI.EventFire("updated", this, mw, args...)
 }
 
 func (this *{{structName}}) Setter(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
 	return this.Param().SetArgs(args...).SetMiddleware(mw)
 }
 
-func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) error {
+func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
 	return this.SetFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) error {
+func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 	{{setUpdatedAt}}
-	return this.Setter(mw, args...).SetSend(kvset).Update()
+	this.FromMap(kvset)
+	if err = DBI.EventFire("updating", this, mw, args...); err != nil {
+		return
+	}
+	if err = this.Setter(mw, args...).SetSend(kvset).Update(); err != nil {
+		return
+	}
+	return DBI.EventFire("updated", this, mw, args...)
 }
 
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
 	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func(){
 		{{beforeUpdate}}
+		if err = DBI.EventFire("updating", this, mw, args...); err != nil {
+			return
+		}
 	},func(){
 		{{beforeInsert}}
+		if err = DBI.EventFire("creating", this, mw, args...); err != nil {
+			return
+		}
 	})
 	{{afterInsert}}
+	if err == nil {
+		if pk == nil {
+			err = DBI.EventFire("updated", this, mw, args...)
+		} else {
+			err = DBI.EventFire("created", this, mw, args...)
+		}
+	} 
 	return 
 }
 
-func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{}) error {
-	if err := DBI.EventFire("deleting", this, mw, args...); err != nil {
-		return err
-	}
+func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{})  (err error) {
 	{{beforeDelete}}
-	return this.Param().SetArgs(args...).SetMiddleware(mw).Delete()
+	if err = DBI.EventFire("deleting", this, mw, args...); err != nil {
+		return
+	}
+	if err = this.Param().SetArgs(args...).SetMiddleware(mw).Delete(); err != nil {
+		return
+	}
+	return DBI.EventFire("deleted", this, mw, args...)
 }
 
 func (this *{{structName}}) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {

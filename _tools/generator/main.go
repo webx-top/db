@@ -104,7 +104,7 @@ func main() {
 				goTypeName = `bytes`
 			}
 			setCase += `				case "` + f.GoName + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
-			fromMapCase += `				case "` + f.Name + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
+			fromMapCase += `			case "` + f.Name + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
