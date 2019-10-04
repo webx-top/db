@@ -143,7 +143,7 @@ func (this *{{structName}}) New(structName string, connID ...int) factory.Model 
 }
 
 func (this *{{structName}}) Objects() []*{{structName}} {
-	if this.bjects == nil {
+	if this.objects == nil {
 		return nil
 	}
 	return this.objects[:]
