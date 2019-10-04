@@ -78,8 +78,9 @@ func (e *Event) On(event string, h EventHandler, async ...bool) *Event {
 		return e.AddDeleting(h, async...)
 	case `deleted`:
 		return e.AddDeleted(h, async...)
+	default:
+		panic(`Unsupported event: ` + event)
 	}
-	return e
 }
 
 func (e *Event) AddCreating(h EventHandler, async ...bool) *Event {
