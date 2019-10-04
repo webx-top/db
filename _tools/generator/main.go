@@ -96,15 +96,15 @@ func main() {
 				setCase += "\n"
 				fromRowCase += "\n"
 			}
-			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
-			asMap += `	r["` + f.GoName + `"] = this.` + f.GoName
-			asRow += `	r["` + f.Name + `"] = this.` + f.GoName
+			resets += "	a." + f.GoName + " = " + ZeroValue(f.GoType)
+			asMap += `	r["` + f.GoName + `"] = a.` + f.GoName
+			asRow += `	r["` + f.Name + `"] = a.` + f.GoName
 			goTypeName := f.GoType
 			if goTypeName == `byte[]` {
 				goTypeName = `bytes`
 			}
-			setCase += `				case "` + f.GoName + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
-			fromRowCase += `			case "` + f.Name + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
+			setCase += `				case "` + f.GoName + `": a.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
+			fromRowCase += `			case "` + f.Name + `": a.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
@@ -139,7 +139,7 @@ func main() {
 					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
-						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeInsert += newLine + `a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
 					case `string`:
@@ -151,17 +151,17 @@ func main() {
 				newTab2 := ``
 				for _, fieldInf := range fields {
 					if fieldInf.AutoIncrement && fieldInf.PrimaryKey {
-						beforeInsert += newLine + `this.` + fieldInf.GoName + ` = 0`
+						beforeInsert += newLine + `a.` + fieldInf.GoName + ` = 0`
 						newLine = "\n\t"
 						var extData string
 						if fieldInf.GoType != `int64` {
 							extData = ` else if v, y := pk.(int64); y {
-` + newTab2 + `			this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(v)
+` + newTab2 + `			a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(v)
 ` + newTab2 + `		}`
 						}
 						afterInsert += newLine2 + `if err == nil && pk != nil {
 ` + newTab2 + `		if v, y := pk.(` + fieldInf.GoType + `); y {
-` + newTab2 + `			this.` + fieldInf.GoName + ` = v
+` + newTab2 + `			a.` + fieldInf.GoName + ` = v
 ` + newTab2 + `		}` + extData + `
 ` + newTab2 + `	}`
 						newLine2 = "\n\t"
@@ -187,7 +187,7 @@ func main() {
 					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
-						beforeUpdate += newLine + `this.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeUpdate += newLine + `a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
 						setUpdatedAt += newLine + `kvset["` + _fieldName + `"] = ` + fieldInf.GoType + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
@@ -211,7 +211,7 @@ func main() {
 			switch fieldInf.GoType {
 			case `string`:
 				if len(fieldInf.DefaultValue) > 0 {
-					setDefault := newLine + `if len(this.` + fieldInf.GoName + `) == 0 { this.` + fieldInf.GoName + ` = "` + fieldInf.DefaultValue + `" }`
+					setDefault := newLine + `if len(a.` + fieldInf.GoName + `) == 0 { a.` + fieldInf.GoName + ` = "` + fieldInf.DefaultValue + `" }`
 					beforeUpdate += setDefault
 					beforeInsert += setDefault
 					setUpdatedAt += newLine + `if val, ok := kvset["` + _fieldName + `"]; ok && val != nil { if v, ok := val.(string); ok && len(v) == 0 { kvset["` + _fieldName + `"] = "` + fieldInf.DefaultValue + `" } }`
