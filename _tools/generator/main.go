@@ -86,7 +86,7 @@ func main() {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
 		columns[noPrefixTableName] = fieldNames
-		var resets, asMap, asRow, setCase, fromMapCase string
+		var resets, asMap, asRow, setCase, fromRowCase string
 		for key, fieldName := range fieldNames {
 			f := fields[fieldName]
 			if key > 0 {
@@ -94,7 +94,7 @@ func main() {
 				asMap += "\n"
 				asRow += "\n"
 				setCase += "\n"
-				fromMapCase += "\n"
+				fromRowCase += "\n"
 			}
 			resets += "	this." + f.GoName + " = " + ZeroValue(f.GoType)
 			asMap += `	r["` + f.GoName + `"] = this.` + f.GoName
@@ -104,7 +104,7 @@ func main() {
 				goTypeName = `bytes`
 			}
 			setCase += `				case "` + f.GoName + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
-			fromMapCase += `			case "` + f.Name + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
+			fromRowCase += `			case "` + f.Name + `": this.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
@@ -114,7 +114,7 @@ func main() {
 		replaceMap["reset"] = resets
 		replaceMap["asMap"] = asMap
 		replaceMap["asRow"] = asRow
-		replaceMap["fromMapCase"] = fromMapCase
+		replaceMap["fromRowCase"] = fromRowCase
 		replaceMap["setCase"] = setCase
 		replaceMap["tableName"] = noPrefixTableName
 		replaceMap["beforeInsert"] = ""

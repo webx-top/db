@@ -10,7 +10,7 @@ var replaces = &map[string]string{
 	"reset":         "",
 	"asMap":         "",
 	"asRow":         "",
-	"fromMapCase":   "",
+	"fromRowCase":   "",
 	"setCase":       "",
 	"tableName":     "",
 	"beforeInsert":  "",
@@ -291,7 +291,7 @@ func (this *{{structName}}) SetField(mw func(db.Result) db.Result, field string,
 func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 	{{setUpdatedAt}}
 	m := *this
-	m.FromMap(kvset)
+	m.FromRow(kvset)
 	var editColumns []string
 	for column := range kvset {
 		editColumns = append(editColumns, column)
@@ -348,10 +348,10 @@ func (this *{{structName}}) AsMap() map[string]interface{} {
 	return r
 }
 
-func (this *{{structName}}) FromMap(rows map[string]interface{}) {
+func (this *{{structName}}) FromRow(row map[string]interface{}) {
 	for key, value := range rows {
 		switch key {
-{{fromMapCase}}
+{{fromRowCase}}
 		}
 	}
 }
