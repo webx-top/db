@@ -8,7 +8,7 @@ func NewEvents() Events {
 
 type Events map[string]*Event
 
-func (e Events) Call(event string, model Model, mw func(db.Result) db.Result, args ...interface{}) error {
+func (e Events) Call(event string, model Model, editColumns []string, mw func(db.Result) db.Result, args ...interface{}) error {
 	if len(args) > 0 {
 		table := model.Short_()
 		events := []*Event{}
@@ -45,7 +45,7 @@ func (e Events) Call(event string, model Model, mw func(db.Result) db.Result, ar
 			}
 			return rows.Range(func(m Model) error {
 				for _, evt := range events {
-					if err := evt.Call(event, m); err != nil {
+					if err := evt.Call(event, m, editColumns...); err != nil {
 						return err
 					}
 				}
@@ -53,19 +53,19 @@ func (e Events) Call(event string, model Model, mw func(db.Result) db.Result, ar
 			})
 		}
 	}
-	return e.call(event, model)
+	return e.call(event, model, editColumns...)
 }
 
-func (e Events) call(event string, model Model) error {
+func (e Events) call(event string, model Model, editColumns ...string) error {
 	table := model.Short_()
 	if evt, ok := e[table]; ok {
-		err := evt.Call(event, model)
+		err := evt.Call(event, model, editColumns...)
 		if err != nil {
 			return err
 		}
 	}
 	if evt, ok := e[`*`]; ok {
-		return evt.Call(event, model)
+		return evt.Call(event, model, editColumns...)
 	}
 	return nil
 }

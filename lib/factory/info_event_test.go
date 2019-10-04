@@ -14,12 +14,12 @@ func TestEvent(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	// 定义事件
-	dbi.On(`creating`, func(m factory.Model) error {
+	dbi.On(`creating`, func(m factory.Model, _ ...string) error {
 		buf.WriteString(`creating.`)
 		println(`creating.`)
 		return nil
 	}, `config`)
-	dbi.On(`created`, func(m factory.Model) error {
+	dbi.On(`created`, func(m factory.Model, _ ...string) error {
 		buf.WriteString(`created.`)
 		println(`created.`)
 		return nil
