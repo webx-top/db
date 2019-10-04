@@ -11,6 +11,8 @@ type Model interface {
 	SetContext(ctx echo.Context) Model
 	Context() echo.Context
 	SetNamer(func(string) string) Model
+	Namer() func(string) string
+	CPAFrom(source Model) Model //CopyAttrFrom
 	Name_() string
 	Short_() string
 	Struct_() string

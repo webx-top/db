@@ -44,6 +44,7 @@ func (e Events) Call(event string, model Model, editColumns []string, mw func(db
 				}
 			}
 			return rows.Range(func(m Model) error {
+				m.CPAFrom(model)
 				for _, evt := range events {
 					if err := evt.Call(event, m, editColumns...); err != nil {
 						return err

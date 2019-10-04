@@ -161,6 +161,17 @@ func (this *{{structName}}) Name_() string {
 	return WithPrefix(factory.TableNamerGet(this.Short_())(this))
 }
 
+func (this *{{structName}}) Namer() func(string) string {
+	return this.namer
+}
+
+func (this *{{structName}}) CPAFrom(source factory.Model) factory.Model {
+	this.SetContext(source.Context())
+	this.Use(source.Trans())
+	this.SetNamer(source.Namer())
+	return this
+}
+
 func (this *{{structName}}) SetParam(param *factory.Param) factory.Model {
 	this.param = param
 	return this
