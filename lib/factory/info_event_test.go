@@ -39,22 +39,4 @@ func TestEvent(t *testing.T) {
 		`creating.created.`,
 		buf.String(),
 	)
-
-	m2 := *m
-	m2.FromMap(map[string]interface{}{
-		`key`: `test`,
-	})
-	assert.Equal(
-		t,
-		`test`,
-		m2.Key,
-	)
-	m2.FromMap(map[string]interface{}{
-		`key`: `test2`,
-	})
-	assert.Equal(
-		t,
-		`test2`,
-		m2.Key,
-	)
 }

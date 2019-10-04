@@ -284,7 +284,7 @@ func (this *Config) SetFields(mw func(db.Result) db.Result, kvset map[string]int
 		}
 	}
 	m := *this
-	m.FromMap(kvset)
+	m.FromRow(kvset)
 	var editColumns []string
 	for column := range kvset {
 		editColumns = append(editColumns, column)
@@ -375,8 +375,8 @@ func (this *Config) AsMap() map[string]interface{} {
 	return r
 }
 
-func (this *Config) FromMap(rows map[string]interface{}) {
-	for key, value := range rows {
+func (this *Config) FromRow(row map[string]interface{}) {
+	for key, value := range row {
 		switch key {
 		case "key":
 			this.Key = param.AsString(value)
