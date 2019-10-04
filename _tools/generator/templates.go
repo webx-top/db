@@ -244,27 +244,27 @@ func (this *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db
 
 func (this *{{structName}}) Add() (pk interface{}, err error) {
 	{{beforeInsert}}
-	err = DBI.EventFire("creating", this, nil)
+	err = DBI.Fire("creating", this, nil)
 	if err != nil {
 		return
 	}
 	pk, err = this.Param().SetSend(this).Insert()
 	{{afterInsert}}
 	if err == nil {
-		err = DBI.EventFire("created", this, nil)
+		err = DBI.Fire("created", this, nil)
 	}
 	return
 }
 
 func (this *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	{{beforeUpdate}}
-	if err = DBI.EventFire("updating", this, mw, args...); err != nil {
+	if err = DBI.Fire("updating", this, mw, args...); err != nil {
 		return
 	}
 	if err = this.Setter(mw, args...).SetSend(this).Update(); err != nil {
 		return
 	}
-	return DBI.EventFire("updated", this, mw, args...)
+	return DBI.Fire("updated", this, mw, args...)
 }
 
 func (this *{{structName}}) Setter(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
@@ -281,27 +281,27 @@ func (this *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[st
 	{{setUpdatedAt}}
 	m := *this
 	m.FromMap(kvset)
-	if err = DBI.EventFire("updating", &m, mw, args...); err != nil {
+	if err = DBI.Fire("updating", &m, mw, args...); err != nil {
 		return
 	}
 	if err = this.Setter(mw, args...).SetSend(kvset).Update(); err != nil {
 		return
 	}
-	return DBI.EventFire("updated", &m, mw, args...)
+	return DBI.Fire("updated", &m, mw, args...)
 }
 
 func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
 	pk, err = this.Param().SetArgs(args...).SetSend(this).SetMiddleware(mw).Upsert(func() error { {{beforeUpdate}}
-		return DBI.EventFire("updating", this, mw, args...)
+		return DBI.Fire("updating", this, mw, args...)
 	}, func() error { {{beforeInsert}}
-		return DBI.EventFire("creating", this, nil)
+		return DBI.Fire("creating", this, nil)
 	})
 	{{afterInsert}}
 	if err == nil {
 		if pk == nil {
-			err = DBI.EventFire("updated", this, mw, args...)
+			err = DBI.Fire("updated", this, mw, args...)
 		} else {
-			err = DBI.EventFire("created", this, nil)
+			err = DBI.Fire("created", this, nil)
 		}
 	} 
 	return 
@@ -309,13 +309,13 @@ func (this *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interfa
 
 func (this *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{})  (err error) {
 	{{beforeDelete}}
-	if err = DBI.EventFire("deleting", this, mw, args...); err != nil {
+	if err = DBI.Fire("deleting", this, mw, args...); err != nil {
 		return
 	}
 	if err = this.Param().SetArgs(args...).SetMiddleware(mw).Delete(); err != nil {
 		return
 	}
-	return DBI.EventFire("deleted", this, mw, args...)
+	return DBI.Fire("deleted", this, mw, args...)
 }
 
 func (this *{{structName}}) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {

@@ -14,12 +14,12 @@ func TestEvent(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	// 定义事件
-	dbi.EventOn(`creating`, func(m factory.Model) error {
+	dbi.On(`creating`, func(m factory.Model) error {
 		buf.WriteString(`creating.`)
 		println(`creating.`)
 		return nil
 	}, `config`)
-	dbi.EventOn(`created`, func(m factory.Model) error {
+	dbi.On(`created`, func(m factory.Model) error {
 		buf.WriteString(`created.`)
 		println(`created.`)
 		return nil
@@ -27,13 +27,13 @@ func TestEvent(t *testing.T) {
 
 	// 调用事件
 	m := &dbschema.Config{}
-	dbi.EventFire(`creating`, m, nil)
+	dbi.Fire(`creating`, m, nil)
 	assert.Equal(
 		t,
 		`creating.`,
 		buf.String(),
 	)
-	dbi.EventFire(`created`, m, nil)
+	dbi.Fire(`created`, m, nil)
 	assert.Equal(
 		t,
 		`creating.created.`,
