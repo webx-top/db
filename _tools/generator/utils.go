@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os/exec"
 	"strings"
 
 	"github.com/webx-top/db/lib/factory"
@@ -84,4 +85,9 @@ func GetTableComment(engine string, d sqlbuilder.Database, tableName string) (st
 	default:
 		return getMySQLTableComment(d, tableName)
 	}
+}
+
+func Format(file string) error {
+	cmd := exec.Command(`gofmt`, `-l`, `-s`, `-w`, file)
+	return cmd.Run()
 }

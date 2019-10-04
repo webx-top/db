@@ -346,7 +346,10 @@ func main() {
 			}
 		}
 	}
-
+	Format(cfg.SchemaConfig.SaveDir)
+	if cfg.SchemaConfig.SaveDir != cfg.ModelConfig.SaveDir {
+		Format(cfg.ModelConfig.SaveDir)
+	}
 	execBackupCommand(cfg, validTables)
 
 	log.Println(`End.`)
