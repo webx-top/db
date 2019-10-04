@@ -27,7 +27,7 @@ func (e Events) Call(event string, model Model, editColumns []string, mw func(db
 		}
 		rows := model.NewObjects()
 		num := int64(1000)
-		cnt, err := model.ListByOffset(&rows, mw, 0, int(num), args...)
+		cnt, err := model.ListByOffset(rows, mw, 0, int(num), args...)
 		if err != nil {
 			return err
 		}
@@ -38,7 +38,7 @@ func (e Events) Call(event string, model Model, editColumns []string, mw func(db
 		for i := int64(0); i < total; i += num {
 			if i > 0 {
 				rows = model.NewObjects()
-				_, err := model.ListByOffset(&rows, mw, int(i), int(num), args...)
+				_, err := model.ListByOffset(rows, mw, int(i), int(num), args...)
 				if err != nil {
 					return err
 				}
