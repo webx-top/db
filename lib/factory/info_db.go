@@ -87,5 +87,5 @@ func (d *DBI) On(event string, h EventHandler, table string) {
 }
 
 func (d *DBI) OnAsync(event string, h EventHandler, table string) {
-	d.Events.On(event, h, table)
+	d.Events.On(event, h, table, true)
 }
