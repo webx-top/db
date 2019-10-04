@@ -77,7 +77,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{connID: connID} },"` + com.AddSlashes(structComment, '"') + `")`
+		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{base:*((&factory.Base{}).SetConnID(connID))} },"` + com.AddSlashes(structComment, '"') + `")`
 		var imports string
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
 		fieldBlock := strings.Join(goFields, "\n")

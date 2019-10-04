@@ -159,7 +159,7 @@ func (this *{{structName}}) InitObjects() *[]*{{structName}} {
 }
 
 func (this *{{structName}}) NewParam() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetIndex(this.base.ConnID()).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
+	return factory.NewParam(factory.DefaultFactory).SetIndex(this.base.ConnID()).SetTrans(this.base.Trans()).SetCollection(this.Name_()).SetModel(this)
 }
 
 func (this *{{structName}}) Short_() string {
