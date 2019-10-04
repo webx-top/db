@@ -137,9 +137,9 @@ func (this *{{structName}}) Param() *factory.Param {
 
 func (this *{{structName}}) New(structName string, connID ...int) factory.Model {
 	if len(connID) > 0 {
-		return factory.NewModel(structName,connID[0]).Use(this.trans)
+		return factory.NewModel(structName,connID[0]).Use(this.base.Trans())
 	}
-	return factory.NewModel(structName,this.base.ConnID()).Use(this.trans)
+	return factory.NewModel(structName,this.base.ConnID()).Use(this.base.Trans())
 }
 
 func (this *{{structName}}) Objects() []*{{structName}} {
@@ -159,7 +159,7 @@ func (this *{{structName}}) InitObjects() *[]*{{structName}} {
 }
 
 func (this *{{structName}}) NewParam() *factory.Param {
-	return factory.NewParam(factory.DefaultFactory).SetIndex(this.connID).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
+	return factory.NewParam(factory.DefaultFactory).SetIndex(this.base.ConnID()).SetTrans(this.trans).SetCollection(this.Name_()).SetModel(this)
 }
 
 func (this *{{structName}}) Short_() string {
