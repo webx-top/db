@@ -349,7 +349,7 @@ func (this *{{structName}}) AsMap() map[string]interface{} {
 }
 
 func (this *{{structName}}) FromRow(row map[string]interface{}) {
-	for key, value := range rows {
+	for key, value := range row {
 		switch key {
 {{fromRowCase}}
 		}
