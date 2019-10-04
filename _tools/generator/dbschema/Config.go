@@ -274,13 +274,17 @@ func (this *Config) SetFields(mw func(db.Result) db.Result, kvset map[string]int
 	}
 	m := *this
 	m.FromMap(kvset)
-	if err = DBI.Fire("updating", &m, mw, args...); err != nil {
+	var editColumns []string
+	for column := range kvset {
+		editColumns = append(editColumns, column)
+	}
+	if err = DBI.FireUpdate("updating", &m, editColumns, mw, args...); err != nil {
 		return
 	}
 	if err = this.Setter(mw, args...).SetSend(kvset).Update(); err != nil {
 		return
 	}
-	return DBI.Fire("updated", &m, mw, args...)
+	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
 }
 
 func (this *Config) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
