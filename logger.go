@@ -29,6 +29,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/webx-top/com"
 )
 
 const (
@@ -82,7 +84,15 @@ func (q *QueryStatus) String() string {
 	if query := q.Query; len(query) > 0 {
 		query = reInvisibleChars.ReplaceAllString(query, ` `)
 		query = strings.TrimSpace(query)
-		query = fmt.Sprintf(strings.Replace(query, `?`, `'%v'`, -1), q.Args...)
+		if len(q.Args) > 0 {
+			args := make([]interface{}, len(q.Args))
+			for k, v := range q.Args {
+				s := fmt.Sprint(v)
+				s = com.AddSlashes(s)
+				args[k] = s
+			}
+			query = fmt.Sprintf(strings.Replace(query, `?`, `'%v'`, -1), args...)
+		}
 		lines = append(lines, fmt.Sprintf(fmtLogQuery, query))
 	}
 
