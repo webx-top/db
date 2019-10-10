@@ -275,7 +275,7 @@ func (a *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{})
 	if err = DBI.Fire("updating", a, mw, args...); err != nil {
 		return
 	}
-	if err = a.Setter(mw, args...).SetSend(a).Update(); err != nil {
+	if err = a.Param(mw, args...).SetSend(a).Update(); err != nil {
 		return
 	}
 	return DBI.Fire("updated", a, mw, args...)
