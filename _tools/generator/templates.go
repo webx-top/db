@@ -51,12 +51,12 @@ package {{packageName}}
 
 import (
 	"fmt"
+	{{imports}}
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/param"
-	{{imports}}
 )
 
 type Slice_{{structName}} []*{{structName}}
@@ -126,11 +126,11 @@ func (a *{{structName}}) SetParam(param *factory.Param) factory.Model {
 	return a
 }
 
-func (a *{{structName}}) Param() *factory.Param {
+func (a *{{structName}}) Param(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
 	if a.base.Param() == nil {
-		return a.NewParam()
+		return a.NewParam().SetMiddleware(mw).SetArgs(args...)
 	}
-	return a.base.Param()
+	return a.base.Param().SetMiddleware(mw).SetArgs(args...)
 }
 
 // - current function
@@ -186,7 +186,7 @@ func (a *{{structName}}) CPAFrom(source factory.Model) factory.Model {
 
 func (a *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) error {
 	base := a.base
-	err := a.Param().SetArgs(args...).SetRecv(a).SetMiddleware(mw).One()
+	err := a.Param(mw, args...).SetRecv(a).One()
 	a.base = base
 	return err
 }
@@ -195,7 +195,7 @@ func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, pa
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param().SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
+	return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
 }
 
 func (a *{{structName}}) GroupBy(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
@@ -253,7 +253,7 @@ func (a *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Re
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param().SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv).SetMiddleware(mw).List()
+	return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
 }
 
 func (a *{{structName}}) Add() (pk interface{}, err error) {
@@ -262,7 +262,7 @@ func (a *{{structName}}) Add() (pk interface{}, err error) {
 	if err != nil {
 		return
 	}
-	pk, err = a.Param().SetSend(a).Insert()
+	pk, err = a.Param(nil).SetSend(a).Insert()
 	{{afterInsert}}
 	if err == nil {
 		err = DBI.Fire("created", a, nil)
@@ -279,10 +279,6 @@ func (a *{{structName}}) Edit(mw func(db.Result) db.Result, args ...interface{})
 		return
 	}
 	return DBI.Fire("updated", a, mw, args...)
-}
-
-func (a *{{structName}}) Setter(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
-	return a.Param().SetArgs(args...).SetMiddleware(mw)
 }
 
 func (a *{{structName}}) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
@@ -302,14 +298,14 @@ func (a *{{structName}}) SetFields(mw func(db.Result) db.Result, kvset map[strin
 	if err = DBI.FireUpdate("updating", &m, editColumns, mw, args...); err != nil {
 		return
 	}
-	if err = a.Setter(mw, args...).SetSend(kvset).Update(); err != nil {
+	if err = a.Param(mw, args...).SetSend(kvset).Update(); err != nil {
 		return
 	}
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
 }
 
 func (a *{{structName}}) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
-	pk, err = a.Param().SetArgs(args...).SetSend(a).SetMiddleware(mw).Upsert(func() error { {{beforeUpdate}}
+	pk, err = a.Param(mw, args...).SetSend(a).Upsert(func() error { {{beforeUpdate}}
 		return DBI.Fire("updating", a, mw, args...)
 	}, func() error { {{beforeInsert}}
 		return DBI.Fire("creating", a, nil)
@@ -330,14 +326,14 @@ func (a *{{structName}}) Delete(mw func(db.Result) db.Result, args ...interface{
 	if err = DBI.Fire("deleting", a, mw, args...); err != nil {
 		return
 	}
-	if err = a.Param().SetArgs(args...).SetMiddleware(mw).Delete(); err != nil {
+	if err = a.Param(mw, args...).Delete(); err != nil {
 		return
 	}
 	return DBI.Fire("deleted", a, mw, args...)
 }
 
 func (a *{{structName}}) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
-	return a.Param().SetArgs(args...).SetMiddleware(mw).Count()
+	return a.Param(mw, args...).Count()
 }
 
 func (a *{{structName}}) Reset() *{{structName}} {
