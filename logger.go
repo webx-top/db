@@ -78,9 +78,10 @@ func (q *QueryStatus) String() string {
 		lines = append(lines, fmt.Sprintf(fmtLogTxID, q.TxID))
 	}
 
-	if query := q.Query; query != "" {
+	if query := q.Query; len(query) > 0 {
 		query = reInvisibleChars.ReplaceAllString(query, ` `)
 		query = strings.TrimSpace(query)
+		query = fmt.Sprintf(strings.Replace(query, `?`, `'%v'`, -1), q.Args...)
 		lines = append(lines, fmt.Sprintf(fmtLogQuery, query))
 	}
 
