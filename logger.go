@@ -23,6 +23,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -34,7 +35,7 @@ const (
 	fmtLogSessID       = `Session ID:     %05d`
 	fmtLogTxID         = `Transaction ID: %05d`
 	fmtLogQuery        = `Query:          %s`
-	fmtLogArgs         = `Arguments:      %#v`
+	fmtLogArgs         = `Arguments:      %v`
 	fmtLogRowsAffected = `Rows affected:  %d`
 	fmtLogLastInsertID = `Last insert ID: %d`
 	fmtLogError        = `Error:          %v`
@@ -86,7 +87,8 @@ func (q *QueryStatus) String() string {
 	}
 
 	if len(q.Args) > 0 {
-		lines = append(lines, fmt.Sprintf(fmtLogArgs, q.Args))
+		b, _ := json.Marshal(q.Args)
+		lines = append(lines, fmt.Sprintf(fmtLogArgs, string(b)))
 	}
 
 	if q.RowsAffected != nil {
