@@ -113,8 +113,14 @@ func main() {
 			if goTypeName == `byte[]` {
 				goTypeName = `bytes`
 			}
-			setCase += `				case "` + f.GoName + `": a.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(vv)`
-			fromRowCase += `			case "` + f.Name + `": a.` + f.GoName + ` = param.As` + strings.Title(goTypeName) + `(value)`
+			var extPrefix string
+			var extSuffix string
+			if len(f.MyType) > 0 {
+				extPrefix = f.MyType + `(`
+				extSuffix = `)`
+			}
+			setCase += `				case "` + f.GoName + `": a.` + f.GoName + ` = ` + extPrefix + `param.As` + strings.Title(goTypeName) + `(vv)` + extSuffix
+			fromRowCase += `			case "` + f.Name + `": a.` + f.GoName + ` = ` + extPrefix + `param.As` + strings.Title(goTypeName) + `(value)` + extSuffix
 		}
 		replaceMap := *replaces
 		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
@@ -147,9 +153,13 @@ func main() {
 					if !ok {
 						continue
 					}
+					convt := fieldInf.GoType
+					if len(fieldInf.MyType) > 0 {
+						convt = fieldInf.MyType
+					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
-						beforeInsert += newLine + `a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeInsert += newLine + `a.` + fieldInf.GoName + ` = ` + convt + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
 					case `string`:
@@ -164,14 +174,20 @@ func main() {
 						beforeInsert += newLine + `a.` + fieldInf.GoName + ` = 0`
 						newLine = "\n\t"
 						var extData string
+						var extPrefix string
+						var extSuffix string
+						if len(fieldInf.MyType) > 0 {
+							extPrefix = fieldInf.MyType + `(`
+							extSuffix = `)`
+						}
 						if fieldInf.GoType != `int64` {
 							extData = ` else if v, y := pk.(int64); y {
-` + newTab2 + `			a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(v)
+` + newTab2 + `			a.` + fieldInf.GoName + ` = ` + extPrefix + fieldInf.GoType + `(v)` + extSuffix + `
 ` + newTab2 + `		}`
 						}
 						afterInsert += newLine2 + `if err == nil && pk != nil {
 ` + newTab2 + `		if v, y := pk.(` + fieldInf.GoType + `); y {
-` + newTab2 + `			a.` + fieldInf.GoName + ` = v
+` + newTab2 + `			a.` + fieldInf.GoName + ` = ` + extPrefix + `v` + extSuffix + `
 ` + newTab2 + `		}` + extData + `
 ` + newTab2 + `	}`
 						newLine2 = "\n\t"
@@ -195,10 +211,14 @@ func main() {
 					if !ok {
 						continue
 					}
+					convt := fieldInf.GoType
+					if len(fieldInf.MyType) > 0 {
+						convt = fieldInf.MyType
+					}
 					switch fieldInf.GoType {
 					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
-						beforeUpdate += newLine + `a.` + fieldInf.GoName + ` = ` + fieldInf.GoType + `(time.Now().Unix())`
-						setUpdatedAt += newLine + `kvset["` + _fieldName + `"] = ` + fieldInf.GoType + `(time.Now().Unix())`
+						beforeUpdate += newLine + `a.` + fieldInf.GoName + ` = ` + convt + `(time.Now().Unix())`
+						setUpdatedAt += newLine + `kvset["` + _fieldName + `"] = ` + convt + `(time.Now().Unix())`
 						newLine = "\n\t"
 						importTime = true
 					case `string`:
@@ -209,11 +229,11 @@ func main() {
 				replaceMap["setUpdatedAt"] = setUpdatedAt
 			}
 		}
-		if hasHashids {
-			imports += "\n\t" + `"github.com/admpub/hashseq"`
-		}
 		if importTime {
 			imports += "\n\t" + `"time"`
+		}
+		if hasHashids {
+			imports += "\n\t" + `"github.com/admpub/hashseq"`
 		}
 		beforeInsert := ``
 		beforeUpdate := ``

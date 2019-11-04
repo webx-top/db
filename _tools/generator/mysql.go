@@ -93,7 +93,8 @@ func getMySQLTableFields(db sqlbuilder.Database, tableName string, typeMap map[s
 				switch typee {
 				case `hashids`:
 					if com.InSlice(fieldInfo.Name, typef) {
-						goField.typ = `*hashseq.ID`
+						goField.typ = `hashseq.ID`
+						fieldInfo.MyType = goField.typ
 					}
 				}
 			}
