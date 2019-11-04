@@ -69,12 +69,12 @@ func DataType(fieldInfo *factory.FieldInfo) string {
 	}
 }
 
-func GetTableFields(engine string, d sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo, []string) {
+func GetTableFields(engine string, d sqlbuilder.Database, tableName string, typeMap map[string][]string) ([]string, map[string]factory.FieldInfo, []string) {
 	switch engine {
 	case "mymysql", "mysql":
 		fallthrough
 	default:
-		return getMySQLTableFields(d, tableName)
+		return getMySQLTableFields(d, tableName, typeMap)
 	}
 }
 

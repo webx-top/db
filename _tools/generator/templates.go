@@ -1,5 +1,23 @@
 package main
 
+import (
+	"fmt"
+)
+
+type structField struct {
+	field   string
+	typ     string
+	dbTag   string
+	bsonTag string
+	jsonTag string
+	xmlTag  string
+	comment string
+}
+
+func (f *structField) String() string {
+	return fmt.Sprintf(memberTemplate, f.field, f.typ, f.dbTag, f.bsonTag, f.comment, f.jsonTag, f.xmlTag)
+}
+
 var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
 var replaces = &map[string]string{
 	"packageName":   "",

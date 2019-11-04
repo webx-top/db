@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/admpub/confl"
+
 	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
@@ -42,6 +43,7 @@ func main() {
 		log.Fatal(err)
 	}
 	cfg.Check()
+	hashids := cfg.FieldHashID()
 	defer sess.Close()
 	tables, err := sess.Collections()
 	if err != nil {
@@ -79,7 +81,11 @@ func main() {
 		}
 		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{base:*((&factory.Base{}).SetConnID(connID))} },"` + com.AddSlashes(structComment, '"') + `")`
 		var imports string
-		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName)
+		var typeFields []string
+		if idf, ok := hashids[tableName]; ok {
+			typeFields = append(typeFields, idf)
+		}
+		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName, map[string][]string{`hashids`: typeFields})
 		fieldBlock := strings.Join(goFields, "\n")
 		noPrefixTableName := tableName
 		if hasPrefix {
@@ -87,7 +93,11 @@ func main() {
 		}
 		columns[noPrefixTableName] = fieldNames
 		var resets, asMap, asRow, setCase, fromRowCase string
+		hasHashids := false
 		for key, fieldName := range fieldNames {
+			if !hasHashids && com.InSlice(fieldName, typeFields) {
+				hasHashids = true
+			}
 			f := fields[fieldName]
 			if key > 0 {
 				resets += "\n"
@@ -198,6 +208,9 @@ func main() {
 				replaceMap["beforeUpdate"] = beforeUpdate
 				replaceMap["setUpdatedAt"] = setUpdatedAt
 			}
+		}
+		if hasHashids {
+			imports += "\n\t" + `"github.com/admpub/hashseq"`
 		}
 		if importTime {
 			imports += "\n\t" + `"time"`

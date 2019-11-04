@@ -43,6 +43,7 @@ func parseFlag() {
 
 	//Time
 	flag.StringVar(&autoTime, `autoTime`, `{"update":{"*":["updated"]},"insert":{"*":["created"]}}`, `-autoTime <json-data>`)
+	flag.StringVar(&cfg.HashID, `hashID`, ``, `-hashID tableA.id,tableB.id`)
 
 	flag.StringVar(&cfg.EncFieldFormat, `enc`, ``, `-enc "json:table;xml:table"`)
 	flag.Parse()
@@ -82,6 +83,7 @@ type config struct {
 	Schema          string          `json:"schema"`
 	NotGenerated    bool            `json:"notGenerated"`
 	AutoTimeFields  *AutoTimeFields `json:"autoTime"`
+	HashID          string          `json:"hashID"`
 	Backup          string          `json:"backup"`
 	EncFieldFormat  string          `json:"encFieldFormat"`
 	DBKey           string          `json:"dbKey"`
@@ -107,6 +109,25 @@ func (cfg *config) Check() {
 	}
 
 	cfg.parseEnc()
+}
+
+func (cfg *config) FieldHashID() map[string]string { // table=>field
+	r := map[string]string{}
+	if len(cfg.HashID) == 0 {
+		return r
+	}
+	for _, v := range strings.Split(cfg.HashID, `,`) {
+		v := strings.TrimSpace(v)
+		if len(v) == 0 {
+			continue
+		}
+		tf := strings.SplitN(v, `.`, 2)
+		if len(tf) != 2 {
+			continue
+		}
+		r[tf[0]] = tf[1]
+	}
+	return r
 }
 
 func (cfg *config) FieldEncodeType(typ string) string {

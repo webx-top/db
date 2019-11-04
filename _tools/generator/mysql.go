@@ -80,7 +80,7 @@ func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[stri
 	return fieldMaxLength, fieldsInfo
 }
 
-func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, map[string]factory.FieldInfo, []string) {
+func getMySQLTableFields(db sqlbuilder.Database, tableName string, typeMap map[string][]string) ([]string, map[string]factory.FieldInfo, []string) {
 
 	fieldMaxLength, fieldsInfo := getMySQLTableInfo(db, tableName)
 	goFields := []string{}
@@ -88,14 +88,24 @@ func getMySQLTableFields(db sqlbuilder.Database, tableName string) ([]string, ma
 	fieldNames := make([]string, len(fieldsInfo))
 	for key, field := range fieldsInfo {
 		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength, fields)
-		goFields = append(goFields, goField)
+		if typeMap != nil {
+			for typee, typef := range typeMap {
+				switch typee {
+				case `hashids`:
+					if com.InSlice(fieldInfo.Name, typef) {
+						goField.typ = `*hashseq.ID`
+					}
+				}
+			}
+		}
+		goFields = append(goFields, goField.String())
 		fields[fieldInfo.Name] = fieldInfo
 		fieldNames[key] = fieldInfo.Name
 	}
 	return goFields, fields, fieldNames
 }
 
-func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (string, factory.FieldInfo) {
+func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (*structField, factory.FieldInfo) {
 
 	fieldInfo := factory.FieldInfo{Options: []string{}}
 	p := strings.Index(field["Type"], `(`)
@@ -254,7 +264,15 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 	if cfg.FieldEncodeType(`db`) != `table` {
 		dbTag = fieldInfo.GoName
 	}
-	fieldBlock := fmt.Sprintf(memberTemplate, fieldP, typeP, dbTag, bsonTag, fieldInfo.Comment, jsonTag, xmlTag)
+	fieldBlock := &structField{
+		field:   fieldP,
+		typ:     typeP,
+		comment: fieldInfo.Comment,
+		dbTag:   dbTag,
+		bsonTag: bsonTag,
+		jsonTag: jsonTag,
+		xmlTag:  xmlTag,
+	}
 	return fieldBlock, fieldInfo
 }
 
