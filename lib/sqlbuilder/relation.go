@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/admpub/errors"
+
 	"github.com/webx-top/com"
 	"github.com/webx-top/db"
 	"github.com/webx-top/echo/param"
@@ -102,6 +103,20 @@ var (
 			}
 			return result
 		},
+		`gtZero`: func(v interface{}) interface{} {
+			i := param.AsUint64(v)
+			if i > 0 {
+				return i
+			}
+			return nil
+		},
+		`notEmpty`: func(v interface{}) interface{} {
+			s := v.(string)
+			if len(s) > 0 {
+				return s
+			}
+			return nil
+		},
 	}
 )
 
@@ -153,7 +168,9 @@ func buildCond(refVal reflect.Value, relations []string, pipes []Pipe) interface
 		}
 	}
 	for _, pipe := range pipes {
-		fieldValue = pipe(fieldValue)
+		if fieldValue = pipe(fieldValue); fieldValue == nil {
+			return nil
+		}
 	}
 	var cond interface{}
 	if v, y := fieldValue.([]interface{}); y {
@@ -187,6 +204,9 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
 			cond := buildCond(refVal, relations, pipes)
+			if cond == nil {
+				return nil
+			}
 			sel := builder.SelectFrom(table).Where(cond)
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
@@ -215,6 +235,9 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 				return err
 			}
 			cond := buildCond(refVal, relations, pipes)
+			if cond == nil {
+				return nil
+			}
 			sel := builder.SelectFrom(table).Where(cond)
 			if chains := builder.RelationMap(); chains != nil {
 				if chainFn, ok := chains[name]; ok {
@@ -269,7 +292,12 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			for j := 0; j < l; j++ {
 				v := mapper.FieldByName(refVal.Index(j), rFieldName).Interface()
 				for _, pipe := range pipes {
-					v = pipe(v)
+					if v = pipe(v); v == nil {
+						break
+					}
+				}
+				if v == nil {
+					continue
 				}
 				if vs, ok := v.([]interface{}); ok {
 					if _, ok := relValsMapx[j]; !ok {
