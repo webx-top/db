@@ -21,6 +21,11 @@ const (
 	RelationKeyIndex = 1
 )
 
+var (
+	ErrUnableDetermineTableName = errors.New(`Unable to determine table name`)
+	TableName                   = DefaultTableName
+)
+
 func (b *sqlBuilder) Relation(name string, fn BuilderChainFunc) SQLBuilder {
 	if b.relationMap == nil {
 		b.relationMap = make(map[string]BuilderChainFunc)
@@ -56,13 +61,13 @@ func eachField(t reflect.Type, fn func(field reflect.StructField, relations []st
 		if len(relations) != 2 {
 			return fmt.Errorf("Wrong relation option, length must 2, but get %v. Reference format: `db:\"-,relation=ForeignKey:RelationKey\"`", relations)
 		}
-		rels := strings.Split(relations[1], `|`)
+		rels := strings.Split(relations[1], `|`) // `db:"-,relation=外键名:关联键名|neq(field,value)"`
 		var pipes []Pipe
 		if len(rels) > 1 {
 			relations[1] = rels[0]
 			for _, pipeName := range rels[1:] {
-				pipe, ok := PipeList[pipeName]
-				if !ok {
+				pipe := parsePipe(pipeName)
+				if pipe == nil {
 					continue
 				}
 				pipes = append(pipes, pipe)
@@ -79,46 +84,6 @@ func eachField(t reflect.Type, fn func(field reflect.StructField, relations []st
 type Name_ interface {
 	Name_() string
 }
-
-type Pipe func(interface{}) interface{}
-type Pipes map[string]Pipe
-
-func (pipes *Pipes) Add(name string, pipe Pipe) {
-	(*pipes)[name] = pipe
-}
-
-var (
-	ErrUnableDetermineTableName = errors.New(`Unable to determine table name`)
-	TableName                   = DefaultTableName
-	PipeList                    = Pipes{
-		`split`: func(v interface{}) interface{} {
-			items := strings.Split(v.(string), `,`)
-			result := []interface{}{}
-			for _, item := range items {
-				item = strings.TrimSpace(item)
-				if len(item) == 0 {
-					continue
-				}
-				result = append(result, item)
-			}
-			return result
-		},
-		`gtZero`: func(v interface{}) interface{} {
-			i := param.AsUint64(v)
-			if i > 0 {
-				return i
-			}
-			return nil
-		},
-		`notEmpty`: func(v interface{}) interface{} {
-			s := v.(string)
-			if len(s) > 0 {
-				return s
-			}
-			return nil
-		},
-	}
-)
 
 func DefaultTableName(data interface{}, retry ...bool) (string, error) {
 	switch m := data.(type) {
@@ -168,7 +133,7 @@ func buildCond(refVal reflect.Value, relations []string, pipes []Pipe) interface
 		}
 	}
 	for _, pipe := range pipes {
-		if fieldValue = pipe(fieldValue); fieldValue == nil {
+		if fieldValue = pipe(refVal, fieldValue); fieldValue == nil {
 			return nil
 		}
 	}
@@ -290,9 +255,10 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			}
 		} else {
 			for j := 0; j < l; j++ {
-				v := mapper.FieldByName(refVal.Index(j), rFieldName).Interface()
+				row := refVal.Index(j)
+				v := mapper.FieldByName(row, rFieldName).Interface()
 				for _, pipe := range pipes {
-					if v = pipe(v); v == nil {
+					if v = pipe(row, v); v == nil {
 						break
 					}
 				}
