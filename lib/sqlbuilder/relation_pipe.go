@@ -14,8 +14,8 @@ func parsePipe(pipeName string) Pipe {
 	if pos > 0 {
 		param := pipeName[pos+1:]
 		param = strings.TrimSuffix(param, ")")
-		pipeName = pipeName[0:pos]
-		if gen, ok := PipeGeneratorList[pipeName]; ok {
+		funcName := pipeName[0:pos]
+		if gen, ok := PipeGeneratorList[funcName]; ok {
 			return gen(param)
 		}
 		return nil
