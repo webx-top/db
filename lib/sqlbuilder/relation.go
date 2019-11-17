@@ -52,7 +52,7 @@ func eachField(t reflect.Type, fn func(field reflect.StructField, relations []st
 	for _, fieldInfo := range options {
 		//fmt.Println(`==>`, fieldInfo.Name, fieldInfo.Embedded, com.Dump(fieldInfo.Options, false))
 		// `db:"-,relation=ForeignKey:RelationKey"`
-		// `db:"-,relation=外键名:关联键名"`
+		// `db:"-,relation=外键名:关联键名|gtZero|eq(field:value)"`
 		rel, ok := fieldInfo.Options[`relation`]
 		if !ok || len(rel) == 0 || rel == `-` {
 			continue

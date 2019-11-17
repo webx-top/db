@@ -41,8 +41,8 @@ func (gens *PipeGenerators) Add(name string, generator func(params string) Pipe)
 
 var (
 	PipeGeneratorList = PipeGenerators{
-		`neq`: func(params string) Pipe { // name,value
-			args := strings.SplitN(params, `,`, 2)
+		`neq`: func(params string) Pipe { // name:value
+			args := strings.SplitN(params, `:`, 2)
 			var (
 				fieldName     string
 				expectedValue string
@@ -64,7 +64,7 @@ var (
 			}
 		},
 		`eq`: func(params string) Pipe { // name,value
-			args := strings.SplitN(params, `,`, 2)
+			args := strings.SplitN(params, `:`, 2)
 			var (
 				fieldName     string
 				expectedValue string
