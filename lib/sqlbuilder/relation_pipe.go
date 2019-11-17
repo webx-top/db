@@ -2,7 +2,6 @@ package sqlbuilder
 
 import (
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/webx-top/echo/param"
@@ -51,7 +50,6 @@ var (
 			case 2:
 				fieldName = strings.TrimSpace(args[0])
 				expectedValue = strings.TrimSpace(args[1])
-				expectedValue, _ = strconv.Unquote(expectedValue)
 			default:
 				return nil
 			}
@@ -73,7 +71,6 @@ var (
 			case 2:
 				fieldName = strings.TrimSpace(args[0])
 				expectedValue = strings.TrimSpace(args[1])
-				expectedValue, _ = strconv.Unquote(expectedValue)
 			default:
 				return nil
 			}
