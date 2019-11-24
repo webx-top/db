@@ -148,16 +148,19 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 				fieldInfo.Unsigned = true
 			}
 			if isNum {
-				numStr := strings.Repeat(`9`, fieldInfo.MaxSize)
 				if fieldInfo.Precision > 0 {
+					numStr := strings.Repeat(`9`, fieldInfo.MaxSize*255)
 					end := fieldInfo.MaxSize - fieldInfo.Precision //(4,2): 9999=>99.99
 					numStr = numStr[:end] + `.` + numStr[end:]
+					fieldInfo.Max = param.AsFloat64(numStr)
+				} else {
+					fieldInfo.Max = float64(fieldInfo.MaxSize) * 255
 				}
-				fieldInfo.Max = param.AsFloat64(numStr)
 				if fieldInfo.Unsigned {
 					fieldInfo.Min = 0
 				} else {
-					fieldInfo.Min = fieldInfo.Max * -1
+					fieldInfo.Min = (fieldInfo.Max - 1) / 2 * -1
+					fieldInfo.Max = fieldInfo.Min*-1 + 1
 				}
 			}
 		}
