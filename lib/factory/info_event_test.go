@@ -2,9 +2,11 @@ package factory_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/webx-top/db/_tools/generator/dbschema"
 	"github.com/webx-top/db/lib/factory"
 )
@@ -39,4 +41,10 @@ func TestEvent(t *testing.T) {
 		`creating.created.`,
 		buf.String(),
 	)
+
+	b, err := json.MarshalIndent(dbi.Events, ``, `  `)
+	if err != nil {
+		panic(err)
+	}
+	assert.Contains(t, string(b), `.TestEvent.func1`)
 }
