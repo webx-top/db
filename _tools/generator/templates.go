@@ -97,6 +97,47 @@ func (s Slice_{{structName}}) RangeRaw(fn func(m *{{structName}}) error ) error 
 	return nil
 }
 
+func (s Slice_{{structName}}) GroupBy(keyField string) map[string][]*{{structName}} {
+	r := map[string][]*{{structName}}{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		if _, y := r[vkey]; !y {
+			r[vkey] = []*{{structName}}{}
+		}
+		r[vkey] = append(r[vkey], row)
+	}
+	return r
+}
+
+func (s Slice_{{structName}}) KeyBy(keyField string) map[string]*{{structName}} {
+	r := map[string]*{{structName}}{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = row
+	}
+	return r
+}
+
+func (s Slice_{{structName}}) AsKV(keyField string, valueField string) param.Store {
+	r := param.Store{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = dmap[valueField]
+	}
+	return r
+}
+
+func (s Slice_{{structName}}) Transform(transfers map[string]param.Transfer) []param.Store {
+	r := make([]param.Store,len(s))
+	for idx, row := range s {
+		r[idx] = row.AsMap().Transform(transfers)
+	}
+	return r
+}
+
 // {{structName}} {{structComment}}
 type {{structName}} struct {
 	base    factory.Base
@@ -177,6 +218,10 @@ func (a *{{structName}}) Objects() []*{{structName}} {
 	return a.objects[:]
 }
 
+func (a *{{structName}}) XObjects() Slice_{{structName}} {
+	return Slice_{{structName}}(a.Objects())
+}
+
 func (a *{{structName}}) NewObjects() factory.Ranger {
 	return &Slice_{{structName}}{}
 }
@@ -227,54 +272,33 @@ func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, pa
 }
 
 func (a *{{structName}}) GroupBy(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
-	var rows []*{{structName}}
+	var rows Slice_{{structName}}
 	if len(inputRows) > 0 {
-		rows = inputRows[0]
+		rows = Slice_{{structName}}(inputRows[0])
 	} else {
-		rows = a.Objects()
+		rows = Slice_{{structName}}(a.Objects())
 	}
-	r := map[string][]*{{structName}}{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		if _, y := r[vkey]; !y {
-			r[vkey] = []*{{structName}}{}
-		}
-		r[vkey] = append(r[vkey], row)
-	}
-	return r
+	return rows.GroupBy(keyField)
 }
 
 func (a *{{structName}}) KeyBy(keyField string, inputRows ...[]*{{structName}}) map[string]*{{structName}} {
-	var rows []*{{structName}}
+	var rows Slice_{{structName}}
 	if len(inputRows) > 0 {
-		rows = inputRows[0]
+		rows = Slice_{{structName}}(inputRows[0])
 	} else {
-		rows = a.Objects()
+		rows = Slice_{{structName}}(a.Objects())
 	}
-	r := map[string]*{{structName}}{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		r[vkey] = row
-	}
-	return r
+	return rows.KeyBy(keyField)
 }
 
-func (a *{{structName}}) AsKV(keyField string, valueField string, inputRows ...[]*{{structName}}) map[string]interface{} {
-	var rows []*{{structName}}
+func (a *{{structName}}) AsKV(keyField string, valueField string, inputRows ...[]*{{structName}}) param.Store {
+	var rows Slice_{{structName}}
 	if len(inputRows) > 0 {
-		rows = inputRows[0]
+		rows = Slice_{{structName}}(inputRows[0])
 	} else {
-		rows = a.Objects()
+		rows = Slice_{{structName}}(a.Objects())
 	}
-	r := map[string]interface{}{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		r[vkey] = dmap[valueField]
-	}
-	return r
+	return rows.AsKV(keyField, valueField)
 }
 
 func (a *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
@@ -386,8 +410,8 @@ func (a *{{structName}}) Reset() *{{structName}} {
 	return a
 }
 
-func (a *{{structName}}) AsMap() map[string]interface{} {
-	r := map[string]interface{}{}
+func (a *{{structName}}) AsMap() param.Store {
+	r := param.Store{}
 {{asMap}}
 	return r
 }
@@ -425,8 +449,8 @@ func (a *{{structName}}) Set(key interface{}, value ...interface{}) {
 	}
 }
 
-func (a *{{structName}}) AsRow() map[string]interface{} {
-	r := map[string]interface{}{}
+func (a *{{structName}}) AsRow() param.Store {
+	r := param.Store{}
 {{asRow}}
 	return r
 }
