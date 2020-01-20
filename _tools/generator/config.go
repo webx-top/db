@@ -25,7 +25,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Ignore, `ignore`, ``, `-ignore "^private_"`)
 	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
 	flag.BoolVar(&cfg.NotGenerated, `notGenerated`, false, `-notGenerated=true`)
-	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql"`)
+	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql|./install-data.sql:table1,table2"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)

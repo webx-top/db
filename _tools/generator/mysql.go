@@ -353,7 +353,6 @@ func execBackupCommand(cfg *config, tables []string) {
 		"-p" + cfg.Password,
 		cfg.Database,
 	}
-	args = append(args, tables...)
 	var structFile, dataFile string
 	files := strings.SplitN(cfg.Backup, `|`, 2)
 	switch len(files) {
@@ -367,10 +366,21 @@ func execBackupCommand(cfg *config, tables []string) {
 		if len(saveFile) == 0 {
 			continue
 		}
-		if index > 0 {
-			args[4] = `-t` //导出数据
+		info := strings.SplitN(saveFile, ":", 2)
+		saveFile = info[0]
+		var saveTables []string
+		if len(info) > 1 && len(info[1]) > 0 {
+			saveTables = strings.Split(info[1], `,`)
 		}
-		cmd := exec.Command("mysqldump", args...)
+		if len(saveTables) == 0 {
+			saveTables = append(saveTables, tables...)
+		}
+		cmdArgs := append([]string{}, args...)
+		cmdArgs = append(cmdArgs, saveTables...)
+		if index > 0 {
+			cmdArgs[4] = `-t` //导出数据
+		}
+		cmd := exec.Command("mysqldump", cmdArgs...)
 		fp, err := os.Create(saveFile)
 		if err != nil {
 			log.Println(`Failed to backup:`, err)
