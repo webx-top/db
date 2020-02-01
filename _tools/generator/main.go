@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/admpub/confl"
+	"github.com/admpub/regexp2"
 
 	"github.com/webx-top/com"
 	"github.com/webx-top/db/lib/factory"
@@ -62,13 +62,25 @@ func main() {
 	validTables := []string{}
 	columns := map[string][]string{}
 	for _, tableName := range tables {
-		if hasIngore && regexp.MustCompile(cfg.Ignore).MatchString(tableName) {
-			log.Println(`Ignore the table:`, tableName)
-			continue
+		if hasIngore {
+			matched, err := regexp2.MustCompile(cfg.Ignore, 0).MatchString(tableName)
+			if err != nil {
+				panic(err)
+			}
+			if matched {
+				log.Println(`Ignore the table:`, tableName)
+				continue
+			}
 		}
-		if hasMatch && !regexp.MustCompile(cfg.Match).MatchString(tableName) {
-			log.Println(`Ignore the table:`, tableName)
-			continue
+		if hasMatch {
+			matched, err := regexp2.MustCompile(cfg.Match, 0).MatchString(tableName)
+			if err != nil {
+				panic(err)
+			}
+			if !matched {
+				log.Println(`Ignore the table:`, tableName)
+				continue
+			}
 		}
 		validTables = append(validTables, tableName)
 		if cfg.NotGenerated {
