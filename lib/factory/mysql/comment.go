@@ -43,6 +43,25 @@ func CreateTableSQL(linkID int, dbName string, tableName string) (string, error)
 	return recvCreateTableSQL.String, err
 }
 
+// GetTables 获取数据表列表
+func GetTables(linkID int) ([]string, error) {
+	rows, err := factory.NewParam().SetIndex(linkID).SetCollection(`SHOW TABLES`).Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	ret := []string{}
+	for rows.Next() {
+		var v sql.NullString
+		err := rows.Scan(&v)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, v.String)
+	}
+	return ret, nil
+}
+
 // TableComment 查询表注释
 func TableComment(linkID int, dbName string, tableName string) (string, error) {
 	ctx := context.Background()
