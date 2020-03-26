@@ -138,6 +138,22 @@ func (s Slice_{{structName}}) Transform(transfers map[string]param.Transfer) []p
 	return r
 }
 
+
+func (s Slice_{{structName}}) FromList(data interface{}) Slice_{{structName}} {
+	values, ok := data.([]*{{structName}})
+	if !ok {
+		for _, value := range data.([]interface{}) {
+			row := &{{structName}}{}
+			row.FromRow(value.(map[string]interface{}))
+			s = append(s, row)
+		}
+		return s
+	}
+	s = append(s, values...)
+	
+	return s
+}
+
 // {{structName}} {{structComment}}
 type {{structName}} struct {
 	base    factory.Base
