@@ -104,7 +104,9 @@ func (d *DBI) On(event string, h EventHandler, tableName ...string) {
 			table = set[0]
 		}
 	}
-	d.Events.On(event, h, table)
+	for _, evt := range strings.Split(event, ",") {
+		d.Events.On(evt, h, table)
+	}
 }
 
 func (d *DBI) OnAsync(event string, h EventHandler, tableName ...string) {
@@ -121,5 +123,7 @@ func (d *DBI) OnAsync(event string, h EventHandler, tableName ...string) {
 			table = set[0]
 		}
 	}
-	d.Events.On(event, h, table, true)
+	for _, evt := range strings.Split(event, ",") {
+		d.Events.On(evt, h, table, true)
+	}
 }
