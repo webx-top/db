@@ -90,6 +90,21 @@ func (d *DBI) FireUpdate(event string, model Model, editColumns []string, mw fun
 	return d.Events.Call(event, model, editColumns, mw, args...)
 }
 
+func (d *DBI) ParseEventNames(event string) []string{
+	switch event {
+	case `w+`:
+		return AllAfterWriteEvents
+	case `+w`:
+		return AllBeforeWriteEvents
+	case `r+`:
+		return AllAfterReadEvents
+	case `+r`:
+		return AllBeforeReadEvents
+	default:
+		return strings.Split(event, ",")
+	}
+}
+
 func (d *DBI) On(event string, h EventHandler, tableName ...string) {
 	var table string
 	if len(tableName) > 0 {
@@ -104,7 +119,7 @@ func (d *DBI) On(event string, h EventHandler, tableName ...string) {
 			table = set[0]
 		}
 	}
-	for _, evt := range strings.Split(event, ",") {
+	for _, evt := range d.ParseEventNames(event) {
 		d.Events.On(evt, h, table)
 	}
 }
@@ -123,7 +138,7 @@ func (d *DBI) OnAsync(event string, h EventHandler, tableName ...string) {
 			table = set[0]
 		}
 	}
-	for _, evt := range strings.Split(event, ",") {
+	for _, evt := range d.ParseEventNames(event) {
 		d.Events.On(evt, h, table, true)
 	}
 }

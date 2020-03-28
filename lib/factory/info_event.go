@@ -8,6 +8,16 @@ func NewEvent() *Event {
 	return &Event{}
 }
 
+var (
+	// AllAfterWriteEvents 所有写事件
+	AllAfterWriteEvents = []string{`created`,`updated`,`deleted`}
+	AllBeforeWriteEvents = []string{`creating`,`updating`,`deleting`}
+
+	// AllAfterReadEvents 所有读事件
+	AllAfterReadEvents = []string{}
+	AllBeforeReadEvents = []string{}
+)
+
 type Event struct {
 	// Creating 创建之前
 	Creating *EventHandlers
