@@ -14,11 +14,16 @@ var (
 	AllBeforeWriteEvents = []string{`creating`,`updating`,`deleting`}
 
 	// AllAfterReadEvents 所有读事件
-	AllAfterReadEvents = []string{}
-	AllBeforeReadEvents = []string{}
+	AllAfterReadEvents = []string{`readed`}
+	AllBeforeReadEvents = []string{`reading`}
 )
 
 type Event struct {
+	// Reading 读取之前
+	Reading *EventReadHandlers
+	// Readed 读取之后
+	Readed *EventReadHandlers
+
 	// Creating 创建之前
 	Creating *EventHandlers
 	// Created 创建之后
@@ -37,6 +42,10 @@ type Event struct {
 
 func (e *Event) Exists(event string) bool {
 	switch event {
+	case `reading`:
+		return e.Reading != nil
+	case `readed`:
+		return e.Readed != nil
 	case `creating`:
 		return e.Creating != nil
 	case `created`:
@@ -51,6 +60,19 @@ func (e *Event) Exists(event string) bool {
 		return e.Deleted != nil
 	}
 	return false
+}
+
+func (e *Event) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
+	if !e.Exists(event) {
+		return nil
+	}
+	switch event {
+	case `reading`:
+		return e.Reading.Exec(model, param, rangers...)
+	case `readed`:
+		return e.Readed.Exec(model, param, rangers...)
+	}
+	return nil
 }
 
 func (e *Event) Call(event string, model Model, editColumns ...string) error {
@@ -74,6 +96,17 @@ func (e *Event) Call(event string, model Model, editColumns ...string) error {
 	return nil
 }
 
+func (e *Event) OnRead(event string, h EventReadHandler, async ...bool) *Event {
+	switch event {
+	case `reading`:
+		return e.AddReading(h, async...)
+	case `readed`:
+		return e.AddReaded(h, async...)
+	default:
+		panic(`Unsupported event: ` + event)
+	}
+}
+
 func (e *Event) On(event string, h EventHandler, async ...bool) *Event {
 	switch event {
 	case `creating`:
@@ -91,6 +124,30 @@ func (e *Event) On(event string, h EventHandler, async ...bool) *Event {
 	default:
 		panic(`Unsupported event: ` + event)
 	}
+}
+
+func (e *Event) AddReading(h EventReadHandler, async ...bool) *Event {
+	if e.Reading == nil {
+		e.Reading = NewEventReadHandlers()
+	}
+	if len(async) > 0 && async[0] {
+		e.Reading.Async = append(e.Reading.Async, h)
+	} else {
+		e.Reading.Sync = append(e.Reading.Sync, h)
+	}
+	return e
+}
+
+func (e *Event) AddReaded(h EventReadHandler, async ...bool) *Event {
+	if e.Readed == nil {
+		e.Readed = NewEventReadHandlers()
+	}
+	if len(async) > 0 && async[0] {
+		e.Readed.Async = append(e.Readed.Async, h)
+	} else {
+		e.Readed.Sync = append(e.Readed.Sync, h)
+	}
+	return e
 }
 
 func (e *Event) AddCreating(h EventHandler, async ...bool) *Event {

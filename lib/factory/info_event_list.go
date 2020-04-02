@@ -79,6 +79,11 @@ func (e Events) call(event string, model Model, editColumns ...string) error {
 	return nil
 }
 
+func (e Events) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
+	//TODO:
+	return nil
+}
+
 func (e *Events) On(event string, h EventHandler, table string, async ...bool) {
 	evt, ok := (*e)[table]
 	if !ok {
@@ -86,4 +91,13 @@ func (e *Events) On(event string, h EventHandler, table string, async ...bool) {
 		(*e)[table] = evt
 	}
 	evt.On(event, h, async...)
+}
+
+func (e *Events) OnRead(event string, h EventReadHandler, table string, async ...bool) {
+	evt, ok := (*e)[table]
+	if !ok {
+		evt = NewEvent()
+		(*e)[table] = evt
+	}
+	evt.OnRead(event, h, async...)
 }

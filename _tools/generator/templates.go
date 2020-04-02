@@ -275,8 +275,20 @@ func (a *{{structName}}) CPAFrom(source factory.Model) factory.Model {
 
 func (a *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) error {
 	base := a.base
-	err := a.Param(mw, args...).SetRecv(a).One()
+	if !a.base.Eventable() {
+		err := a.Param(mw, args...).SetRecv(a).One()
+		a.base = base
+		return err
+	}
+	queryParam := a.Param(mw, args...).SetRecv(a)
+	if err = DBI.FireReading(a, queryParam); err != nil {
+		return
+	}
+	err := queryParam.One()
 	a.base = base
+	if err == nil {
+		err = DBI.FireReaded(a, queryParam)
+	}
 	return err
 }
 
@@ -284,7 +296,18 @@ func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, pa
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
+	}
+	queryParam := a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv)
+	if err = DBI.FireReading(a, queryParam); err != nil {
+		return
+	}
+	err := queryParam.List()
+	if err == nil {
+		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
+	}
+	return err
 }
 
 func (a *{{structName}}) GroupBy(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
@@ -321,7 +344,18 @@ func (a *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Re
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
+	}
+	queryParam := a.Param(mw, args...).SetOffset(page).SetSize(size).SetRecv(recv)
+	if err = DBI.FireReading(a, queryParam); err != nil {
+		return
+	}
+	err := queryParam.List()
+	if err == nil {
+		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
+	}
+	return err
 }
 
 func (a *{{structName}}) Add() (pk interface{}, err error) {
