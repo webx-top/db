@@ -98,7 +98,7 @@ func (d *DBI) FireReaded(model Model, param *Param, rangers ...Ranger) error {
 	return d.Events.CallRead(`readed`, model, param, rangers...)
 }
 
-func (d *DBI) ParseEventNames(event string) []string{
+func (d *DBI) ParseEventNames(event string) []string {
 	switch event {
 	case `w+`:
 		return AllAfterWriteEvents
@@ -115,7 +115,7 @@ func (d *DBI) ParseEventNames(event string) []string{
 
 // - 注册写(CUD)事件
 
-func (d *DBI) On(event string, h interface{}, tableName ...string) {
+func (d *DBI) On(event string, h interface{}, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -131,15 +131,16 @@ func (d *DBI) On(event string, h interface{}, tableName ...string) {
 	}
 	for _, evt := range d.ParseEventNames(event) {
 		switch evt {
-		case `reading`,`readed`:
+		case `reading`, `readed`:
 			d.Events.OnRead(evt, h.(EventReadHandler), table)
 		default:
 			d.Events.On(evt, h.(EventHandler), table)
 		}
 	}
+	return d
 }
 
-func (d *DBI) OnAsync(event string, h interface{}, tableName ...string) {
+func (d *DBI) OnAsync(event string, h interface{}, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -155,17 +156,18 @@ func (d *DBI) OnAsync(event string, h interface{}, tableName ...string) {
 	}
 	for _, evt := range d.ParseEventNames(event) {
 		switch evt {
-		case `reading`,`readed`:
+		case `reading`, `readed`:
 			d.Events.OnRead(evt, h.(EventReadHandler), table, true)
 		default:
 			d.Events.On(evt, h.(EventHandler), table, true)
 		}
 	}
+	return d
 }
 
 // - 注册读(R)事件
 
-func (d *DBI) OnRead(event string, h EventReadHandler, tableName ...string) {
+func (d *DBI) OnRead(event string, h EventReadHandler, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -182,9 +184,10 @@ func (d *DBI) OnRead(event string, h EventReadHandler, tableName ...string) {
 	for _, evt := range d.ParseEventNames(event) {
 		d.Events.OnRead(evt, h, table)
 	}
+	return d
 }
 
-func (d *DBI) OnReadAsync(event string, h EventReadHandler, tableName ...string) {
+func (d *DBI) OnReadAsync(event string, h EventReadHandler, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -201,4 +204,5 @@ func (d *DBI) OnReadAsync(event string, h EventReadHandler, tableName ...string)
 	for _, evt := range d.ParseEventNames(event) {
 		d.Events.OnRead(evt, h, table, true)
 	}
+	return d
 }
