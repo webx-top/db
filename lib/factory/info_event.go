@@ -10,11 +10,11 @@ func NewEvent() *Event {
 
 var (
 	// AllAfterWriteEvents 所有写事件
-	AllAfterWriteEvents = []string{`created`,`updated`,`deleted`}
-	AllBeforeWriteEvents = []string{`creating`,`updating`,`deleting`}
+	AllAfterWriteEvents  = []string{`created`, `updated`, `deleted`}
+	AllBeforeWriteEvents = []string{`creating`, `updating`, `deleting`}
 
 	// AllAfterReadEvents 所有读事件
-	AllAfterReadEvents = []string{`readed`}
+	AllAfterReadEvents  = []string{`readed`}
 	AllBeforeReadEvents = []string{`reading`}
 )
 
@@ -62,15 +62,15 @@ func (e *Event) Exists(event string) bool {
 	return false
 }
 
-func (e *Event) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
+func (e *Event) CallRead(event string, model Model, param *Param) error {
 	if !e.Exists(event) {
 		return nil
 	}
 	switch event {
 	case `reading`:
-		return e.Reading.Exec(model, param, rangers...)
+		return e.Reading.Exec(model, param)
 	case `readed`:
-		return e.Readed.Exec(model, param, rangers...)
+		return e.Readed.Exec(model, param)
 	}
 	return nil
 }

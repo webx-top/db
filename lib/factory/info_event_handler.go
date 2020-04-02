@@ -5,7 +5,7 @@ import (
 )
 
 type EventHandler func(model Model, editColumns ...string) error
-type EventReadHandler func(model Model, param *Param, rangers ...Ranger) error
+type EventReadHandler func(model Model, param *Param) error
 
 func NewEventHandlers() *EventHandlers {
 	return &EventHandlers{}
@@ -20,12 +20,12 @@ type EventReadHandlers struct {
 	Sync  []EventReadHandler
 }
 
-func (e *EventReadHandlers) Exec(model Model, param *Param, rangers ...Ranger) error {
+func (e *EventReadHandlers) Exec(model Model, param *Param) error {
 	for _, handler := range e.Async {
-		go handler(model, param, rangers...)
+		go handler(model, param)
 	}
 	for _, handler := range e.Sync {
-		if err := handler(model, param, rangers...); err != nil {
+		if err := handler(model, param); err != nil {
 			return err
 		}
 	}

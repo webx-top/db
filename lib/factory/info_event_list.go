@@ -80,7 +80,37 @@ func (e Events) call(event string, model Model, editColumns ...string) error {
 }
 
 func (e Events) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
-	//TODO:
+	table := model.Short_()
+	if len(rangers) < 1 { // 单行数据
+		if evt, ok := e[table]; ok {
+			err := evt.CallRead(event, model, param)
+			if err != nil {
+				return err
+			}
+		}
+		if evt, ok := e[`*`]; ok {
+			return evt.CallRead(event, model, param)
+		}
+		return nil
+	}
+	if evt, ok := e[table]; ok {
+		err := rangers[0].Range(func(m Model) error {
+			m.CPAFrom(model)
+			return evt.CallRead(event, m, param)
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if evt, ok := e[`*`]; ok {
+		err := rangers[0].Range(func(m Model) error {
+			m.CPAFrom(model)
+			return evt.CallRead(event, m, param)
+		})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
