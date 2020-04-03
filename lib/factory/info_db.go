@@ -115,7 +115,7 @@ func (d *DBI) ParseEventNames(event string) []string {
 
 // - 注册写(CUD)事件
 
-func (d *DBI) On(event string, h interface{}, tableName ...string) *DBI {
+func (d *DBI) On(event string, h EventHandler, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -130,17 +130,12 @@ func (d *DBI) On(event string, h interface{}, tableName ...string) *DBI {
 		}
 	}
 	for _, evt := range d.ParseEventNames(event) {
-		switch evt {
-		case `reading`, `readed`:
-			d.Events.OnRead(evt, h.(EventReadHandler), table)
-		default:
-			d.Events.On(evt, h.(EventHandler), table)
-		}
+		d.Events.On(evt, h, table)
 	}
 	return d
 }
 
-func (d *DBI) OnAsync(event string, h interface{}, tableName ...string) *DBI {
+func (d *DBI) OnAsync(event string, h EventHandler, tableName ...string) *DBI {
 	var table string
 	if len(tableName) > 0 {
 		table = tableName[0]
@@ -155,12 +150,7 @@ func (d *DBI) OnAsync(event string, h interface{}, tableName ...string) *DBI {
 		}
 	}
 	for _, evt := range d.ParseEventNames(event) {
-		switch evt {
-		case `reading`, `readed`:
-			d.Events.OnRead(evt, h.(EventReadHandler), table, true)
-		default:
-			d.Events.On(evt, h.(EventHandler), table, true)
-		}
+		d.Events.On(evt, h, table, true)
 	}
 	return d
 }
