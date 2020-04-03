@@ -273,23 +273,23 @@ func (a *{{structName}}) CPAFrom(source factory.Model) factory.Model {
 	return a
 }
 
-func (a *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+func (a *{{structName}}) Get(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	base := a.base
 	if !a.base.Eventable() {
-		err := a.Param(mw, args...).SetRecv(a).One()
+		err = a.Param(mw, args...).SetRecv(a).One()
 		a.base = base
-		return err
+		return
 	}
 	queryParam := a.Param(mw, args...).SetRecv(a)
 	if err = DBI.FireReading(a, queryParam); err != nil {
 		return
 	}
-	err := queryParam.One()
+	err = queryParam.One()
 	a.base = base
 	if err == nil {
 		err = DBI.FireReaded(a, queryParam)
 	}
-	return err
+	return
 }
 
 func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
@@ -300,14 +300,14 @@ func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, pa
 		return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
 	}
 	queryParam := a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv)
-	if err = DBI.FireReading(a, queryParam); err != nil {
-		return
+	if err := DBI.FireReading(a, queryParam); err != nil {
+		return nil, err
 	}
-	err := queryParam.List()
+	cnt, err := queryParam.List()
 	if err == nil {
 		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
 	}
-	return err
+	return cnt, err
 }
 
 func (a *{{structName}}) GroupBy(keyField string, inputRows ...[]*{{structName}}) map[string][]*{{structName}} {
@@ -348,14 +348,14 @@ func (a *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Re
 		return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
 	}
 	queryParam := a.Param(mw, args...).SetOffset(page).SetSize(size).SetRecv(recv)
-	if err = DBI.FireReading(a, queryParam); err != nil {
-		return
+	if err := DBI.FireReading(a, queryParam); err != nil {
+		return nil, err
 	}
-	err := queryParam.List()
+	cnt, err := queryParam.List()
 	if err == nil {
 		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
 	}
-	return err
+	return cnt, err
 }
 
 func (a *{{structName}}) Add() (pk interface{}, err error) {
