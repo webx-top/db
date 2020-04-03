@@ -305,7 +305,14 @@ func (a *{{structName}}) List(recv interface{}, mw func(db.Result) db.Result, pa
 	}
 	cnt, err := queryParam.List()
 	if err == nil {
-		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
+		switch v := recv.(type) {
+		case *[]*{{structName}}:
+			err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(*v))
+		case []*{{structName}}:
+			err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(v))
+		case factory.Ranger:
+			err = DBI.FireReaded(a, queryParam, v)
+		}
 	}
 	return cnt, err
 }
@@ -347,13 +354,20 @@ func (a *{{structName}}) ListByOffset(recv interface{}, mw func(db.Result) db.Re
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
 	}
-	queryParam := a.Param(mw, args...).SetOffset(page).SetSize(size).SetRecv(recv)
+	queryParam := a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv)
 	if err := DBI.FireReading(a, queryParam); err != nil {
 		return nil, err
 	}
 	cnt, err := queryParam.List()
 	if err == nil {
-		err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(recv))
+		switch v := recv.(type) {
+		case *[]*{{structName}}:
+			err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(*v))
+		case []*{{structName}}:
+			err = DBI.FireReaded(a, queryParam, Slice_{{structName}}(v))
+		case factory.Ranger:
+			err = DBI.FireReaded(a, queryParam, v)
+		}
 	}
 	return cnt, err
 }
