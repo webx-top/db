@@ -20,15 +20,15 @@ func TestEvent(t *testing.T) {
 		buf.WriteString(`creating.`)
 		println(`creating.`)
 		return nil
-	}, `config`)
+	}, `nging_config`)
 	dbi.On(`created`, func(m factory.Model, _ ...string) error {
 		buf.WriteString(`created.`)
 		println(`created.`)
 		return nil
-	}, `config`)
+	}, `nging_config`)
 
 	// 调用事件
-	m := &dbschema.Config{}
+	m := &dbschema.NgingConfig{}
 	dbi.Fire(`creating`, m, nil)
 	assert.Equal(
 		t,

@@ -11,9 +11,9 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
-type Slice_Config []*Config
+type Slice_NgingConfig []*NgingConfig
 
-func (s Slice_Config) Range(fn func(m factory.Model) error) error {
+func (s Slice_NgingConfig) Range(fn func(m factory.Model) error) error {
 	for _, v := range s {
 		if err := fn(v); err != nil {
 			return err
@@ -22,7 +22,7 @@ func (s Slice_Config) Range(fn func(m factory.Model) error) error {
 	return nil
 }
 
-func (s Slice_Config) RangeRaw(fn func(m *Config) error) error {
+func (s Slice_NgingConfig) RangeRaw(fn func(m *NgingConfig) error) error {
 	for _, v := range s {
 		if err := fn(v); err != nil {
 			return err
@@ -31,16 +31,72 @@ func (s Slice_Config) RangeRaw(fn func(m *Config) error) error {
 	return nil
 }
 
-// Config 配置
-type Config struct {
+func (s Slice_NgingConfig) GroupBy(keyField string) map[string][]*NgingConfig {
+	r := map[string][]*NgingConfig{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		if _, y := r[vkey]; !y {
+			r[vkey] = []*NgingConfig{}
+		}
+		r[vkey] = append(r[vkey], row)
+	}
+	return r
+}
+
+func (s Slice_NgingConfig) KeyBy(keyField string) map[string]*NgingConfig {
+	r := map[string]*NgingConfig{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = row
+	}
+	return r
+}
+
+func (s Slice_NgingConfig) AsKV(keyField string, valueField string) param.Store {
+	r := param.Store{}
+	for _, row := range s {
+		dmap := row.AsMap()
+		vkey := fmt.Sprint(dmap[keyField])
+		r[vkey] = dmap[valueField]
+	}
+	return r
+}
+
+func (s Slice_NgingConfig) Transform(transfers map[string]param.Transfer) []param.Store {
+	r := make([]param.Store, len(s))
+	for idx, row := range s {
+		r[idx] = row.AsMap().Transform(transfers)
+	}
+	return r
+}
+
+func (s Slice_NgingConfig) FromList(data interface{}) Slice_NgingConfig {
+	values, ok := data.([]*NgingConfig)
+	if !ok {
+		for _, value := range data.([]interface{}) {
+			row := &NgingConfig{}
+			row.FromRow(value.(map[string]interface{}))
+			s = append(s, row)
+		}
+		return s
+	}
+	s = append(s, values...)
+
+	return s
+}
+
+// NgingConfig 配置
+type NgingConfig struct {
 	base    factory.Base
-	objects []*Config
+	objects []*NgingConfig
 
 	Key         string `db:"key,pk" bson:"key" comment:"键" json:"key" xml:"key"`
-	Label       string `db:"label" bson:"label" comment:"选项名称" json:"label" xml:"label"`
-	Description string `db:"description" bson:"description" comment:"简介" json:"description" xml:"description"`
-	Value       string `db:"value" bson:"value" comment:"值" json:"value" xml:"value"`
 	Group       string `db:"group,pk" bson:"group" comment:"组" json:"group" xml:"group"`
+	Label       string `db:"label" bson:"label" comment:"选项名称" json:"label" xml:"label"`
+	Value       string `db:"value" bson:"value" comment:"值" json:"value" xml:"value"`
+	Description string `db:"description" bson:"description" comment:"简介" json:"description" xml:"description"`
 	Type        string `db:"type" bson:"type" comment:"值类型(list-以半角逗号分隔的值列表)" json:"type" xml:"type"`
 	Sort        int    `db:"sort" bson:"sort" comment:"排序" json:"sort" xml:"sort"`
 	Disabled    string `db:"disabled" bson:"disabled" comment:"是否禁用" json:"disabled" xml:"disabled"`
@@ -49,54 +105,54 @@ type Config struct {
 
 // - base function
 
-func (a *Config) Trans() *factory.Transaction {
+func (a *NgingConfig) Trans() *factory.Transaction {
 	return a.base.Trans()
 }
 
-func (a *Config) Use(trans *factory.Transaction) factory.Model {
+func (a *NgingConfig) Use(trans *factory.Transaction) factory.Model {
 	a.base.Use(trans)
 	return a
 }
 
-func (a *Config) SetContext(ctx echo.Context) factory.Model {
+func (a *NgingConfig) SetContext(ctx echo.Context) factory.Model {
 	a.base.SetContext(ctx)
 	return a
 }
 
-func (a *Config) EventON(on ...bool) factory.Model {
+func (a *NgingConfig) EventON(on ...bool) factory.Model {
 	a.base.EventON(on...)
 	return a
 }
 
-func (a *Config) EventOFF(off ...bool) factory.Model {
+func (a *NgingConfig) EventOFF(off ...bool) factory.Model {
 	a.base.EventOFF(off...)
 	return a
 }
 
-func (a *Config) Context() echo.Context {
+func (a *NgingConfig) Context() echo.Context {
 	return a.base.Context()
 }
 
-func (a *Config) SetConnID(connID int) factory.Model {
+func (a *NgingConfig) SetConnID(connID int) factory.Model {
 	a.base.SetConnID(connID)
 	return a
 }
 
-func (a *Config) SetNamer(namer func(string) string) factory.Model {
+func (a *NgingConfig) SetNamer(namer func(string) string) factory.Model {
 	a.base.SetNamer(namer)
 	return a
 }
 
-func (a *Config) Namer() func(string) string {
+func (a *NgingConfig) Namer() func(string) string {
 	return a.base.Namer()
 }
 
-func (a *Config) SetParam(param *factory.Param) factory.Model {
+func (a *NgingConfig) SetParam(param *factory.Param) factory.Model {
 	a.base.SetParam(param)
 	return a
 }
 
-func (a *Config) Param(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
+func (a *NgingConfig) Param(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
 	if a.base.Param() == nil {
 		return a.NewParam().SetMiddleware(mw).SetArgs(args...)
 	}
@@ -105,128 +161,159 @@ func (a *Config) Param(mw func(db.Result) db.Result, args ...interface{}) *facto
 
 // - current function
 
-func (a *Config) New(structName string, connID ...int) factory.Model {
+func (a *NgingConfig) New(structName string, connID ...int) factory.Model {
 	if len(connID) > 0 {
 		return factory.NewModel(structName, connID[0]).Use(a.base.Trans())
 	}
 	return factory.NewModel(structName, a.base.ConnID()).Use(a.base.Trans())
 }
 
-func (a *Config) Objects() []*Config {
+func (a *NgingConfig) Objects() []*NgingConfig {
 	if a.objects == nil {
 		return nil
 	}
 	return a.objects[:]
 }
 
-func (a *Config) NewObjects() factory.Ranger {
-	return &Slice_Config{}
+func (a *NgingConfig) XObjects() Slice_NgingConfig {
+	return Slice_NgingConfig(a.Objects())
 }
 
-func (a *Config) InitObjects() *[]*Config {
-	a.objects = []*Config{}
+func (a *NgingConfig) NewObjects() factory.Ranger {
+	return &Slice_NgingConfig{}
+}
+
+func (a *NgingConfig) InitObjects() *[]*NgingConfig {
+	a.objects = []*NgingConfig{}
 	return &a.objects
 }
 
-func (a *Config) NewParam() *factory.Param {
+func (a *NgingConfig) NewParam() *factory.Param {
 	return factory.NewParam(factory.DefaultFactory).SetIndex(a.base.ConnID()).SetTrans(a.base.Trans()).SetCollection(a.Name_()).SetModel(a)
 }
 
-func (a *Config) Short_() string {
-	return "config"
+func (a *NgingConfig) Short_() string {
+	return "nging_config"
 }
 
-func (a *Config) Struct_() string {
-	return "Config"
+func (a *NgingConfig) Struct_() string {
+	return "NgingConfig"
 }
 
-func (a *Config) Name_() string {
+func (a *NgingConfig) Name_() string {
 	if a.base.Namer() != nil {
 		return WithPrefix(a.base.Namer()(a.Short_()))
 	}
 	return WithPrefix(factory.TableNamerGet(a.Short_())(a))
 }
 
-func (a *Config) CPAFrom(source factory.Model) factory.Model {
+func (a *NgingConfig) CPAFrom(source factory.Model) factory.Model {
 	a.SetContext(source.Context())
 	a.Use(source.Trans())
 	a.SetNamer(source.Namer())
 	return a
 }
 
-func (a *Config) Get(mw func(db.Result) db.Result, args ...interface{}) error {
+func (a *NgingConfig) Get(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	base := a.base
-	err := a.Param(mw, args...).SetRecv(a).One()
+	if !a.base.Eventable() {
+		err = a.Param(mw, args...).SetRecv(a).One()
+		a.base = base
+		return
+	}
+	queryParam := a.Param(mw, args...).SetRecv(a)
+	if err = DBI.FireReading(a, queryParam); err != nil {
+		return
+	}
+	err = queryParam.One()
 	a.base = base
-	return err
+	if err == nil {
+		err = DBI.FireReaded(a, queryParam)
+	}
+	return
 }
 
-func (a *Config) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+func (a *NgingConfig) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
-}
-
-func (a *Config) GroupBy(keyField string, inputRows ...[]*Config) map[string][]*Config {
-	var rows []*Config
-	if len(inputRows) > 0 {
-		rows = inputRows[0]
-	} else {
-		rows = a.Objects()
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv).List()
 	}
-	r := map[string][]*Config{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		if _, y := r[vkey]; !y {
-			r[vkey] = []*Config{}
+	queryParam := a.Param(mw, args...).SetPage(page).SetSize(size).SetRecv(recv)
+	if err := DBI.FireReading(a, queryParam); err != nil {
+		return nil, err
+	}
+	cnt, err := queryParam.List()
+	if err == nil {
+		switch v := recv.(type) {
+		case *[]*NgingConfig:
+			err = DBI.FireReaded(a, queryParam, Slice_NgingConfig(*v))
+		case []*NgingConfig:
+			err = DBI.FireReaded(a, queryParam, Slice_NgingConfig(v))
+		case factory.Ranger:
+			err = DBI.FireReaded(a, queryParam, v)
 		}
-		r[vkey] = append(r[vkey], row)
 	}
-	return r
+	return cnt, err
 }
 
-func (a *Config) KeyBy(keyField string, inputRows ...[]*Config) map[string]*Config {
-	var rows []*Config
+func (a *NgingConfig) GroupBy(keyField string, inputRows ...[]*NgingConfig) map[string][]*NgingConfig {
+	var rows Slice_NgingConfig
 	if len(inputRows) > 0 {
-		rows = inputRows[0]
+		rows = Slice_NgingConfig(inputRows[0])
 	} else {
-		rows = a.Objects()
+		rows = Slice_NgingConfig(a.Objects())
 	}
-	r := map[string]*Config{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		r[vkey] = row
-	}
-	return r
+	return rows.GroupBy(keyField)
 }
 
-func (a *Config) AsKV(keyField string, valueField string, inputRows ...[]*Config) map[string]interface{} {
-	var rows []*Config
+func (a *NgingConfig) KeyBy(keyField string, inputRows ...[]*NgingConfig) map[string]*NgingConfig {
+	var rows Slice_NgingConfig
 	if len(inputRows) > 0 {
-		rows = inputRows[0]
+		rows = Slice_NgingConfig(inputRows[0])
 	} else {
-		rows = a.Objects()
+		rows = Slice_NgingConfig(a.Objects())
 	}
-	r := map[string]interface{}{}
-	for _, row := range rows {
-		dmap := row.AsMap()
-		vkey := fmt.Sprint(dmap[keyField])
-		r[vkey] = dmap[valueField]
-	}
-	return r
+	return rows.KeyBy(keyField)
 }
 
-func (a *Config) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+func (a *NgingConfig) AsKV(keyField string, valueField string, inputRows ...[]*NgingConfig) param.Store {
+	var rows Slice_NgingConfig
+	if len(inputRows) > 0 {
+		rows = Slice_NgingConfig(inputRows[0])
+	} else {
+		rows = Slice_NgingConfig(a.Objects())
+	}
+	return rows.AsKV(keyField, valueField)
+}
+
+func (a *NgingConfig) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	if recv == nil {
 		recv = a.InitObjects()
 	}
-	return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv).List()
+	}
+	queryParam := a.Param(mw, args...).SetOffset(offset).SetSize(size).SetRecv(recv)
+	if err := DBI.FireReading(a, queryParam); err != nil {
+		return nil, err
+	}
+	cnt, err := queryParam.List()
+	if err == nil {
+		switch v := recv.(type) {
+		case *[]*NgingConfig:
+			err = DBI.FireReaded(a, queryParam, Slice_NgingConfig(*v))
+		case []*NgingConfig:
+			err = DBI.FireReaded(a, queryParam, Slice_NgingConfig(v))
+		case factory.Ranger:
+			err = DBI.FireReaded(a, queryParam, v)
+		}
+	}
+	return cnt, err
 }
 
-func (a *Config) Add() (pk interface{}, err error) {
+func (a *NgingConfig) Add() (pk interface{}, err error) {
 
 	if len(a.Type) == 0 {
 		a.Type = "text"
@@ -251,7 +338,7 @@ func (a *Config) Add() (pk interface{}, err error) {
 	return
 }
 
-func (a *Config) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
+func (a *NgingConfig) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 
 	if len(a.Type) == 0 {
 		a.Type = "text"
@@ -274,13 +361,13 @@ func (a *Config) Edit(mw func(db.Result) db.Result, args ...interface{}) (err er
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *Config) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+func (a *NgingConfig) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
 	return a.SetFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *Config) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *NgingConfig) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["type"]; ok && val != nil {
 		if v, ok := val.(string); ok && len(v) == 0 {
@@ -315,7 +402,7 @@ func (a *Config) SetFields(mw func(db.Result) db.Result, kvset map[string]interf
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
 }
 
-func (a *Config) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
+func (a *NgingConfig) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
 	pk, err = a.Param(mw, args...).SetSend(a).Upsert(func() error {
 		if len(a.Type) == 0 {
 			a.Type = "text"
@@ -356,7 +443,7 @@ func (a *Config) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk i
 	return
 }
 
-func (a *Config) Delete(mw func(db.Result) db.Result, args ...interface{}) (err error) {
+func (a *NgingConfig) Delete(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).Delete()
@@ -370,16 +457,16 @@ func (a *Config) Delete(mw func(db.Result) db.Result, args ...interface{}) (err 
 	return DBI.Fire("deleted", a, mw, args...)
 }
 
-func (a *Config) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
+func (a *NgingConfig) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
 	return a.Param(mw, args...).Count()
 }
 
-func (a *Config) Reset() *Config {
+func (a *NgingConfig) Reset() *NgingConfig {
 	a.Key = ``
-	a.Label = ``
-	a.Description = ``
-	a.Value = ``
 	a.Group = ``
+	a.Label = ``
+	a.Value = ``
+	a.Description = ``
 	a.Type = ``
 	a.Sort = 0
 	a.Disabled = ``
@@ -387,13 +474,13 @@ func (a *Config) Reset() *Config {
 	return a
 }
 
-func (a *Config) AsMap() map[string]interface{} {
-	r := map[string]interface{}{}
+func (a *NgingConfig) AsMap() param.Store {
+	r := param.Store{}
 	r["Key"] = a.Key
-	r["Label"] = a.Label
-	r["Description"] = a.Description
-	r["Value"] = a.Value
 	r["Group"] = a.Group
+	r["Label"] = a.Label
+	r["Value"] = a.Value
+	r["Description"] = a.Description
 	r["Type"] = a.Type
 	r["Sort"] = a.Sort
 	r["Disabled"] = a.Disabled
@@ -401,19 +488,19 @@ func (a *Config) AsMap() map[string]interface{} {
 	return r
 }
 
-func (a *Config) FromRow(row map[string]interface{}) {
+func (a *NgingConfig) FromRow(row map[string]interface{}) {
 	for key, value := range row {
 		switch key {
 		case "key":
 			a.Key = param.AsString(value)
-		case "label":
-			a.Label = param.AsString(value)
-		case "description":
-			a.Description = param.AsString(value)
-		case "value":
-			a.Value = param.AsString(value)
 		case "group":
 			a.Group = param.AsString(value)
+		case "label":
+			a.Label = param.AsString(value)
+		case "value":
+			a.Value = param.AsString(value)
+		case "description":
+			a.Description = param.AsString(value)
 		case "type":
 			a.Type = param.AsString(value)
 		case "sort":
@@ -426,7 +513,7 @@ func (a *Config) FromRow(row map[string]interface{}) {
 	}
 }
 
-func (a *Config) Set(key interface{}, value ...interface{}) {
+func (a *NgingConfig) Set(key interface{}, value ...interface{}) {
 	switch k := key.(type) {
 	case map[string]interface{}:
 		for kk, vv := range k {
@@ -448,14 +535,14 @@ func (a *Config) Set(key interface{}, value ...interface{}) {
 		switch kk {
 		case "Key":
 			a.Key = param.AsString(vv)
-		case "Label":
-			a.Label = param.AsString(vv)
-		case "Description":
-			a.Description = param.AsString(vv)
-		case "Value":
-			a.Value = param.AsString(vv)
 		case "Group":
 			a.Group = param.AsString(vv)
+		case "Label":
+			a.Label = param.AsString(vv)
+		case "Value":
+			a.Value = param.AsString(vv)
+		case "Description":
+			a.Description = param.AsString(vv)
 		case "Type":
 			a.Type = param.AsString(vv)
 		case "Sort":
@@ -468,13 +555,13 @@ func (a *Config) Set(key interface{}, value ...interface{}) {
 	}
 }
 
-func (a *Config) AsRow() map[string]interface{} {
-	r := map[string]interface{}{}
+func (a *NgingConfig) AsRow() param.Store {
+	r := param.Store{}
 	r["key"] = a.Key
-	r["label"] = a.Label
-	r["description"] = a.Description
-	r["value"] = a.Value
 	r["group"] = a.Group
+	r["label"] = a.Label
+	r["value"] = a.Value
+	r["description"] = a.Description
 	r["type"] = a.Type
 	r["sort"] = a.Sort
 	r["disabled"] = a.Disabled
@@ -482,13 +569,13 @@ func (a *Config) AsRow() map[string]interface{} {
 	return r
 }
 
-func (a *Config) BatchValidate(kvset map[string]interface{}) error {
+func (a *NgingConfig) BatchValidate(kvset map[string]interface{}) error {
 	if kvset == nil {
 		kvset = a.AsRow()
 	}
 	return factory.BatchValidate(a.Short_(), kvset)
 }
 
-func (a *Config) Validate(field string, value interface{}) error {
+func (a *NgingConfig) Validate(field string, value interface{}) error {
 	return factory.Validate(a.Short_(), field, value)
 }
