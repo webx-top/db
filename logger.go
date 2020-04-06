@@ -82,13 +82,13 @@ func BuildSQL(query string, args ...interface{}) string {
 				args = v
 			}
 		}
-		args := make([]interface{}, len(args))
+		newArgs := make([]interface{}, len(args))
 		for k, v := range args {
 			s := fmt.Sprint(v)
 			s = com.AddSlashes(s)
-			args[k] = s
+			newArgs[k] = s
 		}
-		query = fmt.Sprintf(strings.Replace(query, `?`, `'%v'`, -1), args...)
+		query = fmt.Sprintf(strings.Replace(query, `?`, `'%v'`, -1), newArgs...)
 	}
 	return query
 }
