@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/webx-top/db/lib/factory"
+	dbPkg "github.com/webx-top/db"
 	"github.com/webx-top/echo/param"
 	"github.com/webx-top/com"
 )
@@ -45,7 +46,7 @@ func ReplacePrefix(linkID int, tableName string, field string, oldPrefix string,
 	}
 	result, err := db.Exec(sqlStr, oldPrefix, newPrefix, likeValue)
 	if factory.Debug() {
-		fmt.Println(db.BuildSQL(sqlStr, oldPrefix, newPrefix, likeValue))
+		fmt.Println(dbPkg.BuildSQL(sqlStr, oldPrefix, newPrefix, likeValue))
 	}
 	if err != nil {
 		return 0, err
