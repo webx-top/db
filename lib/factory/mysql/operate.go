@@ -45,7 +45,7 @@ func ReplacePrefix(linkID int, tableName string, field string, oldPrefix string,
 	}
 	result, err := db.Exec(sqlStr, oldPrefix, newPrefix, likeValue)
 	if factory.Debug() {
-		fmt.Println(sqlStr)
+		fmt.Println(db.BuildSQL(sqlStr, oldPrefix, newPrefix, likeValue))
 	}
 	if err != nil {
 		return 0, err
