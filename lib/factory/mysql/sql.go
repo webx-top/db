@@ -85,7 +85,7 @@ func BatchUpdate(table string, rows []param.Store, whereFields ...string) string
 }
 
 // BatchInsert 生成批量插入SQL
-func BatchInsert(table string, rows []param.Store) string {
+func BatchInsert(table string, rows []param.Store, force ...bool) string {
 	if len(rows) < 1 {
 		return ``
 	}
@@ -108,7 +108,11 @@ func BatchInsert(table string, rows []param.Store) string {
 		setValue += `)`
 		setValues[index] = setValue
 	}
-	sqlString := "INSERT IGNORE INTO `"+table+"` " + setFields + " VALUES"
+	sqlString := `INSERT IGNORE INTO`
+	if len(force) > 0 && force[0] {
+		sqlString = `REPLACE INTO`
+	}
+	sqlString += " `"+table+"` " + setFields + " VALUES"
 	sqlString += "\n" + strings.Join(setValues, ",\n")
 	return sqlString
 }
