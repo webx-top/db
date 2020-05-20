@@ -62,7 +62,7 @@ func BatchUpdate(table string, rows []param.Store, whereFields ...string) string
 	for index, row := range rows {
 		join := `SELECT `;
 		for _, field := range fields {
-			join += "'"+row.String(field)+"' AS `"+field+"`,"
+			join += "'"+com.AddSlashes(row.String(field))+"' AS `"+field+"`,"
 		}
 		join = strings.TrimSuffix(join, `,`)
 		joins[index] = join
@@ -102,7 +102,7 @@ func BatchInsert(table string, rows []param.Store, force ...bool) string {
 	for index, row := range rows {
 		setValue := `(`;
 		for _, field := range fields {
-			setValue += "'"+row.String(field)+"',"
+			setValue += "'"+com.AddSlashes(row.String(field))+"',"
 		}
 		setValue = strings.TrimSuffix(setValue, `,`)
 		setValue += `)`
