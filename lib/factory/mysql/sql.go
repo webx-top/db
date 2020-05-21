@@ -8,7 +8,7 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
-// SelectForMap : 生成CASE...ELSE...END
+// BuildSelectCase : 生成CASE...ELSE...END
 // SELECT status,
 // CASE status
 // WHEN 1 THEN '待查询'
@@ -19,7 +19,7 @@ import (
 // END statusName,
 // count(status)
 // FROM order GROUP BY status;
-func SelectForMap(field string, dict map[string]string, defaultValue string, asFields ...string) string {
+func BuildSelectCase(field string, dict map[string]string, defaultValue string, asFields ...string) string {
 	var asField string
 	if len(asFields)> 0{
 		asField = asFields[0]
@@ -44,8 +44,8 @@ func SelectForMap(field string, dict map[string]string, defaultValue string, asF
 	return sqlString
 }
 
-// BatchUpdate 生成批量更新SQL
-func BatchUpdate(table string, rows []param.Store, whereFields ...string) string {
+// BuildBatchUpdate 生成批量更新SQL
+func BuildBatchUpdate(table string, rows []param.Store, whereFields ...string) string {
 	if len(rows) < 1 {
 		return ``
 	}
@@ -84,8 +84,8 @@ func BatchUpdate(table string, rows []param.Store, whereFields ...string) string
 	return sqlString
 }
 
-// BatchInsert 生成批量插入SQL
-func BatchInsert(table string, rows []param.Store, force ...bool) string {
+// BuildBatchInsert 生成批量插入SQL
+func BuildBatchInsert(table string, rows []param.Store, force ...bool) string {
 	if len(rows) < 1 {
 		return ``
 	}
