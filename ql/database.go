@@ -19,7 +19,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package ql wraps the github.com/cznic/ql/driver QL driver. See
+// Package ql wraps the modernc.org/ql/driver QL driver. See
 // https://upper.io/db.v3/ql for documentation, particularities and usage
 // examples.
 package ql
@@ -32,8 +32,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	_ "github.com/cznic/ql/driver" // QL driver
-	"upper.io/db.v3"
+	_ "modernc.org/ql/driver" // QL driver
+	db "upper.io/db.v3"
 	"upper.io/db.v3/internal/sqladapter"
 	"upper.io/db.v3/internal/sqladapter/compat"
 	"upper.io/db.v3/internal/sqladapter/exql"

@@ -22,7 +22,7 @@
 package mssql
 
 import (
-	"upper.io/db.v3"
+	db "upper.io/db.v3"
 	"upper.io/db.v3/internal/sqladapter"
 	"upper.io/db.v3/lib/sqlbuilder"
 )
@@ -108,7 +108,9 @@ func (t *table) Insert(item interface{}) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			defer t.d.Exec("SET IDENTITY_INSERT " + t.Name() + " OFF")
+			defer func() {
+				_, _ = t.d.Exec("SET IDENTITY_INSERT " + t.Name() + " OFF")
+			}()
 		}
 	}
 

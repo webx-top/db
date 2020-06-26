@@ -24,13 +24,10 @@ package postgresql // import "upper.io/db.v3/postgresql"
 import (
 	"database/sql"
 
-	"upper.io/db.v3"
-
+	db "upper.io/db.v3"
 	"upper.io/db.v3/internal/sqladapter"
 	"upper.io/db.v3/lib/sqlbuilder"
 )
-
-const sqlDriver = `postgres`
 
 // Adapter is the unique name that you can use to refer to this adapter.
 const Adapter = `postgresql`
