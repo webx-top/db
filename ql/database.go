@@ -19,7 +19,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package ql wraps the github.com/cznic/ql/driver QL driver. See
+// Package ql wraps the modernc.org/ql/driver QL driver. See
 // https://upper.io/db.v3/ql for documentation, particularities and usage
 // examples.
 package ql
@@ -32,12 +32,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	_ "github.com/cznic/ql/driver" // QL driver
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
 	"github.com/webx-top/db/internal/sqladapter/compat"
 	"github.com/webx-top/db/internal/sqladapter/exql"
 	"github.com/webx-top/db/lib/sqlbuilder"
+	_ "modernc.org/ql/driver" // QL driver
 )
 
 // database is the actual implementation of Database

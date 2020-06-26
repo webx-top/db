@@ -30,8 +30,6 @@ import (
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
-const sqlDriver = `postgres`
-
 // Adapter is the unique name that you can use to refer to this adapter.
 const Adapter = `postgresql`
 
