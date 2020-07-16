@@ -80,7 +80,7 @@ type Short interface {
 	Short_() string
 }
 
-func (d *DBI) GetSelect(v interface{}, excludeColumns ...string) []interface{} {
+func (d *DBI) OmitSelect(v interface{}, excludeColumns ...string) []interface{} {
 	var noPrefixTableName string
 	switch a := v.(type) {
 	case string:
@@ -101,7 +101,7 @@ func (d *DBI) GetSelect(v interface{}, excludeColumns ...string) []interface{} {
 	return results
 }
 
-func (d *DBI) GetColumns(v interface{}, excludeColumns ...string) []string {
+func (d *DBI) OmitColumns(v interface{}, excludeColumns ...string) []string {
 	var noPrefixTableName string
 	switch a := v.(type) {
 	case string:
