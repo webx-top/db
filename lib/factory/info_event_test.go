@@ -9,7 +9,14 @@ import (
 
 	"github.com/webx-top/db/_tools/generator/dbschema"
 	"github.com/webx-top/db/lib/factory"
+	"github.com/webx-top/echo"
 )
+
+func TestTransaction(t *testing.T) {
+	var tr echo.Transaction = echo.NewTransaction(factory.NewParam())
+	_, ok := tr.(*echo.BaseTransaction).Transaction.(*factory.Param)
+	assert.True(t, ok)
+}
 
 func TestEvent(t *testing.T) {
 	dbi := dbschema.DBI

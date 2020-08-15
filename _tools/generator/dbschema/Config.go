@@ -579,3 +579,7 @@ func (a *NgingConfig) BatchValidate(kvset map[string]interface{}) error {
 func (a *NgingConfig) Validate(field string, value interface{}) error {
 	return factory.Validate(a.Short_(), field, value)
 }
+
+func (a *NgingConfig) Exists(mw func(db.Result) db.Result, args ...interface{}) (bool, error) {
+	return a.Param(mw, args...).Exists()
+}
