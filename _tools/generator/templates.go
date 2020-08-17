@@ -18,7 +18,7 @@ func (f *structField) String() string {
 	return fmt.Sprintf(memberTemplate, f.field, f.typ, f.dbTag, f.bsonTag, f.comment, f.jsonTag, f.xmlTag)
 }
 
-var memberTemplate = "\t%v\t%v\t`db:\"%v\" bson:\"%v\" comment:\"%v\" json:\"%v\" xml:\"%v\"`"
+var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`"
 var replaces = &map[string]string{
 	"packageName":   "",
 	"imports":       "",
