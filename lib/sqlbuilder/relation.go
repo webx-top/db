@@ -26,21 +26,14 @@ var (
 	TableName                   = DefaultTableName
 )
 
-func (b *sqlBuilder) Relation(name string, fn BuilderChainFunc) SQLBuilder {
-	if b.relationMap == nil {
-		b.relationMap = make(map[string]BuilderChainFunc)
-	}
-	b.relationMap[name] = fn
-	return b
-}
-
-func (b *sqlBuilder) RelationMap() map[string]BuilderChainFunc {
-	return b.relationMap
-}
-
 func (sel *selector) Relation(name string, fn BuilderChainFunc) Selector {
-	sel.SQLBuilder().Relation(name, fn)
-	return sel
+	return sel.frame(func(sq *selectorQuery) error {
+		if sq.relationMap == nil {
+			sq.relationMap = map[string]BuilderChainFunc{}
+		}
+		sq.relationMap[name] = fn
+		return nil
+	})
 }
 
 func eachField(t reflect.Type, fn func(field reflect.StructField, relations []string, pipes []Pipe) error) error {
@@ -154,7 +147,7 @@ func buildCond(refVal reflect.Value, relations []string, pipes []Pipe) interface
 }
 
 // RelationOne is get the associated relational data for a single piece of data
-func RelationOne(builder SQLBuilder, data interface{}) error {
+func RelationOne(builder SQLBuilder, data interface{}, relationMap map[string]BuilderChainFunc) error {
 	refVal := reflect.Indirect(reflect.ValueOf(data))
 	t := refVal.Type()
 
@@ -176,8 +169,8 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 				return nil
 			}
 			sel := builder.SelectFrom(table).Where(cond)
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
+			if relationMap != nil {
+				if chainFn, ok := relationMap[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
@@ -207,8 +200,8 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 				return nil
 			}
 			sel := builder.SelectFrom(table).Where(cond)
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
+			if relationMap != nil {
+				if chainFn, ok := relationMap[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
@@ -227,7 +220,7 @@ func RelationOne(builder SQLBuilder, data interface{}) error {
 }
 
 // RelationAll is gets the associated relational data for multiple pieces of data
-func RelationAll(builder SQLBuilder, data interface{}) error {
+func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]BuilderChainFunc) error {
 	refVal := reflect.Indirect(reflect.ValueOf(data))
 
 	l := refVal.Len()
@@ -302,8 +295,8 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			sel := builder.SelectFrom(table).Where(db.Cond{
 				fieldName: db.In(relVals),
 			})
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
+			if relationMap != nil {
+				if chainFn, ok := relationMap[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
@@ -374,8 +367,8 @@ func RelationAll(builder SQLBuilder, data interface{}) error {
 			sel := builder.SelectFrom(table).Where(db.Cond{
 				fieldName: db.In(relVals),
 			})
-			if chains := builder.RelationMap(); chains != nil {
-				if chainFn, ok := chains[name]; ok {
+			if relationMap != nil {
+				if chainFn, ok := relationMap[name]; ok {
 					sel = chainFn(sel)
 				}
 			}
