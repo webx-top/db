@@ -54,7 +54,11 @@ func eachField(t reflect.Type, fn func(field reflect.StructField, relations []st
 		if len(relations) != 2 {
 			return fmt.Errorf("Wrong relation option, length must 2, but get %v. Reference format: `db:\"-,relation=ForeignKey:RelationKey\"`", relations)
 		}
-		rels := strings.Split(relations[1], `|`) // `db:"-,relation=外键名:关联键名|neq(field,value)"`
+		rels := strings.Split(relations[1], `|`)
+		// tagPipe := fieldInfo.Field.Tag.Get(`pipe`)
+		// if len(tagPipe) > 0 {
+		// 	rels = append(rels, strings.Split(tagPipe, `|`)...)
+		// }
 		var pipes []Pipe
 		if len(rels) > 1 {
 			relations[1] = rels[0]
