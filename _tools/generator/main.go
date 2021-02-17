@@ -14,7 +14,11 @@ import (
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/db/mysql"
+	"github.com/webx-top/echo"
 )
+
+//go:generate go get github.com/admpub/bindata/v3/...
+//go:generate go-bindata -fs -o bindata_assetfs.go template/...
 
 func main() {
 	parseFlag()
@@ -61,6 +65,7 @@ func main() {
 	hasMatch := len(cfg.Match) > 0
 	validTables := []string{}
 	columns := map[string][]string{}
+
 	for _, tableName := range tables {
 		if hasIngore {
 			matched, err := regexp2.MustCompile(cfg.Ignore, 0).MatchString(tableName)
@@ -92,38 +97,29 @@ func main() {
 			panic(err)
 		}
 		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{base:*((&factory.Base{}).SetConnID(connID))} },"` + com.AddSlashes(structComment, '"') + `")`
-		var imports string
 		var typeFields []string
 		if idf, ok := hashids[tableName]; ok {
 			typeFields = append(typeFields, idf)
 		}
 		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName, map[string][]string{`hashids`: typeFields})
-		fieldBlock := strings.Join(goFields, "\n")
 		noPrefixTableName := tableName
 		if hasPrefix {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
 		}
 		columns[noPrefixTableName] = fieldNames
-		var resets, asMap, asRow, setCase, fromRowCase string
 		hasHashids := false
-		for key, fieldName := range fieldNames {
+		// template data
+		tplSchema := &tempateDbschemaData{}
+		for _, fieldName := range fieldNames {
 			if !hasHashids && com.InSlice(fieldName, typeFields) {
 				hasHashids = true
 			}
 			f := fields[fieldName]
-			if key > 0 {
-				resets += "\n"
-				asMap += "\n"
-				asRow += "\n"
-				setCase += "\n"
-				fromRowCase += "\n"
-			}
-			resets += "	a." + f.GoName + " = " + ZeroValue(f.GoType)
-			asMap += `	r["` + f.GoName + `"] = a.` + f.GoName
-			asRow += `	r["` + f.Name + `"] = a.` + f.GoName
 			goTypeName := f.GoType
 			if goTypeName == `byte[]` {
 				goTypeName = `bytes`
+			} else {
+				goTypeName = strings.Title(goTypeName)
 			}
 			var extPrefix string
 			var extSuffix string
@@ -131,25 +127,14 @@ func main() {
 				extPrefix = f.MyType + `(`
 				extSuffix = `)`
 			}
-			setCase += `				case "` + f.GoName + `": a.` + f.GoName + ` = ` + extPrefix + `param.As` + strings.Title(goTypeName) + `(vv)` + extSuffix
-			fromRowCase += `			case "` + f.Name + `": a.` + f.GoName + ` = ` + extPrefix + `param.As` + strings.Title(goTypeName) + `(value)` + extSuffix
+			tplSchema.Resets.AddItem(echo.NewKV(f.GoName, ZeroValue(f.GoType)))
+			tplSchema.TableAndStructFields.AddItem(echo.NewKV(f.Name, f.GoName).SetHKV(`dataType`, goTypeName).SetHKV(`convertStart`, extPrefix).SetHKV(`convertEnd`, extSuffix))
 		}
-		replaceMap := *replaces
-		replaceMap["packageName"] = cfg.SchemaConfig.PackageName
-		replaceMap["structName"] = structName
-		replaceMap["structComment"] = structComment
-		replaceMap["attributes"] = fieldBlock
-		replaceMap["reset"] = resets
-		replaceMap["asMap"] = asMap
-		replaceMap["asRow"] = asRow
-		replaceMap["fromRowCase"] = fromRowCase
-		replaceMap["setCase"] = setCase
-		replaceMap["tableName"] = noPrefixTableName
-		replaceMap["beforeInsert"] = ""
-		replaceMap["beforeUpdate"] = ""
-		replaceMap["setUpdatedAt"] = ""
-		replaceMap["beforeDelete"] = ""
-		replaceMap["afterInsert"] = ""
+		tplSchema.PackageName = cfg.SchemaConfig.PackageName
+		tplSchema.StructName = structName
+		tplSchema.StructComment = structComment
+		tplSchema.StructAttributes = goFields
+		tplSchema.TableName = noPrefixTableName
 
 		importTime := false
 		if cfg.AutoTimeFields != nil {
@@ -207,8 +192,8 @@ func main() {
 						break
 					}
 				}
-				replaceMap["afterInsert"] = afterInsert
-				replaceMap["beforeInsert"] = beforeInsert
+				tplSchema.AfterInsert = afterInsert
+				tplSchema.BeforeInsert = beforeInsert
 			}
 			_fieldNames, ok = cfg.AutoTimeFields.Update[`*`]
 			if !ok {
@@ -237,15 +222,15 @@ func main() {
 						//TODO
 					}
 				}
-				replaceMap["beforeUpdate"] = beforeUpdate
-				replaceMap["setUpdatedAt"] = setUpdatedAt
+				tplSchema.BeforeUpdate = beforeUpdate
+				tplSchema.SetUpdatedAt = setUpdatedAt
 			}
 		}
 		if importTime {
-			imports += "\n\t" + `"time"`
+			tplSchema.Imports = append(tplSchema.Imports, `time`)
 		}
 		if hasHashids {
-			imports += "\n\t" + `"github.com/admpub/hashseq"`
+			tplSchema.Imports = append(tplSchema.Imports, `github.com/admpub/hashseq`)
 		}
 		beforeInsert := ``
 		beforeUpdate := ``
@@ -265,26 +250,22 @@ func main() {
 			}
 		}
 		if len(beforeInsert) > 0 {
-			replaceMap["beforeInsert"] += newLine + beforeInsert
+			tplSchema.BeforeInsert += newLine + beforeInsert
 		}
 		if len(beforeUpdate) > 0 {
-			replaceMap["beforeUpdate"] += newLine + beforeUpdate
+			tplSchema.BeforeUpdate += newLine + beforeUpdate
 		}
 		if len(setUpdatedAt) > 0 {
-			replaceMap["setUpdatedAt"] = newLine + setUpdatedAt
+			tplSchema.SetUpdatedAt = newLine + setUpdatedAt
 		}
-
-		replaceMap["imports"] = imports
-
-		content := structTemplate
-		for tag, val := range replaceMap {
-			content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
+		content, err := Template(`dbschema`, tplSchema)
+		if err != nil {
+			panic(err)
 		}
-
 		saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, structName) + `.go`
 		file, err := os.Create(saveAs)
 		if err == nil {
-			_, err = file.WriteString(content)
+			_, err = file.Write(content)
 		}
 		if err != nil {
 			log.Println(err)
@@ -299,22 +280,21 @@ func main() {
 			if err != nil && os.IsNotExist(err) {
 				file, err := os.Create(modelFile)
 				if err == nil {
-					mr := *modelReplaces
-					baseName := `Base`
+					tplModel := &tempateModelData{
+						BaseName: `Base`,
+					}
 					if len(cfg.ModelConfig.BaseName) > 0 {
-						baseName = cfg.ModelConfig.BaseName
+						tplModel.BaseName = cfg.ModelConfig.BaseName
 					}
-					mr["packageName"] = cfg.ModelConfig.PackageName
-					mr["imports"] = ""
-					mr["structName"] = structName
-					mr["baseName"] = baseName
-					mr["schemaPackagePath"] = cfg.SchemaConfig.ImportPath
-					mr["schemaPackageName"] = cfg.SchemaConfig.PackageName
-					content := modelTemplate
-					for tag, val := range mr {
-						content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
+					tplModel.PackageName = cfg.ModelConfig.PackageName
+					tplModel.StructName = structName
+					tplModel.SchemaPackagePath = cfg.SchemaConfig.ImportPath
+					tplModel.SchemaPackageName = cfg.SchemaConfig.PackageName
+					content, err := Template(`model`, tplModel)
+					if err != nil {
+						panic(err)
 					}
-					_, err = file.WriteString(content)
+					_, err = file.Write(content)
 				}
 				if err != nil {
 					log.Println(err)
@@ -331,9 +311,12 @@ func main() {
 		log.Println(`End.`)
 		return
 	}
-	content := initFileTemplate
-	content = strings.Replace(content, `{{prefix}}`, cfg.Prefix, -1)
-	content = strings.Replace(content, `{{dbKey}}`, cfg.DBKey, -1)
+	tplSchemaInit := &tempateDbschemaInitData{
+		DefaultDBKey: factory.DefaultDBKey,
+	}
+	tplSchemaInit.Prefix = cfg.Prefix
+	tplSchemaInit.DBKey = cfg.DBKey
+	tplSchemaInit.PackageName = cfg.SchemaConfig.PackageName
 	dataContent := strings.Replace(fmt.Sprintf(`DBI.Fields.Register(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
@@ -343,18 +326,15 @@ func main() {
 		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}
 	dataContent += "})\n"
-	content = strings.Replace(content, `{{packageName}}`, cfg.SchemaConfig.PackageName, -1)
-	if cfg.DBKey != factory.DefaultDBKey {
-		dataContent = `factory.DBIRegister(DBI,"` + cfg.DBKey + `")` + "\n\t" + dataContent
-	} else {
-		content = strings.Replace(content, `factory.NewDBI()`, `factory.DefaultDBI`, -1)
+	tplSchemaInit.InitCode = dataContent
+	content, err := Template(`dbschema_init`, tplSchemaInit)
+	if err != nil {
+		panic(err)
 	}
-	content = strings.Replace(content, `{{initCode}}`, dataContent, -1)
-
 	saveAs := filepath.Join(cfg.SchemaConfig.SaveDir, `init`) + `.go`
 	file, err := os.Create(saveAs)
 	if err == nil {
-		_, err = file.WriteString(content)
+		_, err = file.Write(content)
 	}
 	if err != nil {
 		log.Println(err)
@@ -362,32 +342,31 @@ func main() {
 		log.Println(`Generated init.go`)
 	}
 	if len(cfg.ModelConfig.PackageName) > 0 && len(cfg.ModelConfig.SaveDir) > 0 {
-		structName := `Base`
+		tplModelBase := &tempateModelBaseData{
+			StructName: `Base`,
+		}
 		if len(cfg.ModelConfig.BaseName) > 0 {
-			structName = cfg.ModelConfig.BaseName
+			tplModelBase.StructName = cfg.ModelConfig.BaseName
 		}
 		os.MkdirAll(cfg.ModelConfig.SaveDir, 0777)
-		modelFile := filepath.Join(cfg.ModelConfig.SaveDir, structName) + `.go`
+		modelFile := filepath.Join(cfg.ModelConfig.SaveDir, tplModelBase.StructName) + `.go`
 		_, err := os.Stat(modelFile)
 		if err != nil && os.IsNotExist(err) {
 			file, err := os.Create(modelFile)
 			if err == nil {
-				mr := *modelReplaces
-				mr["packageName"] = cfg.ModelConfig.PackageName
-				mr["imports"] = ""
-				mr["structName"] = structName
-				mr["schemaPackagePath"] = cfg.SchemaConfig.ImportPath
-				mr["schemaPackageName"] = cfg.SchemaConfig.PackageName
-				content := modelBaseTemplate
-				for tag, val := range mr {
-					content = strings.Replace(content, `{{`+tag+`}}`, val, -1)
+				tplModelBase.PackageName = cfg.ModelConfig.PackageName
+				tplModelBase.SchemaPackagePath = cfg.SchemaConfig.ImportPath
+				tplModelBase.SchemaPackageName = cfg.SchemaConfig.PackageName
+				content, err = Template(`model_base`, tplModelBase)
+				if err != nil {
+					panic(err)
 				}
-				_, err = file.WriteString(content)
+				_, err = file.Write(content)
 			}
 			if err != nil {
 				log.Println(err)
 			} else {
-				log.Println(`Generated model struct:`, structName)
+				log.Println(`Generated model struct:`, tplModelBase.StructName)
 			}
 		}
 	}

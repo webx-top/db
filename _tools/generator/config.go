@@ -46,6 +46,8 @@ func parseFlag() {
 	flag.StringVar(&cfg.HashID, `hashID`, ``, `-hashID tableA.id,tableB.id`)
 
 	flag.StringVar(&cfg.EncFieldFormat, `enc`, ``, `-enc "json:table;xml:table"`)
+
+	flag.StringVar(&cfg.TemplateDir, `templatedir`, ``, `-templatedir directory`)
 	flag.Parse()
 }
 
@@ -87,6 +89,7 @@ type config struct {
 	Backup          string          `json:"backup"`
 	EncFieldFormat  string          `json:"encFieldFormat"`
 	DBKey           string          `json:"dbKey"`
+	TemplateDir     string          `json:"templateDir"`
 	encFieldFormats map[string]string
 }
 
