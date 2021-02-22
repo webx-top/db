@@ -34,7 +34,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
@@ -1008,7 +1008,7 @@ func TestUUIDInsert_Issue370(t *testing.T) {
 			Name string     `db:"name"`
 		}
 
-		newUUID := uuid.Must(uuid.NewV4())
+		newUUID := uuid.NewV4()
 
 		item1 := itemT{
 			ID:   &newUUID,
@@ -1040,7 +1040,7 @@ func TestUUIDInsert_Issue370(t *testing.T) {
 		}
 
 		item1 := itemT{
-			ID:   uuid.Must(uuid.NewV4()),
+			ID:   uuid.NewV4(),
 			Name: "Jonny",
 		}
 
