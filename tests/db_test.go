@@ -32,8 +32,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/mongo"
 	"github.com/webx-top/db/mssql"
@@ -41,6 +39,8 @@ import (
 	"github.com/webx-top/db/postgresql"
 	"github.com/webx-top/db/ql"
 	"github.com/webx-top/db/sqlite"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var wrappers = []string{
@@ -54,6 +54,7 @@ var wrappers = []string{
 
 const (
 	testAllWrappers = `all`
+	errExpectingDB  = "Expecting *sql.DB got %T (%#v)."
 )
 
 var (
@@ -200,7 +201,7 @@ var setupFn = map[string]func(driver interface{}) error{
 
 			return nil
 		}
-		return fmt.Errorf("Expecting *sql.DB got %T (%#v).", driver, driver)
+		return fmt.Errorf(errExpectingDB, driver, driver)
 	},
 	`mysql`: func(driver interface{}) error {
 		if sqld, ok := driver.(*sql.DB); ok {
@@ -259,7 +260,7 @@ var setupFn = map[string]func(driver interface{}) error{
 
 			return nil
 		}
-		return fmt.Errorf("Expecting *sql.DB got %T (%#v).", driver, driver)
+		return fmt.Errorf(errExpectingDB, driver, driver)
 	},
 	`mssql`: func(driver interface{}) error {
 		if sqld, ok := driver.(*sql.DB); ok {
@@ -318,7 +319,7 @@ var setupFn = map[string]func(driver interface{}) error{
 
 			return nil
 		}
-		return fmt.Errorf("Expecting *sql.DB got %T (%#v).", driver, driver)
+		return fmt.Errorf(errExpectingDB, driver, driver)
 	},
 	`sqlite`: func(driver interface{}) error {
 		if sqld, ok := driver.(*sql.DB); ok {

@@ -31,7 +31,9 @@ type PostCollection2 struct {
 	U *dbschema.User `db:",inline"`
 }
 
-func main() {
+const outputTitleAndID = "%q (ID: %d)\n"
+
+func connect() {
 	factory.SetDebug(true) //要放在Open前面才有效
 	database, err := mysql.Open(settings)
 	if err != nil {
@@ -40,10 +42,9 @@ func main() {
 	cacher := ttlmap.New(1000000)
 	factory.SetCacher(cacher)
 	factory.AddDB(database).Cluster(0).SetPrefix(`webx_`)
-	defer factory.Default().CloseAll()
+}
 
-	var posts []*dbschema.Post
-
+func query(posts []*dbschema.Post) {
 	rows, err := factory.NewParam(nil).DB().Query(`SELECT * FROM webx_post ORDER BY id DESC`)
 	if err != nil {
 		log.Fatal(err)
@@ -74,8 +75,15 @@ func main() {
 	}
 
 	for _, post := range posts {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
+}
+
+func main() {
+	connect()
+	defer factory.Default().CloseAll()
+	var posts []*dbschema.Post
+	query(posts)
 
 	//err = db.Find("webx_post").All(&posts)
 	log.Println(`查询方式1：使用Factory查询`)
@@ -85,7 +93,7 @@ func main() {
 	}
 
 	for _, post := range posts {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -97,7 +105,7 @@ func main() {
 	}
 
 	for _, post := range posts {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -112,7 +120,7 @@ func main() {
 	}
 	objects := post.Objects()
 	for _, post := range objects {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -124,12 +132,12 @@ func main() {
 	}
 
 	for _, post := range post.Objects() {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	log.Println(`-----old----------------`)
 	for _, post := range objects {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -142,7 +150,7 @@ func main() {
 	}
 
 	for _, post := range m {
-		log.Printf("%q (ID: %d)\n", post.Post.Title, post.Post.Id)
+		log.Printf(outputTitleAndID, post.Post.Title, post.Post.Id)
 	}
 
 	fmt.Println(``)
@@ -162,7 +170,7 @@ func main() {
 	}
 
 	for _, post := range m2 {
-		log.Printf("%q (ID: %d)\n", post.P.Title, post.P.Id)
+		log.Printf(outputTitleAndID, post.P.Title, post.P.Id)
 	}
 	log.Println(`=== 字段转换结果：===================`)
 	log.Println(structField, `====>`, tableName)
@@ -181,7 +189,7 @@ func main() {
 	res := factory.NewParam().SetCollection(`post`).Result()
 	defer res.Close() //操作结束后别忘了执行关闭操作
 	for res.Next(post) {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -189,7 +197,7 @@ func main() {
 	log.Println(`查询方式6：使用Next查询大结果集`)
 	res = post.Param().Result()
 	for res.Next(post) {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 	res.Close() //操作结束后别忘了执行关闭操作
 
@@ -199,7 +207,7 @@ func main() {
 	param := post.Param().Begin()
 	res = param.Result()
 	for res.Next(post) {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	res.Close() //操作结束后别忘了执行关闭操作
@@ -218,7 +226,7 @@ func main() {
 	}
 
 	for _, post := range posts {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -234,7 +242,7 @@ func main() {
 	}
 
 	for _, post := range *recv {
-		log.Printf("%q (ID: %d)\n", post.Title, post.Id)
+		log.Printf(outputTitleAndID, post.Title, post.Id)
 	}
 
 	fmt.Println(``)
@@ -293,7 +301,7 @@ func main() {
 			log.Printf("%d => %q (ID: %d)\n", i+1, post.Title, post.Id)
 		}
 	}
-	return
+	//return
 
 	param = post.Param()
 	factory.Tx(param.SetTxMW(func(t *factory.Transaction) (err error) {

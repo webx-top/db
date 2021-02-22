@@ -106,9 +106,9 @@ func main() {
 	c := settings.Connect()
 
 	testMultiOne2many2(c)
-	return
+	//return
 	testJoin(c)
-	return
+	//return
 	testOne2one(c)
 
 	fmt.Println(`===========================================`)
