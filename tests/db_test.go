@@ -1178,11 +1178,7 @@ func TestExplicitAndDefaultMapping(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if wrapper == `mongo` {
-				res = col.Find(db.Cond{"case_test": "World!"})
-			} else {
-				res = col.Find(db.Cond{"case_test": "World!"})
-			}
+			res = col.Find(db.Cond{"case_test": "World!"})
 
 			if wrapper == `ql` {
 				res = res.Select(`id() as id`, `case_test`)
