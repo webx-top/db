@@ -33,8 +33,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2/bson"
 	"github.com/webx-top/db"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type artistType struct {
@@ -831,7 +831,7 @@ func TestPaginator(t *testing.T) {
 	paginator := q.Paginate(13)
 
 	var zerothPage []artistType
-	err = paginator.Page(0).All(&zerothPage)
+	err = paginator.Page(1).All(&zerothPage)
 	assert.NoError(t, err)
 	assert.Equal(t, 13, len(zerothPage))
 
@@ -883,7 +883,7 @@ func TestPaginator(t *testing.T) {
 
 	paginator = paginator.Cursor("_id")
 	{
-		current := paginator.Page(0)
+		current := paginator.Page(1)
 		for i := 0; ; i++ {
 			var items []artistType
 			err := current.All(&items)
@@ -937,7 +937,7 @@ func TestPaginator(t *testing.T) {
 			assert.Equal(t, fmt.Sprintf("artist-%d", 15*5+j), items[j].Name)
 		}
 
-		resultPaginator = resultPaginator.Cursor("_id").Page(0)
+		resultPaginator = resultPaginator.Cursor("_id").Page(1)
 		for i := 0; ; i++ {
 			var items []artistType
 

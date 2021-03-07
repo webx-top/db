@@ -1541,19 +1541,19 @@ func TestPaginator(t *testing.T) {
 	paginator := q.Paginate(pageSize)
 
 	var zerothPage []artistType
-	err = paginator.Page(0).All(&zerothPage)
+	err = paginator.Page(1).All(&zerothPage)
 	assert.NoError(t, err)
 	assert.Equal(t, pageSize, len(zerothPage))
 
 	var firstPage []artistType
-	err = paginator.Page(1).All(&firstPage)
+	err = paginator.Page(2).All(&firstPage)
 	assert.NoError(t, err)
 	assert.Equal(t, pageSize, len(firstPage))
 
 	assert.Equal(t, zerothPage, firstPage)
 
 	var secondPage []artistType
-	err = paginator.Page(2).All(&secondPage)
+	err = paginator.Page(3).All(&secondPage)
 	assert.NoError(t, err)
 	assert.Equal(t, pageSize, len(secondPage))
 
@@ -1714,7 +1714,7 @@ func TestPaginator(t *testing.T) {
 		assert.Equal(t, uint64(999), totalEntries)
 
 		var allItems []artistType
-		err = paginator.Page(0).All(&allItems)
+		err = paginator.Page(1).All(&allItems)
 		assert.NoError(t, err)
 		assert.Equal(t, totalEntries, uint64(len(allItems)))
 
