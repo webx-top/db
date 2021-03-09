@@ -383,19 +383,26 @@ func execBackupCommand(cfg *config, tables []string) {
 		cmd := exec.Command("mysqldump", cmdArgs...)
 		fp, err := os.Create(saveFile)
 		if err != nil {
-			log.Println(`Failed to backup:`, err)
-		}
-		defer fp.Close()
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
 			log.Fatal(`Failed to backup:`, err)
 		}
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			fp.Close()
+			log.Fatal(`Failed to backup:`, err)
+		}
+		close := func() {
+			fp.Close()
+			stdout.Close()
+		}
 		if err := cmd.Start(); err != nil {
+			close()
 			log.Fatal(`Failed to backup:`, err)
 		}
 		if _, err := io.Copy(fp, stdout); err != nil {
+			close()
 			log.Fatal(`Failed to backup:`, err)
 		}
+		close()
 		cmd.Wait()
 		if index == 0 {
 			b, err := ioutil.ReadFile(saveFile)
