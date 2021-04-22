@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/admpub/confl"
@@ -322,7 +323,13 @@ func main() {
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
 	dataContent += "\n\t" + fmt.Sprintf(`DBI.Columns=%#v`, columns) + "\n"
 	dataContent += "\n\tDBI.Models.Register(factory.ModelInstancers{"
-	for structName, modelInstancer := range modelInstancers {
+	var structNames []string
+	for structName := range modelInstancers {
+		structNames = append(structNames, structName)
+	}
+	sort.Strings(structNames)
+	for _, structName := range structNames {
+		modelInstancer := modelInstancers[structName]
 		dataContent += "`" + structName + "`:" + modelInstancer + `,`
 	}
 	dataContent += "})\n"
