@@ -19,8 +19,8 @@ build:
 	go build && go install
 
 require-client:
-	@if [ -z "$$(which mysql)" ]; then \
-		echo 'Missing "mysql" command. Please install the MySQL client and try again.' && \
+	@if [ -z "$$(which clickhouse-client)" ]; then \
+		echo 'Missing "clickhouse-client" command. Please install the clickhouse client and try again.' && \
 		exit 1; \
 	fi
 
@@ -33,7 +33,7 @@ reset-db: require-client
 	SQL+="DROP DATABASE IF EXISTS $(DB_NAME);" && \
 	SQL+="CREATE DATABASE $(DB_NAME);" && \
 	SQL+="GRANT ALL PRIVILEGES ON $(DB_NAME).* TO $(DB_USERNAME) IDENTIFIED BY '$(DB_PASSWORD)';" && \
-	mysql -uroot -h"$(DB_HOST)" -P$(DB_PORT) <<< $$SQL
+	clickhouse-client --user=root --host="$(DB_HOST)" --port=$(DB_PORT) --database=test --multiquery <<< $$SQL
 
 test: reset-db generate
 	#go test -tags generated -v -race # race: limit on 8192 simultaneously alive goroutines is exceeded, dying

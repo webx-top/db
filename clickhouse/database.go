@@ -273,15 +273,7 @@ func (d *database) TableExists(name string) error {
 
 // PrimaryKeys returns the names of all the primary keys on the table.
 func (d *database) PrimaryKeys(tableName string) ([]string, error) {
-	q := d.Select("k.column_name").
-		From("information_schema.key_column_usage AS k").
-		Where(`
-			k.constraint_name = 'PRIMARY'
-			AND k.table_schema = ?
-			AND k.table_name = ?
-		`, d.BaseDatabase.Name(), tableName).
-		OrderBy("k.ordinal_position")
-
+	q := d.Select("k.name").From("system.columns AS k").Where(`k.is_in_sampling_key = 1 AND k.database = ? AND k.table = ?`, d.BaseDatabase.Name(), tableName)
 	iter := q.Iterator()
 	defer iter.Close()
 
@@ -293,6 +285,28 @@ func (d *database) PrimaryKeys(tableName string) ([]string, error) {
 			return nil, err
 		}
 		pk = append(pk, k)
+	}
+
+	return pk, nil
+}
+
+// primaryKeys returns the names of all the primary keys on the table.
+func (d *database) primaryKeys(tableName string) ([]string, error) {
+	q := d.Select("k.primary_key").From("system.tables AS k").Where(`k.database = ? AND k.table = ?`, d.BaseDatabase.Name(), tableName)
+	iter := q.Iterator()
+	defer iter.Close()
+
+	pk := []string{}
+
+	for iter.Next() {
+		var k string
+		if err := iter.Scan(&k); err != nil {
+			return nil, err
+		}
+		if len(k) == 0 {
+			continue
+		}
+		pk = append(pk, strings.Split(k, ",")...)
 	}
 
 	return pk, nil

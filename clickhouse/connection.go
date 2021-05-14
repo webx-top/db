@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"strings"
+	"strconv"
 )
 
 // From https://github.com/go-sql-driver/mysql/blob/master/utils.go
@@ -52,8 +52,22 @@ type ConnectionURL struct {
 	Password string
 	Database string
 	Host     string
-	Socket   string
-	Options  map[string]string
+
+	// Optional
+	TLSConfig              string
+	NoDelay                bool
+	Secure                 bool
+	SkipVerify             bool
+	Timeout                float64
+	ReadTimeout            float64
+	WriteTimeout           float64
+	BlockSize              int64
+	PoolSize               int64
+	AltHosts               string
+	ConnectionOpenStrategy string //random/in_order/time_random,
+	Compress               bool
+	Debug                  bool
+	Options                map[string]string
 }
 
 func (c ConnectionURL) String() (s string) {
@@ -62,54 +76,82 @@ func (c ConnectionURL) String() (s string) {
 			return ""
 		}
 	*/
-	// Adding username.
-	if c.User != "" {
-		s = s + c.User
-		// Adding password.
-		if c.Password != "" {
-			s = s + ":" + c.Password
-		}
-		s = s + "@"
-	}
-
 	// Adding protocol and address
-	if c.Socket != "" {
-		s = s + fmt.Sprintf("unix(%s)", c.Socket)
-	} else if c.Host != "" {
+	if len(c.Host) > 0 {
 		host, port, err := net.SplitHostPort(c.Host)
 		if err != nil {
 			host = c.Host
-			port = "3306"
+			port = "9000"
 		}
-		s = s + fmt.Sprintf("tcp(%s:%s)", host, port)
+		s = s + fmt.Sprintf("tcp://%s:%s", host, port)
+	} else {
+		s = "tcp://127.0.0.1:9000"
 	}
-
-	// Adding database
-	s = s + "/" + c.Database
 
 	// Do we have any options?
 	if c.Options == nil {
 		c.Options = map[string]string{}
 	}
 
-	// Default options.
-	if _, ok := c.Options["charset"]; !ok {
-		c.Options["charset"] = "utf8"
-	}
-
-	if _, ok := c.Options["parseTime"]; !ok {
-		c.Options["parseTime"] = "true"
-	}
-
 	// Converting options into URL values.
-	vv := url.Values{}
+	vv := url.Values{
+		`database`: []string{c.Database},
+	}
+	// Adding username.
+	if len(c.User) > 0 {
+		vv.Set(`username`, c.User)
+		// Adding password.
+		if len(c.Password) > 0 {
+			vv.Set(`password`, c.Password)
+		}
+	}
+	if len(c.TLSConfig) > 0 {
+		vv.Set(`no_delay`, c.TLSConfig)
+	}
+	if c.NoDelay {
+		vv.Set(`tls_config`, `true`)
+	}
+	if c.Secure {
+		vv.Set(`secure`, `true`)
+	}
+	if c.SkipVerify {
+		vv.Set(`skip_verify`, `true`)
+	}
+	if c.Timeout > 0 {
+		vv.Set(`timeout`, fmt.Sprintf("%f", c.Timeout))
+	}
+	if c.ReadTimeout > 0 {
+		vv.Set(`read_timeout`, fmt.Sprintf("%f", c.ReadTimeout))
+	}
+	if c.WriteTimeout > 0 {
+		vv.Set(`write_timeout`, fmt.Sprintf("%f", c.WriteTimeout))
+	}
+	if c.BlockSize > 0 {
+		vv.Set(`block_size`, fmt.Sprintf("%d", c.BlockSize))
+	}
+	if c.PoolSize > 0 {
+		vv.Set(`pool_size`, fmt.Sprintf("%d", c.PoolSize))
+	}
+	if len(c.AltHosts) > 0 {
+		vv.Set(`alt_hosts`, c.AltHosts)
+	}
+	if len(c.ConnectionOpenStrategy) > 0 {
+		vv.Set(`connection_open_strategy`, c.ConnectionOpenStrategy)
+	}
+	if c.Compress {
+		vv.Set(`compress`, c.TLSConfig)
+	}
+	if c.Debug {
+		vv.Set(`debug`, `true`)
+	}
+	// tcp://host1:9000?username=user&password=qwerty&database=clicks&read_timeout=10&write_timeout=20&alt_hosts=host2:9000,host3:9000
 
 	for k, v := range c.Options {
 		vv.Set(k, v)
 	}
 
 	// Inserting options.
-	if p := vv.Encode(); p != "" {
+	if p := vv.Encode(); len(p) > 0 {
 		s = s + "?" + p
 	}
 
@@ -118,147 +160,71 @@ func (c ConnectionURL) String() (s string) {
 
 // ParseURL parses s into a ConnectionURL struct.
 func ParseURL(s string) (conn ConnectionURL, err error) {
-	var cfg *config
-
-	if cfg, err = parseDSN(s); err != nil {
+	var url *url.URL
+	if url, err = url.Parse(s); err != nil {
 		return
 	}
-
-	conn.User = cfg.user
-	conn.Password = cfg.passwd
-
-	if cfg.net == "unix" {
-		conn.Socket = cfg.addr
-	} else if cfg.net == "tcp" {
-		conn.Host = cfg.addr
+	query := url.Query()
+	conn.User = query.Get(`username`)
+	conn.Password = query.Get(`password`)
+	conn.Host = url.Host
+	conn.Database = query.Get(`database`)
+	if v := query.Get(`tls_config`); len(v) > 0 {
+		conn.TLSConfig = v
 	}
-
-	conn.Database = cfg.dbname
-
+	query.Del(`tls_config`)
+	if v, e := strconv.ParseBool(query.Get(`no_delay`)); e == nil {
+		conn.NoDelay = v
+	}
+	query.Del(`no_delay`)
+	if v, e := strconv.ParseBool(query.Get(`secure`)); e == nil {
+		conn.Secure = v
+	}
+	query.Del(`secure`)
+	if v, e := strconv.ParseBool(query.Get(`skip_verify`)); e == nil {
+		conn.SkipVerify = v
+	}
+	query.Del(`skip_verify`)
+	if v, e := strconv.ParseFloat(query.Get(`timeout`), 64); e == nil {
+		conn.Timeout = v
+	}
+	query.Del(`timeout`)
+	if v, e := strconv.ParseFloat(query.Get(`read_timeout`), 64); e == nil {
+		conn.ReadTimeout = v
+	}
+	query.Del(`read_timeout`)
+	if v, e := strconv.ParseFloat(query.Get(`write_timeout`), 64); e == nil {
+		conn.WriteTimeout = v
+	}
+	query.Del(`write_timeout`)
+	if v, e := strconv.ParseInt(query.Get(`block_size`), 10, 64); e == nil {
+		conn.BlockSize = v
+	}
+	query.Del(`block_size`)
+	if v, e := strconv.ParseInt(query.Get(`pool_size`), 10, 64); e == nil {
+		conn.PoolSize = v
+	}
+	query.Del(`pool_size`)
+	if v := query.Get(`alt_hosts`); len(v) > 0 {
+		conn.AltHosts = v
+	}
+	query.Del(`alt_hosts`)
+	if v := query.Get(`connection_open_strategy`); len(v) > 0 {
+		conn.ConnectionOpenStrategy = v
+	}
+	query.Del(`connection_open_strategy`)
+	if v, e := strconv.ParseBool(query.Get(`compress`)); e == nil {
+		conn.Compress = v
+	}
+	query.Del(`compress`)
+	if v, e := strconv.ParseBool(query.Get(`debug`)); e == nil {
+		conn.Debug = v
+	}
+	query.Del(`debug`)
 	conn.Options = map[string]string{}
 
-	for k, v := range cfg.params {
-		conn.Options[k] = v
-	}
-
-	return
-}
-
-// from https://github.com/go-sql-driver/mysql/blob/master/utils.go
-// parseDSN parses the DSN string to a config
-func parseDSN(dsn string) (cfg *config, err error) {
-	// New config with some default values
-	cfg = &config{}
-
-	// TODO: use strings.IndexByte when we can depend on Go 1.2
-
-	// [user[:password]@][net[(addr)]]/dbname[?param1=value1&paramN=valueN]
-	// Find the last '/' (since the password or the net addr might contain a '/')
-	foundSlash := false
-	for i := len(dsn) - 1; i >= 0; i-- {
-		if dsn[i] == '/' {
-			foundSlash = true
-			var j, k int
-
-			// left part is empty if i <= 0
-			if i > 0 {
-				// [username[:password]@][protocol[(address)]]
-				// Find the last '@' in dsn[:i]
-				for j = i; j >= 0; j-- {
-					if dsn[j] == '@' {
-						// username[:password]
-						// Find the first ':' in dsn[:j]
-						for k = 0; k < j; k++ {
-							if dsn[k] == ':' {
-								cfg.passwd = dsn[k+1 : j]
-								break
-							}
-						}
-						cfg.user = dsn[:k]
-
-						break
-					}
-				}
-
-				// [protocol[(address)]]
-				// Find the first '(' in dsn[j+1:i]
-				for k = j + 1; k < i; k++ {
-					if dsn[k] == '(' {
-						// dsn[i-1] must be == ')' if an address is specified
-						if dsn[i-1] != ')' {
-							if strings.ContainsRune(dsn[k+1:i], ')') {
-								return nil, errInvalidDSNUnescaped
-							}
-							return nil, errInvalidDSNAddr
-						}
-						cfg.addr = dsn[k+1 : i-1]
-						break
-					}
-				}
-				cfg.net = dsn[j+1 : k]
-			}
-
-			// dbname[?param1=value1&...&paramN=valueN]
-			// Find the first '?' in dsn[i+1:]
-			for j = i + 1; j < len(dsn); j++ {
-				if dsn[j] == '?' {
-					if err = parseDSNParams(cfg, dsn[j+1:]); err != nil {
-						return
-					}
-					break
-				}
-			}
-			cfg.dbname = dsn[i+1 : j]
-
-			break
-		}
-	}
-
-	if !foundSlash && len(dsn) > 0 {
-		return nil, errInvalidDSNNoSlash
-	}
-
-	// Set default network if empty
-	if cfg.net == "" {
-		cfg.net = "tcp"
-	}
-
-	// Set default address if empty
-	if cfg.addr == "" {
-		switch cfg.net {
-		case "tcp":
-			cfg.addr = "127.0.0.1:3306"
-		case "unix":
-			cfg.addr = "/tmp/mysql.sock"
-		default:
-			return nil, errors.New("Default addr for network '" + cfg.net + "' unknown")
-		}
-
-	}
-
-	return
-}
-
-// From https://github.com/go-sql-driver/mysql/blob/master/utils.go
-// parseDSNParams parses the DSN "query string"
-// Values must be url.QueryEscape'ed
-func parseDSNParams(cfg *config, params string) (err error) {
-	for _, v := range strings.Split(params, "&") {
-		param := strings.SplitN(v, "=", 2)
-		if len(param) != 2 {
-			continue
-		}
-
-		value := param[1]
-
-		// lazy init
-		if cfg.params == nil {
-			cfg.params = make(map[string]string)
-		}
-
-		if cfg.params[param[0]], err = url.QueryUnescape(value); err != nil {
-			return
-		}
+	for k := range query {
+		conn.Options[k] = query.Get(k)
 	}
 
 	return

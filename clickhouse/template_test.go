@@ -183,7 +183,7 @@ func TestTemplateInsert(t *testing.T) {
 	)
 
 	assert.Equal(
-		"INSERT INTO `artist` (`id`, `name`) VALUES ($1, $2) RETURNING `id`",
+		"INSERT INTO `artist` (`id`, `name`) VALUES ($1, $2)",
 		b.InsertInto("artist").Values(map[string]string{"id": "12", "name": "Chavela Vargas"}).Returning("id").String(),
 	)
 
@@ -211,36 +211,36 @@ func TestTemplateUpdate(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1",
+		"ALTER TABLE `artist` UPDATE `name` = $1",
 		b.Update("artist").Set("name", "Artist").String(),
 	)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1 WHERE (`id` < $2)",
+		"ALTER TABLE `artist` UPDATE `name` = $1 WHERE (`id` < $2)",
 		b.Update("artist").Set("name = ?", "Artist").Where("id <", 5).String(),
 	)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1 WHERE (`id` < $2)",
+		"ALTER TABLE `artist` UPDATE `name` = $1 WHERE (`id` < $2)",
 		b.Update("artist").Set(map[string]string{"name": "Artist"}).Where(db.Cond{"id <": 5}).String(),
 	)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1 WHERE (`id` < $2)",
+		"ALTER TABLE `artist` UPDATE `name` = $1 WHERE (`id` < $2)",
 		b.Update("artist").Set(struct {
 			Nombre string `db:"name"`
 		}{"Artist"}).Where(db.Cond{"id <": 5}).String(),
 	)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1, `last_name` = $2 WHERE (`id` < $3)",
+		"ALTER TABLE `artist` UPDATE `name` = $1, `last_name` = $2 WHERE (`id` < $3)",
 		b.Update("artist").Set(struct {
 			Nombre string `db:"name"`
 		}{"Artist"}).Set(map[string]string{"last_name": "Foo"}).Where(db.Cond{"id <": 5}).String(),
 	)
 
 	assert.Equal(
-		"UPDATE `artist` SET `name` = $1 || ' ' || $2 || id, `id` = id + $3 WHERE (id > $4)",
+		"ALTER TABLE `artist` UPDATE `name` = $1 || ' ' || $2 || id, `id` = id + $3 WHERE (id > $4)",
 		b.Update("artist").Set(
 			"name = ? || ' ' || ? || id", "Artist", "#",
 			"id = id + ?", 10,
@@ -253,12 +253,12 @@ func TestTemplateDelete(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(
-		"DELETE FROM `artist` WHERE (name = $1)",
+		"ALTER TABLE `artist` DELETE WHERE (name = $1)",
 		b.DeleteFrom("artist").Where("name = ?", "Chavela Vargas").String(),
 	)
 
 	assert.Equal(
-		"DELETE FROM `artist` WHERE (id > 5)",
+		"ALTER TABLE `artist` DELETE WHERE (id > 5)",
 		b.DeleteFrom("artist").Where("id > 5").String(),
 	)
 }

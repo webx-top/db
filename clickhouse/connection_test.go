@@ -30,14 +30,14 @@ func TestConnectionURL(t *testing.T) {
 	c := ConnectionURL{}
 
 	// Zero value equals to an empty string.
-	if c.String() != "" {
+	if c.String() != "tcp://127.0.0.1:9000?database=" {
 		t.Fatal(`Expecting default connectiong string to be empty, got:`, c.String())
 	}
 
 	// Adding a database name.
 	c.Database = "mydbname"
 
-	if c.String() != "/mydbname?charset=utf8&parseTime=true" {
+	if c.String() != "tcp://127.0.0.1:9000?database=mydbname" {
 		t.Fatal(`Test failed, got:`, c.String())
 	}
 
@@ -47,7 +47,7 @@ func TestConnectionURL(t *testing.T) {
 		"sys_var": "esc@ped",
 	}
 
-	if c.String() != "/mydbname?charset=utf8mb4%2Cutf8&parseTime=true&sys_var=esc%40ped" {
+	if c.String() != "tcp://127.0.0.1:9000?charset=utf8mb4%2Cutf8&database=mydbname&sys_var=esc%40ped" {
 		t.Fatal(`Test failed, got:`, c.String())
 	}
 
@@ -58,24 +58,16 @@ func TestConnectionURL(t *testing.T) {
 	c.User = "user"
 	c.Password = "pass"
 
-	if c.String() != `user:pass@/mydbname?charset=utf8&parseTime=true` {
+	if c.String() != `tcp://127.0.0.1:9000?database=mydbname&password=pass&username=user` {
 		t.Fatal(`Test failed, got:`, c.String())
 	}
 
 	// Setting host.
-	c.Host = "1.2.3.4:3306"
+	c.Host = "1.2.3.4:9000"
 
-	if c.String() != `user:pass@tcp(1.2.3.4:3306)/mydbname?charset=utf8&parseTime=true` {
+	if c.String() != `tcp://1.2.3.4:9000?database=mydbname&password=pass&username=user` {
 		t.Fatal(`Test failed, got:`, c.String())
 	}
-
-	// Setting socket.
-	c.Socket = "/path/to/socket"
-
-	if c.String() != `user:pass@unix(/path/to/socket)/mydbname?charset=utf8&parseTime=true` {
-		t.Fatal(`Test failed, got:`, c.String())
-	}
-
 }
 
 func TestParseConnectionURL(t *testing.T) {
@@ -83,33 +75,7 @@ func TestParseConnectionURL(t *testing.T) {
 	var s string
 	var err error
 
-	s = "user:pass@unix(/path/to/socket)/mydbname?charset=utf8"
-
-	if u, err = ParseURL(s); err != nil {
-		t.Fatal(err)
-	}
-
-	if u.User != "user" {
-		t.Fatal("Expecting username.")
-	}
-
-	if u.Password != "pass" {
-		t.Fatal("Expecting password.")
-	}
-
-	if u.Socket != "/path/to/socket" {
-		t.Fatal("Expecting socket.")
-	}
-
-	if u.Database != "mydbname" {
-		t.Fatal("Expecting database.")
-	}
-
-	if u.Options["charset"] != "utf8" {
-		t.Fatal("Expecting charset.")
-	}
-
-	s = "user:pass@tcp(1.2.3.4:5678)/mydbname?charset=utf8"
+	s = "tcp://1.2.3.4:5678?database=mydbname&charset=utf8&username=user&password=pass"
 
 	if u, err = ParseURL(s); err != nil {
 		t.Fatal(err)
