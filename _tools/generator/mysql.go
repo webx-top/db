@@ -381,6 +381,7 @@ func execBackupCommand(cfg *config, tables []string) {
 			cmdArgs[4] = `-t` //导出数据
 		}
 		cmd := exec.Command("mysqldump", cmdArgs...)
+		cmd.Stderr = os.Stderr
 		fp, err := os.Create(saveFile)
 		if err != nil {
 			log.Fatal(`Failed to backup:`, err)
@@ -388,7 +389,7 @@ func execBackupCommand(cfg *config, tables []string) {
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
 			fp.Close()
-			log.Fatal(`Failed to backup:`, err)
+			log.Fatal(`Failed to backup(StdoutPipe):`, err)
 		}
 		close := func() {
 			fp.Close()
@@ -396,15 +397,15 @@ func execBackupCommand(cfg *config, tables []string) {
 		}
 		if err := cmd.Start(); err != nil {
 			close()
-			log.Fatal(`Failed to backup:`, err)
+			log.Fatal(`Failed to backup(Start):`, err)
 		}
 		if _, err := io.Copy(fp, stdout); err != nil {
 			close()
-			log.Fatal(`Failed to backup:`, err)
+			log.Fatal(`Failed to backup(io.Copy):`, err)
 		}
 		if err := cmd.Wait(); err != nil {
 			close()
-			log.Fatal(`Failed to backup:`, err)
+			log.Fatal(`Failed to backup(Wait):`, err)
 		}
 		close()
 		if index == 0 {
