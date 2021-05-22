@@ -8,7 +8,7 @@ import (
 )
 
 var settings = mysql.ConnectionURL{
-	Host:     "localhost",
+	Host:     "127.0.0.1",
 	Database: "nging",
 	User:     "root",
 	Password: "root",

@@ -7,7 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/webx-top/db/_tools/generator/dbschema"
+	"./dbschema"
+
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
 )
@@ -27,15 +28,15 @@ func TestEvent(t *testing.T) {
 		buf.WriteString(`creating.`)
 		println(`creating.`)
 		return nil
-	}, `nging_config`)
+	}, `nging_vhost`)
 	dbi.On(`created`, func(m factory.Model, _ ...string) error {
 		buf.WriteString(`created.`)
 		println(`created.`)
 		return nil
-	}, `nging_config`)
+	}, `nging_vhost`)
 
 	// 调用事件
-	m := &dbschema.NgingConfig{}
+	m := &dbschema.NgingVhost{}
 	dbi.Fire(`creating`, m, nil)
 	assert.Equal(
 		t,

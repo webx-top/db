@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"test/settings"
+
 	"github.com/admpub/null"
 	"github.com/webx-top/db"
-	"github.com/webx-top/db/_tools/test/settings"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/testing/test"
@@ -19,7 +20,7 @@ var (
 
 func verifyResult(t *testing.T, result string) null.StringMap {
 	recv := null.StringMap{}
-	err := factory.NewParam().SetCollection(`vhost`).SetRecv(&recv).SetArgs(cond).One()
+	err := factory.NewParam().SetCollection(`nging_vhost`).SetRecv(&recv).SetArgs(cond).One()
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +32,7 @@ func verifyResult(t *testing.T, result string) null.StringMap {
 func TestTransaction(t *testing.T) {
 	c := settings.Connect()
 	//reset
-	_, err := factory.NewParam().SQLBuilder().Update(`vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
+	_, err := factory.NewParam().SQLBuilder().Update(`nging_vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +43,7 @@ func TestTransaction(t *testing.T) {
 		panic(err)
 	}
 	param := factory.NewParam().SetTrans(trans)
-	_, err = param.SQLBuilder().Update(`vhost`).Set(echo.H{`disabled`: `Y`}).Where(cond).Exec()
+	_, err = param.SQLBuilder().Update(`nging_vhost`).Set(echo.H{`disabled`: `Y`}).Where(cond).Exec()
 	if err != nil {
 		panic(err)
 	}
@@ -53,14 +54,14 @@ func TestTransaction(t *testing.T) {
 	verifyResult(t, `N`)
 
 	param2 := factory.NewParam()
-	err = param2.SetTrans(trans).SetCollection(`vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `Y`}).Update()
+	err = param2.SetTrans(trans).SetCollection(`nging_vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `Y`}).Update()
 	if err != nil {
 		panic(err)
 	}
 	verifyResult(t, `Y`)
 
 	//reset
-	err = param2.SetTrans(trans).SetCollection(`vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `N`}).Update()
+	err = param2.SetTrans(trans).SetCollection(`nging_vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `N`}).Update()
 	if err != nil {
 		panic(err)
 	}
@@ -72,7 +73,7 @@ func TestTransaction(t *testing.T) {
 func TestTransaction2(t *testing.T) {
 	c := settings.Connect()
 	//reset
-	_, err := factory.NewParam().SQLBuilder().Update(`vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
+	_, err := factory.NewParam().SQLBuilder().Update(`nging_vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +84,7 @@ func TestTransaction2(t *testing.T) {
 		panic(err)
 	}
 	p := factory.NewParam().SetTrans(tx)
-	err = p.SetCollection(`vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `Y`}).Update()
+	err = p.SetCollection(`nging_vhost`).SetArgs(cond).SetSend(echo.H{`disabled`: `Y`}).Update()
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +100,7 @@ func TestTransaction2(t *testing.T) {
 		panic(err)
 	}
 	recv[`id`] = null.String{`1000`, true}
-	_, err = factory.NewParam().TransFrom(p).SetCollection(`vhost`).SetSend(recv).Insert()
+	_, err = factory.NewParam().TransFrom(p).SetCollection(`nging_vhost`).SetSend(recv).Insert()
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +108,7 @@ func TestTransaction2(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	n, err := factory.NewParam().SetCollection(`vhost`).SetRecv(&recv).SetArgs(db.Cond{`id`: 1000}).Count()
+	n, err := factory.NewParam().SetCollection(`nging_vhost`).SetRecv(&recv).SetArgs(db.Cond{`id`: 1000}).Count()
 	if err != nil {
 		panic(err)
 	}
