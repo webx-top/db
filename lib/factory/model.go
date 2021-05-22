@@ -108,8 +108,8 @@ type Model interface {
 	Use(trans *Transaction) Model
 	SetContext(ctx echo.Context) Model
 	Context() echo.Context
-	SetNamer(func(string) string) Model
-	Namer() func(string) string
+	SetNamer(func(Model) string) Model
+	Namer() func(Model) string
 	CPAFrom(source Model) Model //CopyAttrFrom
 	Name_() string
 	Short_() string
