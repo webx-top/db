@@ -341,6 +341,9 @@ func execBackupCommand(cfg *config, tables []string) {
 	if len(port) == 0 {
 		port = `3306`
 	}
+	if len(host) == 0 {
+		host = `127.0.0.1`
+	}
 	args := []string{
 		"--default-character-set=" + cfg.Charset,
 		"--single-transaction",

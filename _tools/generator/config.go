@@ -16,7 +16,7 @@ func parseFlag() {
 	//DBSettings
 	flag.StringVar(&cfg.Username, `u`, `root`, `-u user`)
 	flag.StringVar(&cfg.Password, `p`, ``, `-p password`)
-	flag.StringVar(&cfg.Host, `h`, `localhost`, `-h host`)
+	flag.StringVar(&cfg.Host, `h`, `127.0.0.1:3306`, `-h host`)
 	flag.StringVar(&cfg.Engine, `e`, `mysql`, `-e engine`)
 	flag.StringVar(&cfg.Database, `d`, `blog`, `-d database`)
 	flag.StringVar(&cfg.DBKey, `k`, factory.DefaultDBKey, `-d default`)
