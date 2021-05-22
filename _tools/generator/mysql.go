@@ -402,8 +402,11 @@ func execBackupCommand(cfg *config, tables []string) {
 			close()
 			log.Fatal(`Failed to backup:`, err)
 		}
+		if err := cmd.Wait(); err != nil {
+			close()
+			log.Fatal(`Failed to backup:`, err)
+		}
 		close()
-		cmd.Wait()
 		if index == 0 {
 			b, err := ioutil.ReadFile(saveFile)
 			if err != nil {
