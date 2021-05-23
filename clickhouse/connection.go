@@ -22,29 +22,11 @@
 package clickhouse
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
 	"strconv"
 )
-
-// From https://github.com/go-sql-driver/mysql/blob/master/utils.go
-var (
-	errInvalidDSNUnescaped = errors.New("Invalid DSN: Did you forget to escape a param value?")
-	errInvalidDSNAddr      = errors.New("Invalid DSN: Network Address not terminated (missing closing brace)")
-	errInvalidDSNNoSlash   = errors.New("Invalid DSN: Missing the slash separating the database name")
-)
-
-// From https://github.com/go-sql-driver/mysql/blob/master/utils.go
-type config struct {
-	user   string
-	passwd string
-	net    string
-	addr   string
-	dbname string
-	params map[string]string
-}
 
 // ConnectionURL implements a MySQL connection struct.
 type ConnectionURL struct {
@@ -71,11 +53,6 @@ type ConnectionURL struct {
 }
 
 func (c ConnectionURL) String() (s string) {
-	/*
-		if c.Database == "" {
-			return ""
-		}
-	*/
 	// Adding protocol and address
 	if len(c.Host) > 0 {
 		host, port, err := net.SplitHostPort(c.Host)
@@ -106,10 +83,10 @@ func (c ConnectionURL) String() (s string) {
 		}
 	}
 	if len(c.TLSConfig) > 0 {
-		vv.Set(`no_delay`, c.TLSConfig)
+		vv.Set(`tls_config`, c.TLSConfig)
 	}
 	if c.NoDelay {
-		vv.Set(`tls_config`, `true`)
+		vv.Set(`no_delay`, `true`)
 	}
 	if c.Secure {
 		vv.Set(`secure`, `true`)
@@ -139,7 +116,7 @@ func (c ConnectionURL) String() (s string) {
 		vv.Set(`connection_open_strategy`, c.ConnectionOpenStrategy)
 	}
 	if c.Compress {
-		vv.Set(`compress`, c.TLSConfig)
+		vv.Set(`compress`, `true`)
 	}
 	if c.Debug {
 		vv.Set(`debug`, `true`)
