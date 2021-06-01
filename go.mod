@@ -11,7 +11,7 @@ require (
 	github.com/admpub/fsnotify v1.4.4 // indirect
 	github.com/admpub/go-reuseport v0.0.4 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
-	github.com/admpub/log v0.3.0 // indirect
+	github.com/admpub/log v0.3.1 // indirect
 	github.com/admpub/realip v0.0.0-20210421084339-374cf5df122d // indirect
 	github.com/admpub/regexp2 v1.1.7
 	github.com/denisenkom/go-mssqldb v0.10.0
@@ -26,7 +26,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/webx-top/captcha v0.0.1 // indirect
-	github.com/webx-top/com v0.2.0
+	github.com/webx-top/com v0.2.1
 	github.com/webx-top/echo v2.13.9+incompatible
 	github.com/webx-top/pagination v0.1.0
 	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
