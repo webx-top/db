@@ -52,7 +52,7 @@ type Example struct {
 
 func TestStructField(t *testing.T) {
 	a := &Example{
-		ReturnTo: `http://www.webx-top/`,
+		ReturnTo: `http://www.webx.top/`,
 		User:     `admin`,
 		ID:       1,
 	}
