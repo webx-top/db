@@ -10,27 +10,37 @@ import (
 
 // [SWH|+]
 func TestMap(t *testing.T) {
-	f, v, e := sqlbuilder.Map([]interface{}{`user`, `admin`, `id`, 1, `email`, `swh@admpub.com`}, nil)
+	keys, values, e := sqlbuilder.Map([]interface{}{`user`, `admin`, `id`, 1, `email`, `swh@admpub.com`}, nil)
 	assert.Equal(
 		t,
 		[]string{`user`, `id`, `email`},
-		f,
+		keys,
 	)
 	assert.Equal(
 		t,
 		[]interface{}{`admin`, 1, `swh@admpub.com`},
-		v,
+		values,
 	)
 	assert.Equal(
 		t,
 		nil,
 		e,
 	)
-	f, v, e = sqlbuilder.Map([]interface{}{`user`, `admin`, `id`, 1, `email`}, nil)
+	keys, values, e = sqlbuilder.Map([]interface{}{`user`, `admin`, `id`, 1, `email`}, nil)
+	assert.Equal(
+		t,
+		[]string{`user`, `id`, `email`},
+		keys,
+	)
 	assert.Equal(
 		t,
 		[]interface{}{`admin`, 1, nil},
-		v,
+		values,
+	)
+	assert.Equal(
+		t,
+		nil,
+		e,
 	)
 }
 
