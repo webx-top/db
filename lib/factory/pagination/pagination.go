@@ -30,7 +30,7 @@ var (
 	// PageMaxSize 每页最大数据量
 	PageMaxSize = 1000
 	// PageDefaultSize 默认每页数据量
-	PageDefaultSize = 50
+	PageDefaultSize = 20
 
 	// Sorts 获取数据查询时的排序方式
 	Sorts = clientPagination.Sorts
