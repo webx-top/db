@@ -36,6 +36,10 @@ var (
 	Sorts = clientPagination.Sorts
 )
 
+func SetDefaultPageSize(ctx echo.Context, pageSize int) {
+	ctx.Internal().Set(`paging.defaultPageSize`, pageSize)
+}
+
 // Paging 获取当前页码和每页数据量
 func Paging(ctx echo.Context) (page int, size int) {
 	page = ctx.Formx(`page`, ctx.Form(`pageNumber`)).Int()
