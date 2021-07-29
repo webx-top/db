@@ -29,6 +29,8 @@ import (
 var (
 	// PageMaxSize 每页最大数据量
 	PageMaxSize = 1000
+	// DefaultPageSize 默认每页数据量
+	DefaultPageSize = 50
 
 	// Sorts 获取数据查询时的排序方式
 	Sorts = clientPagination.Sorts
@@ -42,7 +44,10 @@ func Paging(ctx echo.Context) (page int, size int) {
 		page = 1
 	}
 	if size < 1 || size > PageMaxSize {
-		size = 50
+		size = ctx.Internal().Int(`paging.defaultPageSize`)
+		if size < 1 {
+			size = DefaultPageSize
+		}
 	}
 	return
 }
