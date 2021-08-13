@@ -118,7 +118,7 @@ func main() {
 			f := fields[fieldName]
 			goTypeName := f.GoType
 			if goTypeName == `[]byte` {
-				goTypeName = `bytes`
+				goTypeName = `Bytes`
 			} else {
 				goTypeName = strings.Title(goTypeName)
 			}
@@ -279,7 +279,8 @@ func main() {
 			modelFile := filepath.Join(cfg.ModelConfig.SaveDir, structName) + `.go`
 			_, err := os.Stat(modelFile)
 			if err != nil && os.IsNotExist(err) {
-				file, err := os.Create(modelFile)
+				var file *os.File
+				file, err = os.Create(modelFile)
 				if err == nil {
 					tplModel := &tempateModelData{
 						BaseName: `Base`,
@@ -291,7 +292,8 @@ func main() {
 					tplModel.StructName = structName
 					tplModel.SchemaPackagePath = cfg.SchemaConfig.ImportPath
 					tplModel.SchemaPackageName = cfg.SchemaConfig.PackageName
-					content, err := Template(`model`, tplModel)
+					var content []byte
+					content, err = Template(`model`, tplModel)
 					if err != nil {
 						panic(err)
 					}
