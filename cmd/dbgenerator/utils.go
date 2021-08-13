@@ -25,7 +25,7 @@ func ZeroValue(typ string) string {
 		return `false`
 	case `string`:
 		return "``"
-	case `byte[]`:
+	case `[]byte`:
 		return `nil`
 	case `time.Time`:
 		return `time.Time{}`
@@ -51,9 +51,9 @@ func DataType(fieldInfo *factory.FieldInfo) string {
 	case `float`:
 		return `float32`
 	case `bit`, `binary`, `varbinary`, `tinyblob`, `blob`, `mediumblob`, `longblob`: //二进制
-		return `byte[]`
+		return `[]byte`
 	case `geometry`, `point`, `linestring`, `polygon`, `multipoint`, `multilinestring`, `multipolygon`, `geometrycollection`: //几何图形
-		return `byte[]`
+		return `[]byte`
 
 	//postgreSQL
 	case `boolean`:

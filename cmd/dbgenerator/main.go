@@ -117,7 +117,7 @@ func main() {
 			}
 			f := fields[fieldName]
 			goTypeName := f.GoType
-			if goTypeName == `byte[]` {
+			if goTypeName == `[]byte` {
 				goTypeName = `bytes`
 			} else {
 				goTypeName = strings.Title(goTypeName)
