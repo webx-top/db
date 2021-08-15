@@ -28,6 +28,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -121,7 +122,8 @@ func (d *database) open() error {
 	connFn := func() error {
 		sess, err := sql.Open("mysql", d.ConnectionURL().String())
 		if err == nil {
-			sess.SetConnMaxLifetime(db.DefaultSettings.ConnMaxLifetime())
+			connMaxLifetime, _ := d.QueryConnMaxLifetime()
+			sess.SetConnMaxLifetime(connMaxLifetime)
 			sess.SetMaxIdleConns(db.DefaultSettings.MaxIdleConns())
 			sess.SetMaxOpenConns(db.DefaultSettings.MaxOpenConns())
 			return d.BaseDatabase.BindSession(sess)
@@ -134,6 +136,38 @@ func (d *database) open() error {
 	}
 
 	return nil
+}
+
+func (d *database) QueryConnMaxLifetime() (time.Duration, error) {
+	rows, err := d.Query(`SHOW variables WHERE Variable_name = 'wait_timeout'`)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	connMaxDuration := db.DefaultSettings.ConnMaxLifetime()
+	if rows.Next() {
+		name := sql.NullString{}
+		timeout := sql.NullString{}
+		err = rows.Scan(&name, &timeout)
+		if err != nil {
+			return connMaxDuration, err
+		}
+		if !timeout.Valid {
+			return connMaxDuration, err
+		}
+		n, _ := strconv.ParseInt(timeout.String, 10, 64)
+		if n <= 0 {
+			return connMaxDuration, err
+		}
+		connMaxDuration = time.Duration(n) * time.Second
+		subDuration := 500 * time.Microsecond
+		if connMaxDuration > subDuration*2 {
+			connMaxDuration -= subDuration
+		} else {
+			connMaxDuration /= 2
+		}
+	}
+	return connMaxDuration, err
 }
 
 // Clone creates a copy of the database session on the given context.
