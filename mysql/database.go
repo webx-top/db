@@ -27,6 +27,7 @@ package mysql
 import (
 	"context"
 	"database/sql/driver"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -122,11 +123,18 @@ func (d *database) open() error {
 	connFn := func() error {
 		sess, err := sql.Open("mysql", d.ConnectionURL().String())
 		if err == nil {
-			connMaxLifetime, _ := d.QueryConnMaxLifetime()
-			sess.SetConnMaxLifetime(connMaxLifetime)
+			sess.SetConnMaxLifetime(db.DefaultSettings.ConnMaxLifetime())
 			sess.SetMaxIdleConns(db.DefaultSettings.MaxIdleConns())
 			sess.SetMaxOpenConns(db.DefaultSettings.MaxOpenConns())
-			return d.BaseDatabase.BindSession(sess)
+			err = d.BaseDatabase.BindSession(sess)
+			if err == nil {
+				if connMaxLifetime, err := d.QueryConnMaxLifetime(); err != nil {
+					log.Println(err)
+				} else if connMaxLifetime != db.DefaultSettings.ConnMaxLifetime() {
+					sess.SetConnMaxLifetime(connMaxLifetime)
+				}
+			}
+			return err
 		}
 		return err
 	}
@@ -139,12 +147,15 @@ func (d *database) open() error {
 }
 
 func (d *database) QueryConnMaxLifetime() (time.Duration, error) {
+	connMaxDuration := db.DefaultSettings.ConnMaxLifetime()
+	if connMaxDuration > 0 {
+		return connMaxDuration, nil
+	}
 	rows, err := d.Query(`SHOW variables WHERE Variable_name = 'wait_timeout'`)
 	if err != nil {
-		return 0, err
+		return connMaxDuration, err
 	}
 	defer rows.Close()
-	connMaxDuration := db.DefaultSettings.ConnMaxLifetime()
 	if rows.Next() {
 		name := sql.NullString{}
 		timeout := sql.NullString{}
