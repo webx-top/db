@@ -55,9 +55,11 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf(`Found tables: %v`, tables)
-	err = os.MkdirAll(cfg.SchemaConfig.SaveDir, os.ModePerm)
-	if err != nil {
-		panic(err.Error())
+	if !cfg.NotGenerated {
+		err = os.MkdirAll(cfg.SchemaConfig.SaveDir, os.ModePerm)
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 	allFields := map[string]map[string]factory.FieldInfo{}
 	modelInstancers := map[string]string{}
