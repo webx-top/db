@@ -108,7 +108,10 @@ func (c *Compounds) Size() int {
 	return len(*c)
 }
 
-var EmptyCond = Cond{}
+var (
+	EmptyCond Compound = Cond{}
+	_         Compound = NewCompounds()
+)
 
 func (c *Compounds) And(compounds ...Compound) Compound {
 	c.Add(compounds...)
@@ -132,6 +135,25 @@ func (c *Compounds) Or(compounds ...Compound) Compound {
 	default:
 		return Or(*c...)
 	}
+}
+
+// Sentences return each one of the map records as a compound.
+func (c *Compounds) Sentences() []Compound {
+	z := make([]Compound, len(*c))
+	for i, cmp := range *c {
+		z[i] = cmp
+	}
+	return z
+}
+
+// Operator returns the default compound operator.
+func (c *Compounds) Operator() CompoundOperator {
+	return OperatorAnd
+}
+
+// Empty returns false if there are no conditions.
+func (c *Compounds) Empty() bool {
+	return c.Size() == 0
 }
 
 type TableName interface {
