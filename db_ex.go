@@ -108,10 +108,7 @@ func (c *Compounds) Size() int {
 	return len(*c)
 }
 
-var (
-	EmptyCond Compound = Cond{}
-	_         Compound = NewCompounds()
-)
+var _ Compound = NewCompounds()
 
 func (c *Compounds) And(compounds ...Compound) Compound {
 	c.Add(compounds...)
@@ -139,11 +136,7 @@ func (c *Compounds) Or(compounds ...Compound) Compound {
 
 // Sentences return each one of the map records as a compound.
 func (c *Compounds) Sentences() []Compound {
-	z := make([]Compound, len(*c))
-	for i, cmp := range *c {
-		z[i] = cmp
-	}
-	return z
+	return c.Slice()
 }
 
 // Operator returns the default compound operator.
