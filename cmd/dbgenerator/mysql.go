@@ -204,6 +204,14 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 	bsonTag := fieldInfo.Name
 	fieldInfo.Comment = field["Comment"]
 	fieldInfo.DefaultValue = field["Default"]
+	var magicTags []string
+	if strings.HasPrefix(fieldInfo.Comment, "`") {
+		p := strings.Index(fieldInfo.Comment[1:], "`")
+		if p > -1 {
+			magicTags = strings.Split(fieldInfo.Comment[1:p+1], `,`)
+			fieldInfo.Comment = fieldInfo.Comment[p+2:]
+		}
+	}
 	if field["Key"] == "PRI" && field["Extra"] == "auto_increment" {
 		dbTag += ",omitempty,pk"
 		bsonTag += ",omitempty"
@@ -220,20 +228,16 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 				dbTag += ",omitempty"
 				bsonTag += ",omitempty"
 				fieldInfo.Comment = ""
-			} else if strings.HasPrefix(fieldInfo.Comment, "`") {
-				p := strings.Index(fieldInfo.Comment[1:], "`")
-				if p > -1 {
-					for _, t := range strings.Split(fieldInfo.Comment[1:p+1], `,`) {
-						switch t {
-						case `omitempty`:
-							dbTag += ",omitempty"
-							bsonTag += ",omitempty"
-						case `pk`:
-							dbTag += ",pk"
-							fieldInfo.PrimaryKey = true
-						}
+			} else if len(magicTags) > 0 {
+				for _, t := range magicTags {
+					switch t {
+					case `omitempty`:
+						dbTag += ",omitempty"
+						bsonTag += ",omitempty"
+					case `pk`:
+						dbTag += ",pk"
+						fieldInfo.PrimaryKey = true
 					}
-					fieldInfo.Comment = fieldInfo.Comment[p+2:]
 				}
 			}
 		}
@@ -267,6 +271,53 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 	}
 	if cfg.FieldEncodeType(`db`) != `table` {
 		dbTag = fieldInfo.GoName
+	}
+	for _, t := range magicTags {
+		parts := strings.SplitN(t, `:`, 2)
+		if len(parts) != 2 {
+			continue
+		}
+		temp := map[string]struct{}{}
+		var targets []string
+		for _, tg := range strings.Split(parts[1], `|`) {
+			tg := strings.TrimSpace(tg)
+			if len(tg) == 0 {
+				continue
+			}
+			if _, ok := temp[tg]; ok {
+				continue
+			}
+			temp[tg] = struct{}{}
+			targets = append(targets, tg)
+		}
+		switch parts[0] {
+		case `omit`:
+			for _, tg := range targets {
+				switch tg {
+				case `json`:
+					jsonTag = `-`
+				case `xml`:
+					xmlTag = `-`
+				case `encode`:
+					xmlTag = `-`
+					jsonTag = `-`
+				default:
+				}
+			}
+		case `omitempty`:
+			for _, tg := range targets {
+				switch tg {
+				case `json`:
+					jsonTag += `,omitempty`
+				case `xml`:
+					xmlTag += `,omitempty`
+				case `encode`:
+					xmlTag += `,omitempty`
+					jsonTag += `,omitempty`
+				default:
+				}
+			}
+		}
 	}
 	fieldBlock := &structField{
 		field:   fieldP,
