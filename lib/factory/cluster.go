@@ -2,6 +2,7 @@
 package factory
 
 import (
+	stdlog "log"
 	"strings"
 
 	"github.com/admpub/log"
@@ -168,7 +169,7 @@ func (c *Cluster) CloseAll() {
 func (c *Cluster) CloseMasters() {
 	for _, database := range c.masters {
 		if err := database.Close(); err != nil {
-			log.Println(err.Error())
+			stdlog.Println(err.Error())
 		}
 	}
 }
@@ -177,7 +178,7 @@ func (c *Cluster) CloseMasters() {
 func (c *Cluster) CloseSlaves() {
 	for _, database := range c.slaves {
 		if err := database.Close(); err != nil {
-			log.Println(err.Error())
+			stdlog.Println(err.Error())
 		}
 	}
 }
@@ -186,7 +187,7 @@ func (c *Cluster) CloseSlaves() {
 func (c *Cluster) CloseMaster(index int) bool {
 	if len(c.masters) > index {
 		if err := c.masters[index].Close(); err != nil {
-			log.Println(err.Error())
+			stdlog.Println(err.Error())
 		}
 		return true
 	}
@@ -197,7 +198,7 @@ func (c *Cluster) CloseMaster(index int) bool {
 func (c *Cluster) CloseSlave(index int) bool {
 	if len(c.slaves) > index {
 		if err := c.slaves[index].Close(); err != nil {
-			log.Println(err.Error())
+			stdlog.Println(err.Error())
 		}
 		return true
 	}

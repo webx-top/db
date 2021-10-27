@@ -12,9 +12,8 @@ require (
 	github.com/admpub/fsnotify v1.5.0 // indirect
 	github.com/admpub/go-reuseport v0.0.4 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
-	github.com/admpub/log v1.1.5 // indirect
+	github.com/admpub/log v1.1.5
 	github.com/admpub/map2struct v0.1.0 // indirect
-	github.com/admpub/queueChan v0.0.0-20151001074356-79908f7a499f // indirect
 	github.com/admpub/realip v0.0.0-20210421084339-374cf5df122d // indirect
 	github.com/admpub/regexp2 v1.1.7
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
@@ -24,7 +23,6 @@ require (
 	github.com/goccy/go-json v0.7.6 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/lib/pq v1.10.2
-	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/satori/go.uuid v1.2.0
