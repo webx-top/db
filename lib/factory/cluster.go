@@ -2,9 +2,9 @@
 package factory
 
 import (
-	"log"
 	"strings"
 
+	"github.com/admpub/log"
 	"github.com/webx-top/db"
 )
 
@@ -12,14 +12,22 @@ type masterLogger struct {
 }
 
 func (lg *masterLogger) Log(m *db.QueryStatus) {
-	log.Printf("<master>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+	if m.Slow {
+		log.GetLogger(`db`).Warnf("<master>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+		return
+	}
+	log.GetLogger(`db`).Infof("<master>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
 }
 
 type slaveLogger struct {
 }
 
 func (lg *slaveLogger) Log(m *db.QueryStatus) {
-	log.Printf("<slave>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+	if m.Slow {
+		log.GetLogger(`db`).Warnf("<slave>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+		return
+	}
+	log.GetLogger(`db`).Infof("<slave>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
 }
 
 var (
