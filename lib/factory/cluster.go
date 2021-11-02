@@ -13,6 +13,10 @@ type masterLogger struct {
 }
 
 func (lg *masterLogger) Log(m *db.QueryStatus) {
+	if m.Err != nil {
+		log.GetLogger(`db`).Errorf("<master>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+		return
+	}
 	if m.Slow {
 		log.GetLogger(`db`).Warnf("<master>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
 		return
@@ -24,6 +28,10 @@ type slaveLogger struct {
 }
 
 func (lg *slaveLogger) Log(m *db.QueryStatus) {
+	if m.Err != nil {
+		log.GetLogger(`db`).Errorf("<slave>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
+		return
+	}
 	if m.Slow {
 		log.GetLogger(`db`).Warnf("<slave>\n\t%s\n\n", strings.Replace(m.String(), "\n", "\n\t", -1))
 		return
