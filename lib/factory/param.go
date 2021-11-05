@@ -142,6 +142,11 @@ func (p *Param) SelectLink(index int) *Param {
 	return p
 }
 
+func (p *Param) SelectLinkName(name string) *Param {
+	p.index = p.factory.IndexByName(name)
+	return p
+}
+
 func (p *Param) CachedKey() string {
 	if len(p.cachedKey) == 0 {
 		p.cachedKey = fmt.Sprintf(`%v-%v-%v-%v-%v-%v-%v-%v-%v`, p.index, p.collection, p.cols, p.args, p.offset, p.page, p.size, p.joins, p.middlewareName)
