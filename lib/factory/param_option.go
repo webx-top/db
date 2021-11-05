@@ -104,12 +104,7 @@ func OJoins(joins ...*Join) ParamOption {
 
 func OAddJoin(joinType string, collection string, alias string, condition string) ParamOption {
 	return func(p *Param) {
-		p.joins = append(p.joins, &Join{
-			Collection: collection,
-			Alias:      alias,
-			Condition:  condition,
-			Type:       joinType,
-		})
+		p.joins = append(p.joins, NewJoin(joinType, collection, alias, condition))
 	}
 }
 

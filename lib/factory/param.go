@@ -31,6 +31,15 @@ func init() {
 	//gob.Register(&Param{})
 }
 
+func NewJoin(joinType string, collection string, alias string, condition string) *Join {
+	return &Join{
+		Collection: collection,
+		Alias:      alias,
+		Condition:  condition,
+		Type:       joinType,
+	}
+}
+
 type Join struct {
 	Collection string
 	Alias      string
@@ -182,12 +191,7 @@ func (p *Param) SetWrite() *Param {
 }
 
 func (p *Param) AddJoin(joinType string, collection string, alias string, condition string) *Param {
-	p.joins = append(p.joins, &Join{
-		Collection: collection,
-		Alias:      alias,
-		Condition:  condition,
-		Type:       joinType,
-	})
+	p.joins = append(p.joins, NewJoin(joinType, collection, alias, condition))
 	return p
 }
 
