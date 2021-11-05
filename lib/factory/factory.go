@@ -178,17 +178,17 @@ func (f *Factory) IndexByName(name string) int {
 }
 
 func (f *Factory) Tx(param *Param, ctx context.Context) error {
-	if param.TxMiddleware == nil {
+	if param.middlewareTx == nil {
 		return nil
 	}
-	c := f.Cluster(param.Index)
+	c := f.Cluster(param.index)
 	trans := &Transaction{
 		Cluster: c,
 		Factory: f,
 	}
 	fn := func(tx sqlbuilder.Tx) error {
 		trans.Tx = tx
-		return param.TxMiddleware(trans)
+		return param.middlewareTx(trans)
 	}
 	if rdb, ok := c.Master().(sqlbuilder.Database); ok {
 		return rdb.Tx(ctx, fn)
