@@ -169,8 +169,8 @@ func (p *Param) SetJoin(joins ...*Join) *Param {
 
 func (p *Param) SetTx(tx sqlbuilder.Tx) *Param {
 	p.trans = &Transaction{
-		Tx:      tx,
-		Factory: p.factory,
+		tx:      tx,
+		factory: p.factory,
 	}
 	return p
 }
@@ -485,18 +485,18 @@ func (p *Param) MustBegin(ctx context.Context) *Param {
 
 func (p *Param) Rollback(ctx context.Context) error {
 	t := p.T()
-	if t.Tx == nil {
+	if t.tx == nil {
 		return nil
 	}
-	return t.Rollback()
+	return t.tx.Rollback()
 }
 
 func (p *Param) Commit(ctx context.Context) error {
 	t := p.T()
-	if t.Tx == nil {
+	if t.tx == nil {
 		return nil
 	}
-	return t.Commit()
+	return t.tx.Commit()
 }
 
 func (p *Param) End(ctx context.Context, succeed bool) error {

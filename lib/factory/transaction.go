@@ -2,6 +2,7 @@ package factory
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"strings"
 
@@ -10,22 +11,22 @@ import (
 )
 
 type Transaction struct {
-	sqlbuilder.Tx
-	*Cluster
-	*Factory
+	tx      sqlbuilder.Tx
+	cluster *Cluster
+	factory *Factory
 }
 
 func (t *Transaction) Database(param *Param) db.Database {
-	if t.Cluster == nil {
-		param.cluster = t.Factory.Cluster(param.index)
+	if t.cluster == nil {
+		param.cluster = t.factory.Cluster(param.index)
 	} else {
-		param.cluster = t.Cluster
+		param.cluster = t.cluster
 	}
-	if t.Tx != nil {
-		if _, ok := t.Tx.Driver().(*sql.Tx); ok {
-			return t.Tx
+	if t.tx != nil {
+		if _, ok := t.tx.Driver().(*sql.Tx); ok {
+			return t.tx
 		}
-		t.Tx = nil
+		t.tx = nil
 	}
 	if param.readOnly {
 		return param.cluster.Slave()
@@ -38,17 +39,19 @@ func (t *Transaction) Driver(param *Param) interface{} {
 }
 
 func (t *Transaction) DB(param *Param) *sql.DB {
-	if db, ok := t.Driver(param).(*sql.DB); ok {
+	d := t.Driver(param)
+	if db, ok := d.(*sql.DB); ok {
 		return db
 	}
-	panic(db.ErrUnsupported)
+	panic(fmt.Sprintf(`%v: %T`, db.ErrUnsupported.Error(), d))
 }
 
 func (t *Transaction) SQLBuilder(param *Param) sqlbuilder.SQLBuilder {
-	if db, ok := t.Database(param).(sqlbuilder.SQLBuilder); ok {
+	d := t.Database(param)
+	if db, ok := d.(sqlbuilder.SQLBuilder); ok {
 		return db
 	}
-	panic(db.ErrUnsupported)
+	panic(fmt.Sprintf(`%v: %T`, db.ErrUnsupported.Error(), d))
 }
 
 func (t *Transaction) result(param *Param) db.Result {
@@ -198,12 +201,12 @@ func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
 }
 
 func (t *Transaction) CheckCached(param *Param) bool {
-	if t.Factory.cacher != nil {
+	if t.factory.cacher != nil {
 		if param.maxAge > 0 {
 			return true
 		}
 		if param.maxAge < 0 {
-			err := t.Factory.cacher.Del(param.CachedKey())
+			err := t.factory.cacher.Del(param.CachedKey())
 			if err != nil {
 				log.Println(err)
 			}
@@ -214,13 +217,12 @@ func (t *Transaction) CheckCached(param *Param) bool {
 }
 
 func (t *Transaction) Cached(param *Param, fn func(*Param) error) error {
-	if t.CheckCached(param) {
-		return t.Factory.cacher.Do(param.CachedKey(), param.result, func() error {
-			return fn(param)
-		}, param.maxAge)
+	if !t.CheckCached(param) {
+		return fn(param)
 	}
-
-	return fn(param)
+	return t.factory.cacher.Do(param.CachedKey(), param.result, func() error {
+		return fn(param)
+	}, param.maxAge)
 }
 
 func (t *Transaction) All(param *Param) error {
@@ -295,15 +297,15 @@ func (t *Transaction) Upsert(param *Param, beforeUpsert ...func() error) (interf
 	res := t.Result(param)
 	cnt, err := res.Count()
 	if err != nil {
-		if err == db.ErrNoMoreRows {
-			if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
-				if err = beforeUpsert[1](); err != nil {
-					return nil, err
-				}
-			}
-			return t.C(param).Insert(param.save)
+		if err != db.ErrNoMoreRows {
+			return nil, err
 		}
-		return nil, err
+		if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
+			if err = beforeUpsert[1](); err != nil {
+				return nil, err
+			}
+		}
+		return t.C(param).Insert(param.save)
 	}
 	if cnt < 1 {
 		if len(beforeUpsert) > 1 && beforeUpsert[1] != nil {
