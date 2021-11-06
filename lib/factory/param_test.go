@@ -61,6 +61,6 @@ func TestStructField(t *testing.T) {
 	assert.Equal(
 		t,
 		[]interface{}{`id`, 1, `user`, `admin`},
-		p.SaveData.(*db.KeysValues).Slice(),
+		p.save.(*db.KeysValues).Slice(),
 	)
 }
