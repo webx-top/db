@@ -538,6 +538,12 @@ func (p *Param) SQLBuilder() sqlbuilder.SQLBuilder {
 	return p.T().SQLBuilder(p)
 }
 
+func (p *Param) DoFunc(fn func() error) func(*Param) error {
+	return func(*Param) error {
+		return fn()
+	}
+}
+
 // Read ==========================
 
 // Cached query support cache
