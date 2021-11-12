@@ -457,6 +457,9 @@ func GenDateRange(field string, keywords string, seperators ...string) *db.Compo
 	}
 	//日期范围
 	dateStartTs := com.StrToTime(dateStart)
+	if dateStartTs <= 0 {
+		return cond
+	}
 	cond.AddKV(field, db.Gte(dateStartTs))
 	if len(dateEnd) > 0 {
 		endDateAndTime := com.FixDateTimeString(dateEnd)
@@ -469,6 +472,9 @@ func GenDateRange(field string, keywords string, seperators ...string) *db.Compo
 			return cond
 		}
 		dateEndTs := com.StrToTime(dateEnd)
+		if dateEndTs <= 0 {
+			return cond
+		}
 		cond.AddKV(field, db.Lte(dateEndTs))
 	}
 	return cond
