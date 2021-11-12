@@ -12,7 +12,7 @@ require (
 	github.com/admpub/fsnotify v1.5.0 // indirect
 	github.com/admpub/go-reuseport v0.0.4 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
-	github.com/admpub/log v1.3.0
+	github.com/admpub/log v1.3.2
 	github.com/admpub/map2struct v0.1.0 // indirect
 	github.com/admpub/realip v0.0.0-20210421084339-374cf5df122d // indirect
 	github.com/admpub/regexp2 v1.1.7
@@ -22,21 +22,21 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.7.10 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/lib/pq v1.10.3
+	github.com/lib/pq v1.10.4
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/webx-top/captcha v0.0.1 // indirect
-	github.com/webx-top/com v0.2.10
-	github.com/webx-top/echo v2.22.7+incompatible
+	github.com/webx-top/com v0.3.2
+	github.com/webx-top/echo v2.22.17+incompatible
 	github.com/webx-top/pagination v0.1.1
 	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
 	github.com/webx-top/validation v0.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3 // indirect
-	golang.org/x/sys v0.0.0-20211101204403-39c9dd37992c // indirect
+	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
+	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a // indirect
+	golang.org/x/sys v0.0.0-20211111213525-f221eed1c01e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/yaml.v2 v2.4.0 // indirect
