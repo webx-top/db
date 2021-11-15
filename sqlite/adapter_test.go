@@ -25,7 +25,9 @@ package sqlite
 import (
 	"database/sql"
 	"os"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
@@ -133,4 +135,15 @@ func tearUp() error {
 func cleanUpCheck(sess sqlbuilder.Database) (err error) {
 	// TODO: Check the number of prepared statements.
 	return nil
+}
+
+func TestMemory(t *testing.T) {
+	sqldb, err := sql.Open("sqlite3", ":memory:")
+	assert.Nil(t, err)
+
+	sess, err := New(sqldb)
+	assert.Nil(t, err)
+	defer sess.Close()
+
+	assert.Equal(t, "main", sess.Name())
 }

@@ -1,3 +1,4 @@
+//go:build !generated
 // +build !generated
 
 package sqlite
