@@ -107,17 +107,30 @@ func buildCond(refVal reflect.Value, relations []string, pipes []Pipe) interface
 	return cond
 }
 
-func buildSelector(fieldInfo *reflectx.FieldInfo, sel Selector) Selector {
+func buildSelector(fieldInfo *reflectx.FieldInfo, sel Selector, mustColumnName string, hasMustCol *bool) Selector {
 	columns, ok := fieldInfo.Options[`columns`] // columns=col1&col2&col3
 	if !ok || len(columns) == 0 {
 		return sel
 	}
 	cols := []interface{}{}
+	var _hasMustCol bool
+	if len(mustColumnName) == 0 {
+		_hasMustCol = true
+	}
 	for _, colName := range strings.Split(columns, `&`) {
 		colName = strings.TrimSpace(colName)
 		if len(colName) > 0 {
+			if !_hasMustCol && colName == mustColumnName {
+				_hasMustCol = true
+			}
 			cols = append(cols, colName)
 		}
+	}
+	if !_hasMustCol {
+		cols = append(cols, mustColumnName)
+	}
+	if hasMustCol != nil {
+		*hasMustCol = _hasMustCol
 	}
 	if len(cols) > 0 {
 		return sel.Columns(cols...)
@@ -149,7 +162,7 @@ func RelationOne(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if cond == nil {
 				return nil
 			}
-			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(cond))
+			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(cond), ``, nil)
 			if relationMap != nil {
 				if chainFn, ok := relationMap[name]; ok {
 					if sel = chainFn(sel); sel == nil {
@@ -184,7 +197,7 @@ func RelationOne(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if cond == nil {
 				return nil
 			}
-			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(cond))
+			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(cond), ``, nil)
 			if relationMap != nil {
 				if chainFn, ok := relationMap[name]; ok {
 					if sel = chainFn(sel); sel == nil {
@@ -279,11 +292,12 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if err != nil {
 				return err
 			}
+			var hasMustCol bool
 			// batch get field values
 			// Since the structure is slice, there is no need to new Value
 			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(db.Cond{
 				fieldName: db.In(relVals),
-			}))
+			}), fieldName, &hasMustCol)
 			if relationMap != nil {
 				if chainFn, ok := relationMap[name]; ok {
 					if sel = chainFn(sel); sel == nil {
@@ -307,13 +321,16 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 				ft = mapper.FieldByName(reflect.Indirect(foreignModel).Index(0), fieldName).Kind()
 			}
 			for n := 0; n < mlen; n++ {
-				val := reflect.Indirect(foreignModel).Index(n)
-				fid := mapper.FieldByName(val, fieldName)
+				row := reflect.Indirect(foreignModel).Index(n)
+				fid := mapper.FieldByName(row, fieldName)
 				fv := fid.Interface()
 				if _, has := fmap[fv]; !has {
 					fmap[fv] = reflect.New(reflect.SliceOf(field.Type.Elem())).Elem()
 				}
-				fmap[fv] = reflect.Append(fmap[fv], val)
+				fmap[fv] = reflect.Append(fmap[fv], row)
+				if !hasMustCol {
+					fid.Set(reflect.Zero(fid.Type()))
+				}
 			}
 			needConversion := rt != ft && ft != reflect.Invalid
 			// Set the result to the model
@@ -355,10 +372,10 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if err != nil {
 				return err
 			}
-
+			var hasMustCol bool
 			sel := buildSelector(fieldInfo, b.SelectFrom(table).Where(db.Cond{
 				fieldName: db.In(relVals),
-			}))
+			}), fieldName, &hasMustCol)
 			if relationMap != nil {
 				if chainFn, ok := relationMap[name]; ok {
 					if sel = chainFn(sel); sel == nil {
@@ -380,9 +397,12 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 				ft = mapper.FieldByName(fval.Index(0), fieldName).Kind()
 			}
 			for n := 0; n < mlen; n++ {
-				val := fval.Index(n)
-				fid := mapper.FieldByName(val, fieldName)
-				fmap[fid.Interface()] = val
+				row := fval.Index(n)
+				fid := mapper.FieldByName(row, fieldName)
+				fmap[fid.Interface()] = row
+				if !hasMustCol {
+					fid.Set(reflect.Zero(fid.Type()))
+				}
 			}
 			needConversion := rt != ft && ft != reflect.Invalid
 			// Set the result to the model
