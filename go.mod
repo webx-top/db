@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.1
+	github.com/admpub/bindata/v3 v3.1.5 // indirect
 	github.com/admpub/confl v0.1.0
 	github.com/admpub/copier v0.0.2 // indirect
 	github.com/admpub/decimal v0.0.2 // indirect
