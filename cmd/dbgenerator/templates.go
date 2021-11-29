@@ -87,14 +87,6 @@ type tempateModelData struct {
 	SchemaPackageName string
 }
 
-type tempateModelBaseData struct {
-	PackageName       string
-	Imports           []string
-	StructName        string
-	SchemaPackagePath string
-	SchemaPackageName string
-}
-
 var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`"
 
 var (

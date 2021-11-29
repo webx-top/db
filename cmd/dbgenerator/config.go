@@ -28,7 +28,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql|./install-data.sql:table1,table2"`)
 
 	//DBSchema
-	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, ``, `-import github.com/webx-top/project/app/dbschema`)
+	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, `../dbschema`, `-import github.com/webx-top/project/app/dbschema`)
 	flag.StringVar(&cfg.SchemaConfig.PackageName, `pkg`, `dbschema`, `-pkg packageName`)
 	flag.StringVar(&cfg.SchemaConfig.SaveDir, `o`, `dbschema`, `-o targetDir`)
 
