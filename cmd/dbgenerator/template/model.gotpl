@@ -20,28 +20,28 @@ type {{.StructName}} struct {
 	*{{.SchemaPackageName}}.{{.StructName}}
 }
 
-func (f *{{.StructName}}) check() error {
+func (m *{{.StructName}}) check() error {
 	return nil
 }
 
-func (f *{{.StructName}}) Add() (pk interface{}, err error) {
-	if err := f.check(); err != nil {
+func (m *{{.StructName}}) Add() (pk interface{}, err error) {
+	if err := m.check(); err != nil {
 		return nil, err
 	}
-	return f.{{.StructName}}.Add()
+	return m.{{.StructName}}.Add()
 }
 
-func (f *Staff) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
-	if err := f.check(); err != nil {
+func (m *Staff) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
+	if err := m.check(); err != nil {
 		return err
 	}
-	return f.{{.StructName}}.Edit(mw, args...)
+	return m.{{.StructName}}.Edit(mw, args...)
 }
 
-func (f *Staff) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {
+func (m *Staff) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {
 	recv := []*{{.StructName}}{}
-	_, err := pagination.NewLister(f.{{.StructName}}, &recv, func(r db.Result) db.Result {
+	_, err := pagination.NewLister(m.{{.StructName}}, &recv, func(r db.Result) db.Result {
 		return r.OrderBy(sorts...)
-	}, cond.And()).Paging(f.Context())
+	}, cond.And()).Paging(m.Context())
 	return recv, err
 }

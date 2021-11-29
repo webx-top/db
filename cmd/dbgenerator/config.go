@@ -33,7 +33,6 @@ func parseFlag() {
 	flag.StringVar(&cfg.SchemaConfig.SaveDir, `o`, `dbschema`, `-o targetDir`)
 
 	//Model
-	flag.StringVar(&cfg.ModelConfig.BaseName, `mbase`, `Base`, `-mbase Base`)
 	flag.StringVar(&cfg.ModelConfig.ImportPath, `mimport`, ``, `-mimport github.com/webx-top/project/app/model`)
 	flag.StringVar(&cfg.ModelConfig.SaveDir, `mo`, ``, `-mo targetDir`)
 	flag.StringVar(&cfg.ModelConfig.PackageName, `mpkg`, `model`, `-mpkg packageName`)
@@ -67,7 +66,6 @@ type ModelConfig struct {
 	SaveDir     string `json:"saveDir"`
 	ImportPath  string `json:"importPath"`
 	PackageName string `json:"packageName"`
-	BaseName    string `json:"baseName"`
 }
 
 type config struct {
