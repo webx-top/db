@@ -31,14 +31,14 @@ func (m *{{.StructName}}) Add() (pk interface{}, err error) {
 	return m.{{.StructName}}.Add()
 }
 
-func (m *Staff) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
+func (m *{{.StructName}}) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
 	if err := m.check(); err != nil {
 		return err
 	}
 	return m.{{.StructName}}.Edit(mw, args...)
 }
 
-func (m *Staff) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {
+func (m *{{.StructName}}) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {
 	recv := []*{{.StructName}}{}
 	_, err := pagination.NewLister(m.{{.StructName}}, &recv, func(r db.Result) db.Result {
 		return r.OrderBy(sorts...)
