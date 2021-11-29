@@ -3,6 +3,8 @@ package {{.PackageName}}
 import (
 	"{{.SchemaPackagePath}}"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/db"
+	"github.com/webx-top/db/lib/factory/pagination"
 	{{range $k, $v := .Imports}}
 	"{{$v}}"
 	{{end}}
@@ -10,12 +12,36 @@ import (
 				
 func New{{.StructName}}(ctx echo.Context) *{{.StructName}} {
 	return &{{.StructName}}{
-		{{.StructName}}: &{{.SchemaPackageName}}.{{.StructName}}{},
-		{{.BaseName}}:   &{{.BaseName}}{Context: ctx},
+		{{.StructName}}: {{.SchemaPackageName}}.New{{.StructName}}(ctx),
 	}
 }
 
 type {{.StructName}} struct {
 	*{{.SchemaPackageName}}.{{.StructName}}
-	*{{.BaseName}}
+}
+
+func (f *{{.StructName}}) check() error {
+	return nil
+}
+
+func (f *{{.StructName}}) Add() (pk interface{}, err error) {
+	if err := f.check(); err != nil {
+		return nil, err
+	}
+	return f.{{.StructName}}.Add()
+}
+
+func (f *Staff) Edit(mw func(db.Result) db.Result, args ...interface{}) error {
+	if err := f.check(); err != nil {
+		return err
+	}
+	return f.{{.StructName}}.Edit(mw, args...)
+}
+
+func (f *Staff) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {
+	recv := []*{{.StructName}}{}
+	_, err := pagination.NewLister(f.{{.StructName}}, &recv, func(r db.Result) db.Result {
+		return r.OrderBy(sorts...)
+	}, cond.And()).Paging(f.Context())
+	return recv, err
 }

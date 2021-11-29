@@ -83,7 +83,6 @@ type tempateModelData struct {
 	PackageName       string
 	Imports           []string
 	StructName        string
-	BaseName          string
 	SchemaPackagePath string
 	SchemaPackageName string
 }
@@ -99,11 +98,11 @@ type tempateModelBaseData struct {
 var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`"
 
 var (
-	structTemplateObj    *template.Template
-	modelBaseTemplateObj *template.Template
-	modelTemplateObj     *template.Template
-	initTemplateObj      *template.Template
-	once                 sync.Once
+	structTemplateObj *template.Template
+	//modelBaseTemplateObj *template.Template
+	modelTemplateObj *template.Template
+	initTemplateObj  *template.Template
+	once             sync.Once
 )
 
 func getTemplate(name string) string {
@@ -117,8 +116,6 @@ func getTemplate(name string) string {
 		return filepath.Join(cfg.TemplateDir, `dbschema_init.gotpl`)
 	case `model`:
 		return filepath.Join(cfg.TemplateDir, `model.gotpl`)
-	case `model_base`:
-		return filepath.Join(cfg.TemplateDir, `model_base.gotpl`)
 	default:
 		panic("unknown template name: " + name)
 	}
@@ -172,15 +169,6 @@ func initTemplate() {
 	if err != nil {
 		panic(err)
 	}
-
-	tpl, err = getTemplateContent(`model_base`)
-	if err != nil {
-		panic(err)
-	}
-	modelBaseTemplateObj, err = template.New(`model_base`).Parse(tpl)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func Template(name string, data interface{}) ([]byte, error) {
@@ -194,8 +182,6 @@ func Template(name string, data interface{}) ([]byte, error) {
 		err = initTemplateObj.ExecuteTemplate(w, name, data)
 	case `model`:
 		err = modelTemplateObj.ExecuteTemplate(w, name, data)
-	case `model_base`:
-		err = modelBaseTemplateObj.ExecuteTemplate(w, name, data)
 	default:
 		panic("unknown template name: " + name)
 	}

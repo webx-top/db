@@ -18,7 +18,7 @@ import (
 	"github.com/webx-top/echo"
 )
 
-//go:generate go get github.com/admpub/bindata/v3/...
+//go:generate go install github.com/admpub/bindata/go-bindata@latest
 //go:generate go-bindata -fs -o bindata_assetfs.go template/...
 
 func main() {
@@ -284,12 +284,7 @@ func main() {
 				var file *os.File
 				file, err = os.Create(modelFile)
 				if err == nil {
-					tplModel := &tempateModelData{
-						BaseName: `Base`,
-					}
-					if len(cfg.ModelConfig.BaseName) > 0 {
-						tplModel.BaseName = cfg.ModelConfig.BaseName
-					}
+					tplModel := &tempateModelData{}
 					tplModel.PackageName = cfg.ModelConfig.PackageName
 					tplModel.StructName = structName
 					tplModel.SchemaPackagePath = cfg.SchemaConfig.ImportPath
@@ -351,35 +346,6 @@ func main() {
 		log.Println(err)
 	} else {
 		log.Println(`Generated init.go`)
-	}
-	if len(cfg.ModelConfig.PackageName) > 0 && len(cfg.ModelConfig.SaveDir) > 0 {
-		tplModelBase := &tempateModelBaseData{
-			StructName: `Base`,
-		}
-		if len(cfg.ModelConfig.BaseName) > 0 {
-			tplModelBase.StructName = cfg.ModelConfig.BaseName
-		}
-		os.MkdirAll(cfg.ModelConfig.SaveDir, 0777)
-		modelFile := filepath.Join(cfg.ModelConfig.SaveDir, tplModelBase.StructName) + `.go`
-		_, err := os.Stat(modelFile)
-		if err != nil && os.IsNotExist(err) {
-			file, err := os.Create(modelFile)
-			if err == nil {
-				tplModelBase.PackageName = cfg.ModelConfig.PackageName
-				tplModelBase.SchemaPackagePath = cfg.SchemaConfig.ImportPath
-				tplModelBase.SchemaPackageName = cfg.SchemaConfig.PackageName
-				content, err = Template(`model_base`, tplModelBase)
-				if err != nil {
-					panic(err)
-				}
-				_, err = file.Write(content)
-			}
-			if err != nil {
-				log.Println(err)
-			} else {
-				log.Println(`Generated model struct:`, tplModelBase.StructName)
-			}
-		}
 	}
 	Format(cfg.SchemaConfig.SaveDir)
 	if cfg.SchemaConfig.SaveDir != cfg.ModelConfig.SaveDir {

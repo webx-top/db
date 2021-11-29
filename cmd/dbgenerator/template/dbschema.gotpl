@@ -91,6 +91,12 @@ func (s Slice_{{.StructName}}) FromList(data interface{}) Slice_{{.StructName}} 
 	return s
 }
 
+func New{{.StructName}}(ctx echo.Context) *{{.StructName}} {
+	m := &{{.StructName}}{}
+	m.SetContext(ctx)
+	return m 
+}
+
 // {{.StructName}} {{.StructComment}}
 type {{.StructName}} struct {
 	base    factory.Base
