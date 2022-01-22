@@ -31,6 +31,7 @@ var settings = mysql.ConnectionURL{
 
 type Post struct {
     Id      int     `db:"id,omitempty"`
+	UserId  int     `db:"user_id"`
     Title   string  `db:"title"`
     Group   string  `db:"group"`
     Views   int     `db:"views"`
@@ -104,21 +105,23 @@ res.Close() //操作结束后别忘了执行关闭操作
 ```
 
 ### 关联查询
+
 #### 手动 Join 查询
 ```go
 m := []*PostCollection{}
-err = factory.NewParam().SetCollection(`post`,`a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.id`).Select().All(&m)
+err = factory.NewParam().SetCollection(`post`,`a`).SetCols(db.Raw(`a.*`)).AddJoin(`LEFT`, `user`, `b`, `b.id=a.user_id`).Select().All(&m)
 ```
 
 #### 自动关联查询
 ```go
 type PostWithUser struct {
 	*Post
-	User *User `db:"-,relation=id:id"`
+	User *User `db:"-,relation=id:user_id"`
 }
 m := []*PostWithUser{}
 err = factory.NewParam().SetCollection(`post`).Select().All(&m)
 ```
+
 自动关联查询是通过在结构体 Tag 属性的 `db` 属性中定义 `relation` 参数来实现。  
 其完整的格式如下：
 
@@ -126,7 +129,8 @@ relation=`User表列名`:`Post表列名`|`Post表管道函数1`|`Post表管道�
 
 其中，__relation=`User表列名`:`Post表列名`__ 是必需的，其余的为可选项。
 
-##### 各个参数的详细说明：
+##### 各个参数的详细说明
+
 * `table`: 指定表名称(在无法通过左侧的字段名自动推导出表名称的情况下使用)
 * `dbconn`: 指定查询数据库采用的连接名称(不指定的情况下采用默认连接)
 * `columns`: 指定要查询的列(默认为查询所有列)。如果左侧的User字段的数据类型为 `map[string]interface{}` 或者 `echo.H` , 还需要分别对每一个字段指明数据类型，例如：columns=col1:string&col2:int , 要注意的是仅支持指定 github.com/webx-top/echo/param 包中 AsType() 函数支持的数据类型
