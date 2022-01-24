@@ -38,7 +38,7 @@ var structFuncs = map[string]string{
 	`Get`:             `Get`,
 	`List`:            `List`,
 	`ListByOffset`:    `ListByOffset`,
-	`Add`:             `Add`,
+	`Insert`:          `Insert`,
 	`Update`:          `Update`,
 	`Updatex`:         `Updatex`,
 	`UpdateByFields`:  `UpdateByFields`,
