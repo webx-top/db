@@ -7,6 +7,7 @@ import (
 
 	"time"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
@@ -89,6 +90,12 @@ func (s Slice_OfficialFilmItem) FromList(data interface{}) Slice_OfficialFilmIte
 	return s
 }
 
+func NewOfficialFilmItem(ctx echo.Context) *OfficialFilmItem {
+	m := &OfficialFilmItem{}
+	m.SetContext(ctx)
+	return m
+}
+
 // OfficialFilmItem 影片
 type OfficialFilmItem struct {
 	base    factory.Base
@@ -118,6 +125,7 @@ type OfficialFilmItem struct {
 	Released           uint    `db:"released" bson:"released" comment:"上映时间" json:"released" xml:"released"`
 	Image              string  `db:"image" bson:"image" comment:"缩略图" json:"image" xml:"image"`
 	ImageOriginal      string  `db:"image_original" bson:"image_original" comment:"原始图" json:"image_original" xml:"image_original"`
+	ImagePoster        string  `db:"image_poster" bson:"image_poster" comment:"海报图" json:"image_poster" xml:"image_poster"`
 	Summary            string  `db:"summary" bson:"summary" comment:"摘要" json:"summary" xml:"summary"`
 	Content            string  `db:"content" bson:"content" comment:"内容" json:"content" xml:"content"`
 	Contype            string  `db:"contype" bson:"contype" comment:"内容类型" json:"contype" xml:"contype"`
@@ -370,7 +378,7 @@ func (a *OfficialFilmItem) ListByOffset(recv interface{}, mw func(db.Result) db.
 	return cnt, err
 }
 
-func (a *OfficialFilmItem) Add() (pk interface{}, err error) {
+func (a *OfficialFilmItem) Insert() (pk interface{}, err error) {
 	a.Created = uint(time.Now().Unix())
 	a.Id = 0
 	if len(a.OwnerType) == 0 {
@@ -426,7 +434,7 @@ func (a *OfficialFilmItem) Add() (pk interface{}, err error) {
 	return
 }
 
-func (a *OfficialFilmItem) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
+func (a *OfficialFilmItem) Update(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	a.Updated = uint(time.Now().Unix())
 	if len(a.OwnerType) == 0 {
 		a.OwnerType = "customer"
@@ -473,13 +481,165 @@ func (a *OfficialFilmItem) Edit(mw func(db.Result) db.Result, args ...interface{
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *OfficialFilmItem) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SaveFields(mw, map[string]interface{}{
+func (a *OfficialFilmItem) Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
+	a.Updated = uint(time.Now().Unix())
+	if len(a.OwnerType) == 0 {
+		a.OwnerType = "customer"
+	}
+	if len(a.Contype) == 0 {
+		a.Contype = "markdown"
+	}
+	if len(a.Disabled) == 0 {
+		a.Disabled = "N"
+	}
+	if len(a.CloseComment) == 0 {
+		a.CloseComment = "N"
+	}
+	if len(a.CommentAutoDisplay) == 0 {
+		a.CommentAutoDisplay = "N"
+	}
+	if len(a.IsPreview) == 0 {
+		a.IsPreview = "N"
+	}
+	if len(a.IsMutiple) == 0 {
+		a.IsMutiple = "N"
+	}
+	if len(a.Completed) == 0 {
+		a.Completed = "Y"
+	}
+	if len(a.Playable) == 0 {
+		a.Playable = "N"
+	}
+	if len(a.Recommend) == 0 {
+		a.Recommend = "N"
+	}
+	if len(a.Licensed) == 0 {
+		a.Licensed = "N"
+	}
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetSend(a).Updatex()
+	}
+	if err = DBI.Fire("updating", a, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).SetSend(a).Updatex(); err != nil {
+		return
+	}
+	err = DBI.Fire("updated", a, mw, args...)
+	return
+}
+
+func (a *OfficialFilmItem) UpdateByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error) {
+	a.Updated = uint(time.Now().Unix())
+	if len(a.OwnerType) == 0 {
+		a.OwnerType = "customer"
+	}
+	if len(a.Contype) == 0 {
+		a.Contype = "markdown"
+	}
+	if len(a.Disabled) == 0 {
+		a.Disabled = "N"
+	}
+	if len(a.CloseComment) == 0 {
+		a.CloseComment = "N"
+	}
+	if len(a.CommentAutoDisplay) == 0 {
+		a.CommentAutoDisplay = "N"
+	}
+	if len(a.IsPreview) == 0 {
+		a.IsPreview = "N"
+	}
+	if len(a.IsMutiple) == 0 {
+		a.IsMutiple = "N"
+	}
+	if len(a.Completed) == 0 {
+		a.Completed = "Y"
+	}
+	if len(a.Playable) == 0 {
+		a.Playable = "N"
+	}
+	if len(a.Recommend) == 0 {
+		a.Recommend = "N"
+	}
+	if len(a.Licensed) == 0 {
+		a.Licensed = "N"
+	}
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).UpdateByStruct(a, fields...)
+	}
+	editColumns := make([]string, len(fields))
+	for index, field := range fields {
+		editColumns[index] = com.SnakeCase(field)
+	}
+	if err = DBI.FireUpdate("updating", a, editColumns, mw, args...); err != nil {
+		return
+	}
+	if err = a.Param(mw, args...).UpdateByStruct(a, fields...); err != nil {
+		return
+	}
+	err = DBI.FireUpdate("updated", a, editColumns, mw, args...)
+	return
+}
+
+func (a *OfficialFilmItem) UpdatexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error) {
+	a.Updated = uint(time.Now().Unix())
+	if len(a.OwnerType) == 0 {
+		a.OwnerType = "customer"
+	}
+	if len(a.Contype) == 0 {
+		a.Contype = "markdown"
+	}
+	if len(a.Disabled) == 0 {
+		a.Disabled = "N"
+	}
+	if len(a.CloseComment) == 0 {
+		a.CloseComment = "N"
+	}
+	if len(a.CommentAutoDisplay) == 0 {
+		a.CommentAutoDisplay = "N"
+	}
+	if len(a.IsPreview) == 0 {
+		a.IsPreview = "N"
+	}
+	if len(a.IsMutiple) == 0 {
+		a.IsMutiple = "N"
+	}
+	if len(a.Completed) == 0 {
+		a.Completed = "Y"
+	}
+	if len(a.Playable) == 0 {
+		a.Playable = "N"
+	}
+	if len(a.Recommend) == 0 {
+		a.Recommend = "N"
+	}
+	if len(a.Licensed) == 0 {
+		a.Licensed = "N"
+	}
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).UpdatexByStruct(a, fields...)
+	}
+	editColumns := make([]string, len(fields))
+	for index, field := range fields {
+		editColumns[index] = com.SnakeCase(field)
+	}
+	if err = DBI.FireUpdate("updating", a, editColumns, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).UpdatexByStruct(a, fields...); err != nil {
+		return
+	}
+	err = DBI.FireUpdate("updated", a, editColumns, mw, args...)
+	return
+}
+
+func (a *OfficialFilmItem) UpdateField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.UpdateFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *OfficialFilmItem) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *OfficialFilmItem) UpdateFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["owner_type"]; ok && val != nil {
 		if v, ok := val.(string); ok && len(v) == 0 {
@@ -552,6 +712,21 @@ func (a *OfficialFilmItem) SaveFields(mw func(db.Result) db.Result, kvset map[st
 		return
 	}
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
+}
+
+func (a *OfficialFilmItem) UpdateValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetSend(keysValues).Update()
+	}
+	m := *a
+	m.FromRow(keysValues.Map())
+	if err = DBI.FireUpdate("updating", &m, keysValues.Keys(), mw, args...); err != nil {
+		return
+	}
+	if err = a.Param(mw, args...).SetSend(keysValues).Update(); err != nil {
+		return
+	}
+	return DBI.FireUpdate("updated", &m, keysValues.Keys(), mw, args...)
 }
 
 func (a *OfficialFilmItem) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
@@ -666,6 +841,21 @@ func (a *OfficialFilmItem) Delete(mw func(db.Result) db.Result, args ...interfac
 	return DBI.Fire("deleted", a, mw, args...)
 }
 
+func (a *OfficialFilmItem) Deletex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
+
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).Deletex()
+	}
+	if err = DBI.Fire("deleting", a, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).Deletex(); err != nil {
+		return
+	}
+	err = DBI.Fire("deleted", a, mw, args...)
+	return
+}
+
 func (a *OfficialFilmItem) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
 	return a.Param(mw, args...).Count()
 }
@@ -699,6 +889,7 @@ func (a *OfficialFilmItem) Reset() *OfficialFilmItem {
 	a.Released = 0
 	a.Image = ``
 	a.ImageOriginal = ``
+	a.ImagePoster = ``
 	a.Summary = ``
 	a.Content = ``
 	a.Contype = ``
@@ -769,6 +960,7 @@ func (a *OfficialFilmItem) AsMap(onlyFields ...string) param.Store {
 		r["Released"] = a.Released
 		r["Image"] = a.Image
 		r["ImageOriginal"] = a.ImageOriginal
+		r["ImagePoster"] = a.ImagePoster
 		r["Summary"] = a.Summary
 		r["Content"] = a.Content
 		r["Contype"] = a.Contype
@@ -861,6 +1053,8 @@ func (a *OfficialFilmItem) AsMap(onlyFields ...string) param.Store {
 			r["Image"] = a.Image
 		case "ImageOriginal":
 			r["ImageOriginal"] = a.ImageOriginal
+		case "ImagePoster":
+			r["ImagePoster"] = a.ImagePoster
 		case "Summary":
 			r["Summary"] = a.Summary
 		case "Content":
@@ -997,6 +1191,8 @@ func (a *OfficialFilmItem) FromRow(row map[string]interface{}) {
 			a.Image = param.AsString(value)
 		case "image_original":
 			a.ImageOriginal = param.AsString(value)
+		case "image_poster":
+			a.ImagePoster = param.AsString(value)
 		case "summary":
 			a.Summary = param.AsString(value)
 		case "content":
@@ -1149,6 +1345,8 @@ func (a *OfficialFilmItem) Set(key interface{}, value ...interface{}) {
 			a.Image = param.AsString(vv)
 		case "ImageOriginal":
 			a.ImageOriginal = param.AsString(vv)
+		case "ImagePoster":
+			a.ImagePoster = param.AsString(vv)
 		case "Summary":
 			a.Summary = param.AsString(vv)
 		case "Content":
@@ -1260,6 +1458,7 @@ func (a *OfficialFilmItem) AsRow(onlyFields ...string) param.Store {
 		r["released"] = a.Released
 		r["image"] = a.Image
 		r["image_original"] = a.ImageOriginal
+		r["image_poster"] = a.ImagePoster
 		r["summary"] = a.Summary
 		r["content"] = a.Content
 		r["contype"] = a.Contype
@@ -1352,6 +1551,8 @@ func (a *OfficialFilmItem) AsRow(onlyFields ...string) param.Store {
 			r["image"] = a.Image
 		case "image_original":
 			r["image_original"] = a.ImageOriginal
+		case "image_poster":
+			r["image_poster"] = a.ImagePoster
 		case "summary":
 			r["summary"] = a.Summary
 		case "content":
@@ -1441,9 +1642,9 @@ func (a *OfficialFilmItem) BatchValidate(kvset map[string]interface{}) error {
 	if kvset == nil {
 		kvset = a.AsRow()
 	}
-	return factory.BatchValidate(a.Short_(), kvset)
+	return DBI.Fields.BatchValidate(a.Short_(), kvset)
 }
 
 func (a *OfficialFilmItem) Validate(field string, value interface{}) error {
-	return factory.Validate(a.Short_(), field, value)
+	return DBI.Fields.Validate(a.Short_(), field, value)
 }

@@ -7,6 +7,7 @@ import (
 
 	"time"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
@@ -87,6 +88,12 @@ func (s Slice_NgingVhostGroup) FromList(data interface{}) Slice_NgingVhostGroup 
 	s = append(s, values...)
 
 	return s
+}
+
+func NewNgingVhostGroup(ctx echo.Context) *NgingVhostGroup {
+	m := &NgingVhostGroup{}
+	m.SetContext(ctx)
+	return m
 }
 
 // NgingVhostGroup 虚拟主机组
@@ -311,7 +318,7 @@ func (a *NgingVhostGroup) ListByOffset(recv interface{}, mw func(db.Result) db.R
 	return cnt, err
 }
 
-func (a *NgingVhostGroup) Add() (pk interface{}, err error) {
+func (a *NgingVhostGroup) Insert() (pk interface{}, err error) {
 	a.Created = uint(time.Now().Unix())
 	a.Id = 0
 	if a.base.Eventable() {
@@ -334,7 +341,7 @@ func (a *NgingVhostGroup) Add() (pk interface{}, err error) {
 	return
 }
 
-func (a *NgingVhostGroup) Edit(mw func(db.Result) db.Result, args ...interface{}) (err error) {
+func (a *NgingVhostGroup) Update(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(a).Update()
@@ -348,13 +355,66 @@ func (a *NgingVhostGroup) Edit(mw func(db.Result) db.Result, args ...interface{}
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *NgingVhostGroup) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SaveFields(mw, map[string]interface{}{
+func (a *NgingVhostGroup) Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
+
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetSend(a).Updatex()
+	}
+	if err = DBI.Fire("updating", a, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).SetSend(a).Updatex(); err != nil {
+		return
+	}
+	err = DBI.Fire("updated", a, mw, args...)
+	return
+}
+
+func (a *NgingVhostGroup) UpdateByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error) {
+
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).UpdateByStruct(a, fields...)
+	}
+	editColumns := make([]string, len(fields))
+	for index, field := range fields {
+		editColumns[index] = com.SnakeCase(field)
+	}
+	if err = DBI.FireUpdate("updating", a, editColumns, mw, args...); err != nil {
+		return
+	}
+	if err = a.Param(mw, args...).UpdateByStruct(a, fields...); err != nil {
+		return
+	}
+	err = DBI.FireUpdate("updated", a, editColumns, mw, args...)
+	return
+}
+
+func (a *NgingVhostGroup) UpdatexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error) {
+
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).UpdatexByStruct(a, fields...)
+	}
+	editColumns := make([]string, len(fields))
+	for index, field := range fields {
+		editColumns[index] = com.SnakeCase(field)
+	}
+	if err = DBI.FireUpdate("updating", a, editColumns, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).UpdatexByStruct(a, fields...); err != nil {
+		return
+	}
+	err = DBI.FireUpdate("updated", a, editColumns, mw, args...)
+	return
+}
+
+func (a *NgingVhostGroup) UpdateField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.UpdateFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *NgingVhostGroup) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *NgingVhostGroup) UpdateFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(kvset).Update()
@@ -372,6 +432,21 @@ func (a *NgingVhostGroup) SaveFields(mw func(db.Result) db.Result, kvset map[str
 		return
 	}
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
+}
+
+func (a *NgingVhostGroup) UpdateValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetSend(keysValues).Update()
+	}
+	m := *a
+	m.FromRow(keysValues.Map())
+	if err = DBI.FireUpdate("updating", &m, keysValues.Keys(), mw, args...); err != nil {
+		return
+	}
+	if err = a.Param(mw, args...).SetSend(keysValues).Update(); err != nil {
+		return
+	}
+	return DBI.FireUpdate("updated", &m, keysValues.Keys(), mw, args...)
 }
 
 func (a *NgingVhostGroup) Upsert(mw func(db.Result) db.Result, args ...interface{}) (pk interface{}, err error) {
@@ -417,6 +492,21 @@ func (a *NgingVhostGroup) Delete(mw func(db.Result) db.Result, args ...interface
 		return
 	}
 	return DBI.Fire("deleted", a, mw, args...)
+}
+
+func (a *NgingVhostGroup) Deletex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
+
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).Deletex()
+	}
+	if err = DBI.Fire("deleting", a, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).Deletex(); err != nil {
+		return
+	}
+	err = DBI.Fire("deleted", a, mw, args...)
+	return
 }
 
 func (a *NgingVhostGroup) Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error) {
@@ -545,9 +635,9 @@ func (a *NgingVhostGroup) BatchValidate(kvset map[string]interface{}) error {
 	if kvset == nil {
 		kvset = a.AsRow()
 	}
-	return factory.BatchValidate(a.Short_(), kvset)
+	return DBI.Fields.BatchValidate(a.Short_(), kvset)
 }
 
 func (a *NgingVhostGroup) Validate(field string, value interface{}) error {
-	return factory.Validate(a.Short_(), field, value)
+	return DBI.Fields.Validate(a.Short_(), field, value)
 }
