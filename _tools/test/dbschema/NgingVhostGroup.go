@@ -348,13 +348,13 @@ func (a *NgingVhostGroup) Edit(mw func(db.Result) db.Result, args ...interface{}
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *NgingVhostGroup) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SetFields(mw, map[string]interface{}{
+func (a *NgingVhostGroup) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.SaveFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *NgingVhostGroup) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *NgingVhostGroup) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(kvset).Update()

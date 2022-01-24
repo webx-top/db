@@ -35,7 +35,7 @@ func (m *{{.StructName}}) Edit(mw func(db.Result) db.Result, args ...interface{}
 	if err := m.check(); err != nil {
 		return err
 	}
-	return m.{{.StructName}}.Edit(mw, args...)
+	return m.{{.StructName}}.Save(mw, args...)
 }
 
 func (m *{{.StructName}}) ListPage(cond *db.Compounds, sorts ...interface{}) ([]*{{.StructName}}, error) {

@@ -322,7 +322,7 @@ dbgenerator.exe -u <数据库用户名> -p <数据库密码> -h <数据库主机
 * 分页查询 `List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error)`
 * 根据偏移量查询 `ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error)`
 * 添加数据 `Add() (interface{}, error)`
-* 修改数据 `Edit(mw func(db.Result) db.Result, args ...interface{}) error`
+* 修改数据 `Save(mw func(db.Result) db.Result, args ...interface{}) error`
 * 删除数据 `Delete(mw func(db.Result) db.Result, args ...interface{}) error`
 * 统计行数 `Count(mw func(db.Result) db.Result, args ...interface{}) error`
 

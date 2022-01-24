@@ -473,13 +473,13 @@ func (a *OfficialFilmItem) Edit(mw func(db.Result) db.Result, args ...interface{
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *OfficialFilmItem) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SetFields(mw, map[string]interface{}{
+func (a *OfficialFilmItem) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.SaveFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *OfficialFilmItem) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *OfficialFilmItem) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["owner_type"]; ok && val != nil {
 		if v, ok := val.(string); ok && len(v) == 0 {

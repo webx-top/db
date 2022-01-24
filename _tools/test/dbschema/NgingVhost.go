@@ -358,13 +358,13 @@ func (a *NgingVhost) Edit(mw func(db.Result) db.Result, args ...interface{}) (er
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *NgingVhost) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SetFields(mw, map[string]interface{}{
+func (a *NgingVhost) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.SaveFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *NgingVhost) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *NgingVhost) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["disabled"]; ok && val != nil {
 		if v, ok := val.(string); ok && len(v) == 0 {

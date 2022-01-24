@@ -358,13 +358,13 @@ func (a *OfficialFilmType) Edit(mw func(db.Result) db.Result, args ...interface{
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *OfficialFilmType) SetField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SetFields(mw, map[string]interface{}{
+func (a *OfficialFilmType) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.SaveFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *OfficialFilmType) SetFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *OfficialFilmType) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["group"]; ok && val != nil {
 		if v, ok := val.(string); ok && len(v) == 0 {
