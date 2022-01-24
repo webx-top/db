@@ -58,7 +58,7 @@ func ReplacePrefix(linkID int, tableName string, field string, oldPrefix string,
 	affected, err := result.RowsAffected()
 	return affected, err
 	//value := db.Raw("REPLACE(`"+field+"`, ?, ?)", oldPrefix, newPrefix)
-	//return m.SaveField(nil, field, value, field, db.Like(oldPrefix+`%`))
+	//return m.UpdateField(nil, field, value, field, db.Like(oldPrefix+`%`))
 }
 
 // TableExists 查询表是否存在

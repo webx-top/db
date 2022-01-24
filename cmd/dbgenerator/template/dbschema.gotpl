@@ -317,7 +317,7 @@ func (a *{{.StructName}}) ListByOffset(recv interface{}, mw func(db.Result) db.R
 	return cnt, err
 }
 
-func (a *{{.StructName}}) Add() (pk interface{}, err error) {
+func (a *{{.StructName}}) Insert() (pk interface{}, err error) {
 	{{.BeforeInsert}}
 	if a.base.Eventable() {
 		err = DBI.Fire("creating", a, nil)
@@ -333,7 +333,7 @@ func (a *{{.StructName}}) Add() (pk interface{}, err error) {
 	return
 }
 
-func (a *{{.StructName}}) Save(mw func(db.Result) db.Result, args ...interface{}) (err error) {
+func (a *{{.StructName}}) Update(mw func(db.Result) db.Result, args ...interface{}) (err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(a).Update()
@@ -347,7 +347,7 @@ func (a *{{.StructName}}) Save(mw func(db.Result) db.Result, args ...interface{}
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *{{.StructName}}) Savex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(a).Updatex()
@@ -362,7 +362,7 @@ func (a *{{.StructName}}) Savex(mw func(db.Result) db.Result, args ...interface{
 	return
 }
 
-func (a *{{.StructName}}) SaveByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error) {
+func (a *{{.StructName}}) UpdateByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).UpdateByStruct(a, fields...)
@@ -381,7 +381,7 @@ func (a *{{.StructName}}) SaveByFields(mw func(db.Result) db.Result, fields []st
 	return
 }
 
-func (a *{{.StructName}}) SavexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) UpdatexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).UpdatexByStruct(a, fields...)
@@ -400,13 +400,13 @@ func (a *{{.StructName}}) SavexByFields(mw func(db.Result) db.Result, fields []s
 	return
 }
 
-func (a *{{.StructName}}) SaveField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
-	return a.SaveFields(mw, map[string]interface{}{
+func (a *{{.StructName}}) UpdateField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (err error) {
+	return a.UpdateFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
 }
 
-func (a *{{.StructName}}) SaveFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
+func (a *{{.StructName}}) UpdateFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 	{{.SetUpdatedAt}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(kvset).Update()
@@ -426,7 +426,7 @@ func (a *{{.StructName}}) SaveFields(mw func(db.Result) db.Result, kvset map[str
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
 }
 
-func (a *{{.StructName}}) SaveValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {
+func (a *{{.StructName}}) UpdateValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(keysValues).Update()
 	}
