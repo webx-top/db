@@ -427,7 +427,6 @@ func (a *{{.StructName}}) SaveFields(mw func(db.Result) db.Result, kvset map[str
 }
 
 func (a *{{.StructName}}) SaveValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {
-	{{.SetUpdatedAt}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(keysValues).Update()
 	}
