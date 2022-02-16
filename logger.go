@@ -131,7 +131,11 @@ func (q *QueryStatus) Lines() []string {
 		var ctx interface{}
 		switch v := q.Context.(type) {
 		case RequestURI:
-			ctx = v.RequestURI()
+			if m, ok := v.(Method); ok {
+				ctx = `[` + m.Method() + `] ` + v.RequestURI()
+			} else {
+				ctx = v.RequestURI()
+			}
 		case StdContext:
 			ctx = v.StdContext()
 		default:

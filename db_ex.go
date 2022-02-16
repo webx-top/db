@@ -193,3 +193,7 @@ type StdContext interface {
 type RequestURI interface {
 	RequestURI() string
 }
+
+type Method interface {
+	Method() string
+}
