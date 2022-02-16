@@ -128,11 +128,16 @@ func (q *QueryStatus) Lines() []string {
 	lines = append(lines, fmt.Sprintf(fmtLogTimeTaken, float64(q.End.UnixNano()-q.Start.UnixNano())/float64(1e9)))
 
 	if q.Context != nil {
-		if cx, ok := q.Context.(StdContext); ok {
-			lines = append(lines, fmt.Sprintf(fmtLogContext, cx.StdContext()))
-		} else {
-			lines = append(lines, fmt.Sprintf(fmtLogContext, q.Context))
+		var ctx interface{}
+		switch v := q.Context.(type) {
+		case RequestURI:
+			ctx = v.RequestURI()
+		case StdContext:
+			ctx = v.StdContext()
+		default:
+			ctx = v
 		}
+		lines = append(lines, fmt.Sprintf(fmtLogContext, ctx))
 	}
 	return lines
 }
