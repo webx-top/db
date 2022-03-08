@@ -3,12 +3,12 @@ module github.com/webx-top/db
 go 1.16
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.5.2
-	github.com/admpub/confl v0.1.0
+	github.com/ClickHouse/clickhouse-go v1.5.4
+	github.com/admpub/confl v0.2.1
 	github.com/admpub/copier v0.0.2 // indirect
 	github.com/admpub/decimal v0.0.2 // indirect
 	github.com/admpub/errors v0.8.2
-	github.com/admpub/events v1.2.0 // indirect
+	github.com/admpub/events v1.3.2 // indirect
 	github.com/admpub/fsnotify v1.5.0 // indirect
 	github.com/admpub/go-reuseport v0.0.4 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
@@ -20,25 +20,26 @@ require (
 	github.com/denisenkom/go-mssqldb v0.12.0
 	github.com/francoispqt/gojay v1.2.13 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/goccy/go-json v0.9.4 // indirect
+	github.com/goccy/go-json v0.9.5 // indirect
+	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/lib/pq v1.10.4
 	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-sqlite3 v1.14.10
+	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.0
 	github.com/webx-top/captcha v0.0.1 // indirect
-	github.com/webx-top/com v0.3.6
-	github.com/webx-top/echo v2.24.0+incompatible
+	github.com/webx-top/com v0.3.8
+	github.com/webx-top/echo v2.26.2+incompatible
 	github.com/webx-top/pagination v0.1.1
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 // indirect
 	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
 	github.com/webx-top/validation v0.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
-	golang.org/x/net v0.0.0-20220121210141-e204ce36a2ba // indirect
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70 // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	modernc.org/db v1.0.4 // indirect
 	modernc.org/lldb v1.0.4 // indirect
