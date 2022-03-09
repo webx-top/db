@@ -2,6 +2,7 @@ package sqlbuilder
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -1468,6 +1469,10 @@ func BenchmarkUpdate5(b *testing.B) {
 		).Where("id > ?", 0).String()
 	}
 }
+
+var (
+	reInvisibleChars = regexp.MustCompile(`[\s\r\n\t]+`)
+)
 
 func stripWhitespace(in string) string {
 	q := reInvisibleChars.ReplaceAllString(in, ` `)
