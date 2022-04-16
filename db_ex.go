@@ -172,6 +172,10 @@ func (c *Compounds) Reset() {
 	*c = (*c)[0:0]
 }
 
+func (c *Compounds) remove(s int) Compounds {
+	return append((*c)[:s], (*c)[s+1:]...)
+}
+
 func (c *Compounds) Delete(keys ...interface{}) {
 	for _, key := range keys {
 		for i, v := range *c {
@@ -185,11 +189,7 @@ func (c *Compounds) Delete(keys ...interface{}) {
 			}
 			delete(r, key)
 			if len(r) == 0 {
-				if i == 0 {
-					*c = (*c)[i+1:]
-				} else {
-					*c = append((*c)[0:i-1], (*c)[i+1:]...)
-				}
+				*c = c.remove(i)
 			}
 		}
 	}
