@@ -35,12 +35,11 @@ require (
 	github.com/webx-top/echo v2.26.4+incompatible
 	github.com/webx-top/pagination v0.1.1
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 // indirect
+	github.com/webx-top/qmgo v1.2.0
 	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
 	github.com/webx-top/validation v0.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	go.mongodb.org/mongo-driver v1.9.1
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	modernc.org/db v1.0.4 // indirect
 	modernc.org/lldb v1.0.4 // indirect
