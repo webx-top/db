@@ -33,6 +33,9 @@ import (
 
 	"github.com/webx-top/db"
 	mgo "github.com/webx-top/qmgo"
+	"github.com/webx-top/qmgo/options"
+	"go.mongodb.org/mongo-driver/mongo"
+	opts "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Adapter holds the name of the mongodb adapter.
@@ -47,7 +50,6 @@ type Source struct {
 	name          string
 	connURL       db.ConnectionURL
 	client        *mgo.Client
-	session       *mgo.Session
 	database      *mgo.Database
 	version       []int
 	collections   map[string]*Collection
@@ -115,10 +117,48 @@ func (s *Source) Clone() (db.Database, error) {
 	return clone, nil
 }
 
-// NewTransaction should support transactions, but it doesn't as MongoDB
-// currently does not support them.
-func (s *Source) NewTransaction() (db.Tx, error) {
-	return nil, db.ErrUnsupported
+// NewTransaction should support transactions, version of mongoDB server >= v4.0
+func (s *Source) NewTransaction(ctx context.Context, opt ...*options.SessionOptions) (db.Tx, error) {
+	if !s.versionAtLeast(4) {
+		return nil, db.ErrUnsupported
+	}
+	sessionOpts := opts.Session()
+	if len(opt) > 0 && opt[0].SessionOptions != nil {
+		sessionOpts = opt[0].SessionOptions
+	}
+	session, err := s.client.Raw().StartSession(sessionOpts)
+	if err != nil {
+		return nil, err
+	}
+	return &txImpl{
+		session: session,
+		context: ctx,
+	}, db.ErrUnsupported
+}
+
+func (s *Source) DoTransaction(ctx context.Context, callback func(sessCtx context.Context) (interface{}, error), opts ...*options.TransactionOptions) (interface{}, error) {
+	return s.client.DoTransaction(ctx, callback, opts...)
+}
+
+type txImpl struct {
+	session mongo.Session
+	context context.Context
+}
+
+// Rollback discards all the instructions on the current transaction.
+func (t *txImpl) Rollback() error {
+	defer t.session.EndSession(t.context)
+	return t.session.AbortTransaction(t.context)
+}
+
+// Commit commits the current transaction.
+func (t *txImpl) Commit() error {
+	defer t.session.EndSession(t.context)
+	return t.session.CommitTransaction(t.context)
+}
+
+func (t *txImpl) Context() context.Context {
+	return t.context
 }
 
 // Ping checks whether a connection to the database is still alive by pinging
@@ -133,9 +173,9 @@ func (s *Source) ClearCache() {
 	s.collections = make(map[string]*Collection)
 }
 
-// Driver returns the underlying *mgo.Session instance.
+// Driver returns the underlying *mgo.Client instance.
 func (s *Source) Driver() interface{} {
-	return s.session
+	return s.client
 }
 
 func (s *Source) open() error {

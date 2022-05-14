@@ -35,7 +35,7 @@ require (
 	github.com/webx-top/echo v2.26.4+incompatible
 	github.com/webx-top/pagination v0.1.1
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 // indirect
-	github.com/webx-top/qmgo v1.2.0
+	github.com/webx-top/qmgo v1.2.1
 	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
 	github.com/webx-top/validation v0.0.3 // indirect
 	go.mongodb.org/mongo-driver v1.9.1

@@ -269,8 +269,8 @@ github.com/webx-top/pagination v0.1.1 h1:8P0OGWwOp80wVrbuiwLJNEeCKx/3lNWgdK/HV89
 github.com/webx-top/pagination v0.1.1/go.mod h1:5jelnjgnc0GwTVBhX0SjlSKMGFOym3IoXpnmvB+1LQo=
 github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 h1:YUDmvTQjrixwGCtlJFm1piLLo7lxMEBnWUqMrlnqyxM=
 github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380/go.mod h1:JGnKm+kSTq2yvbFHttHLvbo2kqY9wZOTXY98YGhZu6Y=
-github.com/webx-top/qmgo v1.2.0 h1:C/cT3a5OrpIvi9TvUH40YTcoxAjAl7rhvLiBz/HrZyM=
-github.com/webx-top/qmgo v1.2.0/go.mod h1:JBVGL1epCkqv+q68Hc24wOEdjwuWB9EHXngStYzbT9k=
+github.com/webx-top/qmgo v1.2.1 h1:jC/nexCTEjWvGtmyKmHKMAYM/3SEjdA40Jvsq+NQVfo=
+github.com/webx-top/qmgo v1.2.1/go.mod h1:JBVGL1epCkqv+q68Hc24wOEdjwuWB9EHXngStYzbT9k=
 github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2 h1:lqnGa1BnWT7pN+c9V31bik0lTp5XxyOMRp7ICsZ6K5M=
 github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2/go.mod h1:pMe3sJitHxbxX2EAI/v9HEAXjodP4c+yUVw3rbKcljI=
 github.com/webx-top/validation v0.0.3 h1:6vBoAp5iqjIpfFA+XoCnIzBHcuLjQzxv7MRlshptUqk=
