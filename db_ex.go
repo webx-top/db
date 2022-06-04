@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/webx-top/db/internal/adapter"
 )
 
 func NewKeysValues() *KeysValues {
@@ -125,6 +127,7 @@ func (c *Compounds) Size() int {
 }
 
 var _ Compound = NewCompounds()
+var EmptyCond = Cond{}
 
 func (c *Compounds) And(compounds ...Compound) Compound {
 	c.Add(compounds...)
@@ -151,13 +154,13 @@ func (c *Compounds) Or(compounds ...Compound) Compound {
 }
 
 // Sentences return each one of the map records as a compound.
-func (c *Compounds) Sentences() []Compound {
+func (c *Compounds) Expressions() []Compound {
 	return c.Slice()
 }
 
 // Operator returns the default compound operator.
-func (c *Compounds) Operator() CompoundOperator {
-	return OperatorAnd
+func (c *Compounds) Operator() adapter.LogicalOperator {
+	return adapter.LogicalOperatorAnd
 }
 
 // Empty returns false if there are no conditions.

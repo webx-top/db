@@ -399,8 +399,8 @@ func collectFrames() []runtime.Frame {
 	for {
 		frame, more := frames.Next()
 
-		// collect all frames except those from upper/db and runtime stack
-		if (strings.Contains(frame.Function, "upper/db") || strings.Contains(frame.Function, "/go/src/")) && !strings.Contains(frame.Function, "test") {
+		// collect all frames except those from webx-top/db and runtime stack
+		if (strings.Contains(frame.Function, "webx-top/db") || strings.Contains(frame.Function, "/go/src/")) && !strings.Contains(frame.Function, "test") {
 			discardedFrames = append(discardedFrames, frame)
 		} else {
 			collectedFrames = append(collectedFrames, frame)
