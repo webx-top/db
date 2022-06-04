@@ -64,6 +64,8 @@ type iterator struct {
 	sess   exprDB
 	cursor *sql.Rows // This is the main query cursor. It starts as a nil value.
 	err    error
+
+	relationMap map[string]BuilderChainFunc //[SWH|+]
 }
 
 type fieldValue struct {
