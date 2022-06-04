@@ -1,3 +1,4 @@
+//go:build !pq
 // +build !pq
 
 package postgresql
@@ -26,9 +27,10 @@ package postgresql
 import (
 	"context"
 	"database/sql"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/upper/db/v4/internal/sqladapter"
 	"time"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/webx-top/db/internal/sqladapter"
 )
 
 func (*database) OpenDSN(sess sqladapter.Session, dsn string) (*sql.DB, error) {

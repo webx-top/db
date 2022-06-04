@@ -22,8 +22,8 @@
 package postgresql
 
 import (
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/sqladapter"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqladapter"
 )
 
 type collectionAdapter struct {

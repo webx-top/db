@@ -14,7 +14,7 @@ import (
 	detectrace "github.com/ipfs/go-detect-race"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
-	db "github.com/upper/db/v4"
+	db "github.com/webx-top/db"
 )
 
 type artistType struct {

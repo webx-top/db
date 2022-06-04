@@ -25,8 +25,8 @@ import (
 	"database/sql"
 	"os"
 
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/testsuite"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/testsuite"
 )
 
 var (

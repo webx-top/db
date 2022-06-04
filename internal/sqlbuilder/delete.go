@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/immutable"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/immutable"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 type deleterQuery struct {

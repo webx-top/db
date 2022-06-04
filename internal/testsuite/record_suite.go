@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/sqlbuilder"
+	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqlbuilder"
 )
 
 type AccountsStore struct {

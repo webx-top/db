@@ -1,3 +1,4 @@
+//go:build pq
 // +build pq
 
 // Copyright (c) 2012-present The upper.io/db authors. All rights reserved.
@@ -27,7 +28,7 @@ import (
 	"context"
 	"database/sql"
 	_ "github.com/lib/pq"
-	"github.com/upper/db/v4/internal/sqladapter"
+	"github.com/webx-top/db/internal/sqladapter"
 	"time"
 )
 

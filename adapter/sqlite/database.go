@@ -30,10 +30,10 @@ import (
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver.
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/sqladapter"
-	"github.com/upper/db/v4/internal/sqladapter/compat"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqladapter"
+	"github.com/webx-top/db/internal/sqladapter/compat"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 // database is the actual implementation of Database

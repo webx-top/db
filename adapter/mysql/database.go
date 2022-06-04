@@ -31,9 +31,9 @@ import (
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL driver.
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/sqladapter"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqladapter"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 // database is the actual implementation of Database

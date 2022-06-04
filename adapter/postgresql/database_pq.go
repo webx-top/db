@@ -1,3 +1,4 @@
+//go:build pq
 // +build pq
 
 package postgresql
@@ -27,7 +28,7 @@ import (
 	"context"
 	"database/sql"
 	_ "github.com/lib/pq"
-	"github.com/upper/db/v4/internal/sqladapter"
+	"github.com/webx-top/db/internal/sqladapter"
 	"time"
 )
 

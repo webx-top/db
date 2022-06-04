@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/sqlbuilder"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/sqlbuilder"
 )
 
 func TestTemplateSelect(t *testing.T) {

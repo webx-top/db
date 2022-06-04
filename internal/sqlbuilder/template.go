@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/adapter"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/adapter"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 type templateWithUtils struct {

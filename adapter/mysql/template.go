@@ -22,8 +22,8 @@
 package mysql
 
 import (
-	"github.com/upper/db/v4/internal/cache"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	"github.com/webx-top/db/internal/cache"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 const (
@@ -98,6 +98,9 @@ const (
 
       {{if defined .Table}}
         FROM {{.Table | compile}}
+        {{if defined .ForceIndex}}
+          FORCE INDEX({{.ForceIndex | compile}})
+        {{end}}
       {{end}}
 
       {{.Joins | compile}}

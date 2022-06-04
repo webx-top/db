@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/adapter"
-	"github.com/upper/db/v4/internal/immutable"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/adapter"
+	"github.com/webx-top/db/internal/immutable"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 type selectorQuery struct {
@@ -38,6 +38,9 @@ type selectorQuery struct {
 	joinsArgs []interface{}
 
 	amendFn func(string) string
+
+	forceIndex  *exql.Columns               //[SWH|+]
+	relationMap map[string]BuilderChainFunc //[SWH|+]
 }
 
 func (sq *selectorQuery) and(b *sqlBuilder, terms ...interface{}) error {
@@ -65,15 +68,16 @@ func (sq *selectorQuery) arguments() []interface{} {
 
 func (sq *selectorQuery) statement() *exql.Statement {
 	stmt := &exql.Statement{
-		Type:     exql.Select,
-		Table:    sq.table,
-		Columns:  sq.columns,
-		Distinct: sq.distinct,
-		Limit:    sq.limit,
-		Offset:   sq.offset,
-		Where:    sq.where,
-		OrderBy:  sq.orderBy,
-		GroupBy:  sq.groupBy,
+		Type:       exql.Select,
+		Table:      sq.table,
+		Columns:    sq.columns,
+		Distinct:   sq.distinct,
+		Limit:      sq.limit,
+		Offset:     sq.offset,
+		Where:      sq.where,
+		OrderBy:    sq.orderBy,
+		GroupBy:    sq.groupBy,
+		ForceIndex: sq.forceIndex,
 	}
 
 	if len(sq.joins) > 0 {

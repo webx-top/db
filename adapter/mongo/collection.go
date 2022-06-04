@@ -28,8 +28,8 @@ import (
 
 	"reflect"
 
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/adapter"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/adapter"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -154,6 +154,8 @@ func compileStatement(cond db.Cond) bson.M {
 				op = `$lte`
 			case `>=`:
 				op = `$gte`
+			case `!=`, `<>`:
+				op = `$ne`
 			default:
 				op = chunks[1]
 			}
@@ -163,6 +165,13 @@ func compileStatement(cond db.Cond) bson.M {
 		if op == "" {
 			conds[field] = value
 		} else {
+
+			if v, y := conds[field]; y {
+				if bsonM, ok := v.(bson.M); ok {
+					bsonM[op] = value
+					continue
+				}
+			}
 			conds[field] = bson.M{op: value}
 		}
 	}

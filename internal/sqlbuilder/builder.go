@@ -33,11 +33,11 @@ import (
 	"strconv"
 	"strings"
 
-	db "github.com/upper/db/v4"
-	"github.com/upper/db/v4/internal/adapter"
-	"github.com/upper/db/v4/internal/reflectx"
-	"github.com/upper/db/v4/internal/sqladapter/compat"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	db "github.com/webx-top/db"
+	"github.com/webx-top/db/internal/adapter"
+	"github.com/webx-top/db/internal/reflectx"
+	"github.com/webx-top/db/internal/sqladapter/compat"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 // MapOptions represents options for the mapper.

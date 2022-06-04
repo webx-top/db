@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	db "github.com/upper/db/v4"
+	db "github.com/webx-top/db"
 )
 
 var (

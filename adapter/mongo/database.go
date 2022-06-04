@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	db "github.com/upper/db/v4"
+	db "github.com/webx-top/db"
 	mgo "gopkg.in/mgo.v2"
 )
 

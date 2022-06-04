@@ -22,9 +22,9 @@
 package cockroachdb
 
 import (
-	"github.com/upper/db/v4/internal/adapter"
-	"github.com/upper/db/v4/internal/cache"
-	"github.com/upper/db/v4/internal/sqladapter/exql"
+	"github.com/webx-top/db/internal/adapter"
+	"github.com/webx-top/db/internal/cache"
+	"github.com/webx-top/db/internal/sqladapter/exql"
 )
 
 const (
