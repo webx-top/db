@@ -19,15 +19,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Package db (or upper-db) provides a common interface to work with different
-// data sources using adapters that wrap mature database drivers.
+// Package db (or upper/db) provides an agnostic data access layer to work with
+// different databases.
 //
-// The main purpose of upper-db is to abstract common database operations and
-// encourage users perform advanced operations directly using the underlying
-// driver. upper-db supports the MySQL, PostgreSQL, SQLite and QL databases and
-// provides partial support (CRUD, no transactions) for MongoDB.
+// Install upper/db:
 //
-//  go get upper.io/db.v3
+//  go get github.com/upper/db
 //
 // Usage
 //
@@ -36,7 +33,7 @@
 //  import (
 //  	"log"
 //
-//  	"github.com/webx-top/db/postgresql" // Imports the postgresql adapter.
+//  	"github.com/upper/db/v4/adapter/postgresql" // Imports the postgresql adapter.
 //  )
 //
 //  var settings = postgresql.ConnectionURL{
@@ -71,7 +68,4 @@
 //  		log.Printf("%q (ID: %d)\n", book.Title, book.ID)
 //  	}
 //  }
-//
-// See more usage examples and documentation for users at
-// https://upper.io/db.v3.
 package db

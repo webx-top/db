@@ -6,7 +6,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/webx-top/db"
+	"github.com/webx-top/db/internal/adapter"
 	"github.com/webx-top/db/internal/cache"
 )
 
@@ -69,7 +69,7 @@ type Template struct {
 	ValueSeparator      string
 	WhereLayout         string
 
-	ComparisonOperator map[db.ComparisonOperator]string
+	ComparisonOperator map[adapter.ComparisonOperator]string
 
 	templateMutex sync.RWMutex
 	templateMap   map[string]*template.Template

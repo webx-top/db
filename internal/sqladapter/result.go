@@ -22,21 +22,21 @@
 package sqladapter
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 	"sync/atomic"
 
-	"github.com/webx-top/db"
-	"github.com/webx-top/db/internal/immutable"
+	db "github.com/upper/db/v4"
+	"github.com/upper/db/v4/internal/immutable"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
 type Result struct {
-	builder sqlbuilder.SQLBuilder
+	builder db.SQL
 
 	err atomic.Value
 
-	iter   sqlbuilder.Iterator
+	iter   db.Iterator
 	iterMu sync.Mutex
 
 	prev *Result
@@ -74,7 +74,7 @@ func filter(conds []interface{}) []interface{} {
 
 // NewResult creates and Results a new Result set on the given table, this set
 // is limited by the given exql.Where conditions.
-func NewResult(builder sqlbuilder.SQLBuilder, table string, conds []interface{}) *Result {
+func NewResult(builder db.SQL, table string, conds []interface{}) *Result {
 	r := &Result{
 		builder: builder,
 	}
@@ -85,11 +85,11 @@ func (r *Result) frame(fn func(*result) error) *Result {
 	return &Result{err: r.err, prev: r, fn: fn}
 }
 
-func (r *Result) SQLBuilder() sqlbuilder.SQLBuilder {
+func (r *Result) SQL() db.SQL {
 	if r.prev == nil {
 		return r.builder
 	}
-	return r.prev.SQLBuilder()
+	return r.prev.SQL()
 }
 
 func (r *Result) from(table string) *Result {
@@ -191,9 +191,9 @@ func (r *Result) Offset(n int) db.Result {
 	})
 }
 
-// Group is used to group Results that have the same value in the same column
+// GroupBy is used to group Results that have the same value in the same column
 // or columns.
-func (r *Result) Group(fields ...interface{}) db.Result {
+func (r *Result) GroupBy(fields ...interface{}) db.Result {
 	return r.frame(func(res *result) error {
 		res.groupBy = fields
 		return nil
@@ -244,11 +244,11 @@ func (r *Result) One(dst interface{}) error {
 	one := r.Limit(1).(*Result)
 	query, err := one.buildPaginator()
 	if err != nil {
-		one.setErr(err)
+		r.setErr(err)
 		return err
 	}
 	err = query.Iterator().One(dst)
-	one.setErr(err)
+	r.setErr(err)
 	return err
 }
 
@@ -270,8 +270,9 @@ func (r *Result) Next(dst interface{}) bool {
 		return true
 	}
 
-	if err := r.iter.Err(); err != db.ErrNoMoreRows {
+	if err := r.iter.Err(); !errors.Is(err, db.ErrNoMoreRows) {
 		r.setErr(err)
+		return false
 	}
 
 	return false
@@ -361,7 +362,7 @@ func (r *Result) Exists() (bool, error) {
 	}{}
 
 	if err := query.One(&value); err != nil {
-		if err == db.ErrNoMoreRows {
+		if errors.Is(err, db.ErrNoMoreRows) {
 			return false, nil
 		}
 		r.setErr(err)
@@ -387,7 +388,7 @@ func (r *Result) Count() (uint64, error) {
 		Count uint64 `db:"_t"`
 	}{}
 	if err := query.One(&counter); err != nil {
-		if err == db.ErrNoMoreRows {
+		if errors.Is(err, db.ErrNoMoreRows) {
 			return 0, nil
 		}
 		r.setErr(err)
@@ -397,7 +398,7 @@ func (r *Result) Count() (uint64, error) {
 	return counter.Count, nil
 }
 
-func (r *Result) buildPaginator() (sqlbuilder.Paginator, error) {
+func (r *Result) buildPaginator() (db.Paginator, error) {
 	if err := r.Err(); err != nil {
 		return nil, err
 	}
@@ -407,7 +408,7 @@ func (r *Result) buildPaginator() (sqlbuilder.Paginator, error) {
 		return nil, err
 	}
 
-	sel := r.SQLBuilder().Select(res.fields...).
+	sel := r.SQL().Select(res.fields...).
 		From(res.table).
 		ForceIndex(res.forceIndex).
 		Limit(res.limit).
@@ -418,10 +419,6 @@ func (r *Result) buildPaginator() (sqlbuilder.Paginator, error) {
 
 	for i := range res.conds {
 		sel = sel.And(filter(res.conds[i])...)
-	}
-
-	if res.onSelector != nil {
-		sel = res.onSelector(sel)
 	}
 
 	pag := sel.Paginate(res.pageSize).
@@ -439,7 +436,7 @@ func (r *Result) buildPaginator() (sqlbuilder.Paginator, error) {
 	return pag, nil
 }
 
-func (r *Result) buildDelete() (sqlbuilder.Deleter, error) {
+func (r *Result) buildDelete() (db.Deleter, error) {
 	if err := r.Err(); err != nil {
 		return nil, err
 	}
@@ -449,21 +446,17 @@ func (r *Result) buildDelete() (sqlbuilder.Deleter, error) {
 		return nil, err
 	}
 
-	del := r.SQLBuilder().DeleteFrom(res.table).
+	del := r.SQL().DeleteFrom(res.table).
 		Limit(res.limit)
 
 	for i := range res.conds {
 		del = del.And(filter(res.conds[i])...)
 	}
 
-	if res.onDeleter != nil {
-		del = res.onDeleter(del)
-	}
-
 	return del, nil
 }
 
-func (r *Result) buildUpdate(values interface{}) (sqlbuilder.Updater, error) {
+func (r *Result) buildUpdate(values interface{}) (db.Updater, error) {
 	if err := r.Err(); err != nil {
 		return nil, err
 	}
@@ -472,12 +465,8 @@ func (r *Result) buildUpdate(values interface{}) (sqlbuilder.Updater, error) {
 	if err != nil {
 		return nil, err
 	}
-	columns := make([]string, len(res.fields))
-	for index, column := range res.fields {
-		columns[index] = fmt.Sprint(column)
-	}
-	upd := r.SQLBuilder().Update(res.table).
-		Columns(columns...).
+
+	upd := r.SQL().Update(res.table).
 		Set(values).
 		Limit(res.limit)
 
@@ -485,14 +474,10 @@ func (r *Result) buildUpdate(values interface{}) (sqlbuilder.Updater, error) {
 		upd = upd.And(filter(res.conds[i])...)
 	}
 
-	if res.onUpdater != nil {
-		upd = res.onUpdater(upd)
-	}
-
 	return upd, nil
 }
 
-func (r *Result) buildCount() (sqlbuilder.Selector, error) {
+func (r *Result) buildCount() (db.Selector, error) {
 	if err := r.Err(); err != nil {
 		return nil, err
 	}
@@ -502,16 +487,12 @@ func (r *Result) buildCount() (sqlbuilder.Selector, error) {
 		return nil, err
 	}
 
-	sel := r.SQLBuilder().Select(db.Raw("count(1) AS _t")).
+	sel := r.SQL().Select(db.Raw("count(1) AS _t")).
 		From(res.table).
 		GroupBy(res.groupBy...)
 
 	for i := range res.conds {
 		sel = sel.And(filter(res.conds[i])...)
-	}
-
-	if res.onSelector != nil {
-		sel = res.onSelector(sel)
 	}
 
 	return sel, nil
@@ -541,57 +522,6 @@ func (r *Result) fastForward() (*result, error) {
 		return nil, err
 	}
 	return ff.(*result), nil
-}
-
-func (r *Result) Relation(name string, fn interface{}) db.Result {
-	switch fnn := fn.(type) {
-	case func(sqlbuilder.Selector) sqlbuilder.Selector:
-		return r.frame(func(res *result) error {
-			if res.relationMap == nil {
-				res.relationMap = map[string]sqlbuilder.BuilderChainFunc{}
-			}
-			res.relationMap[name] = fnn
-			return nil
-		})
-	case sqlbuilder.BuilderChainFunc:
-		return r.frame(func(res *result) error {
-			if res.relationMap == nil {
-				res.relationMap = map[string]sqlbuilder.BuilderChainFunc{}
-			}
-			res.relationMap[name] = fnn
-			return nil
-		})
-	default:
-		panic(fmt.Sprintf(`Unsupported type: %T`, fn))
-	}
-}
-
-func (r *Result) ForceIndex(index string) db.Result {
-	return r.frame(func(res *result) error {
-		res.forceIndex = index
-		return nil
-	})
-}
-
-func (r *Result) Callback(m interface{}) db.Result {
-	switch v := m.(type) {
-	case func(sqlbuilder.Selector) sqlbuilder.Selector:
-		return r.frame(func(res *result) error {
-			res.onSelector = v
-			return nil
-		})
-	case func(sqlbuilder.Updater) sqlbuilder.Updater:
-		return r.frame(func(res *result) error {
-			res.onUpdater = v
-			return nil
-		})
-	case func(sqlbuilder.Deleter) sqlbuilder.Deleter:
-		return r.frame(func(res *result) error {
-			res.onDeleter = v
-			return nil
-		})
-	}
-	return r
 }
 
 var _ = immutable.Immutable(&Result{})

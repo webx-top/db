@@ -8,7 +8,7 @@ import (
 
 var errUnknownTemplateType = errors.New("Unknown template type")
 
-// Statement represents different kinds of SQL statements.
+//  represents different kinds of SQL statements.
 type Statement struct {
 	Type
 	Table        Fragment
@@ -22,7 +22,6 @@ type Statement struct {
 	Joins        Fragment
 	Where        Fragment
 	Returning    Fragment
-	ForceIndex   Fragment //[SWH|+] force index
 
 	Limit
 	Offset
