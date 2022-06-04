@@ -6,8 +6,8 @@ import (
 	"sync"
 	"text/template"
 
-	db "upper.io/db.v3"
-	"upper.io/db.v3/internal/cache"
+	"github.com/upper/db/v4/internal/adapter"
+	"github.com/upper/db/v4/internal/cache"
 )
 
 // Type is the type of SQL query the statement represents.
@@ -69,7 +69,7 @@ type Template struct {
 	ValueSeparator      string
 	WhereLayout         string
 
-	ComparisonOperator map[db.ComparisonOperator]string
+	ComparisonOperator map[adapter.ComparisonOperator]string
 
 	templateMutex sync.RWMutex
 	templateMap   map[string]*template.Template
@@ -81,7 +81,7 @@ func (layout *Template) MustCompile(templateText string, data interface{}) strin
 	var b bytes.Buffer
 
 	v, ok := layout.getTemplate(templateText)
-	if !ok || true {
+	if !ok {
 		v = template.
 			Must(template.New("").
 				Funcs(map[string]interface{}{
