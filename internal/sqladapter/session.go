@@ -1010,6 +1010,8 @@ func ReplaceWithDollarSign(in string) string {
 }
 
 func copySettings(from Session, into Session) {
+	into.SetLogging(from.LoggingEnabled(), from.LoggingElapsedMs())
+	//into.SetLogger(from.Logger())
 	into.SetPreparedStatementCache(from.PreparedStatementCacheEnabled())
 	into.SetConnMaxLifetime(from.ConnMaxLifetime())
 	into.SetMaxIdleConns(from.MaxIdleConns())
