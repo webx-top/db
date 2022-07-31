@@ -593,7 +593,7 @@ func (a *{{.StructName}}) ListPageAs(recv interface{}, cond *db.Compounds, sorts
 	_, err := pagination.NewLister(a, recv, func(r db.Result) db.Result {
 		return r.OrderBy(sorts...)
 	}, cond.And()).Paging(a.Context())
-	return a.Objects(), err
+	return err
 }
 
 func (a *{{.StructName}}) BatchValidate(kvset map[string]interface{}) error {
