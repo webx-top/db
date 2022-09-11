@@ -317,11 +317,11 @@ func main() {
 	tplSchemaInit.Prefix = cfg.Prefix
 	tplSchemaInit.DBKey = cfg.DBKey
 	tplSchemaInit.PackageName = cfg.SchemaConfig.PackageName
-	dataContent := strings.Replace(fmt.Sprintf(`DBI.Fields.Register(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
+	dataContent := strings.Replace(fmt.Sprintf(`DBI.FieldsRegister(%#v)`+"\n", allFields), `map[string]map[string]factory.FieldInfo`, `map[string]map[string]*factory.FieldInfo`, -1)
 	dataContent = strings.Replace(dataContent, `map[string]factory.FieldInfo`, ``, -1)
 	dataContent = strings.Replace(dataContent, `:factory.FieldInfo`, `:`, -1)
-	dataContent += "\n\t" + fmt.Sprintf(`DBI.Columns=%#v`, columns) + "\n"
-	dataContent += "\n\tDBI.Models.Register(factory.ModelInstancers{"
+	dataContent += "\n\t" + fmt.Sprintf(`DBI.ColumnsRegister(%#v)`, columns) + "\n"
+	dataContent += "\n\tDBI.ModelsRegister(factory.ModelInstancers{"
 	var structNames []string
 	for structName := range modelInstancers {
 		structNames = append(structNames, structName)
