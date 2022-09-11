@@ -113,7 +113,7 @@ func NoPrefixTableName(v interface{}) string {
 func (d *DBI) OmitSelect(v interface{}, excludeColumns ...string) []interface{} {
 	noPrefixTableName := NoPrefixTableName(v)
 	columns := d.TableColumns(noPrefixTableName)
-	results := []interface{}{}
+	results := make([]interface{}, 0, len(columns)-len(excludeColumns))
 	for _, column := range columns {
 		if com.InSlice(column, excludeColumns) {
 			continue
@@ -126,7 +126,7 @@ func (d *DBI) OmitSelect(v interface{}, excludeColumns ...string) []interface{} 
 func (d *DBI) OmitColumns(v interface{}, excludeColumns ...string) []string {
 	noPrefixTableName := NoPrefixTableName(v)
 	columns := d.TableColumns(noPrefixTableName)
-	results := []string{}
+	results := make([]string, 0, len(columns)-len(excludeColumns))
 	for _, column := range columns {
 		if com.InSlice(column, excludeColumns) {
 			continue
