@@ -342,16 +342,16 @@ func getID(item interface{}) interface{} {
 		if !found {
 			for n := 0; n < t.NumField(); n++ {
 				field := t.Field(n)
-				if field.PkgPath != "" {
+				if len(field.PkgPath) > 0 {
 					continue // Private field
 				}
 
 				tag := field.Tag.Get("bson")
-				if tag == "" {
+				if len(tag) == 0 {
 					tag = field.Tag.Get("db")
 				}
 
-				if tag == "" {
+				if len(tag) == 0 {
 					continue
 				}
 
@@ -359,14 +359,14 @@ func getID(item interface{}) interface{} {
 
 				if parts[0] == "_id" {
 					fieldName = field.Name
-					idCacheMutex.RLock()
+					idCacheMutex.Lock()
 					idCache[t] = fieldName
-					idCacheMutex.RUnlock()
+					idCacheMutex.Unlock()
 					break
 				}
 			}
 		}
-		if fieldName != "" {
+		if len(fieldName) > 0 {
 			if bsonID, ok := v.FieldByName(fieldName).Interface().(primitive.ObjectID); ok {
 				if !bsonID.IsZero() {
 					return bsonID
