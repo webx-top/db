@@ -3,6 +3,8 @@ package factory
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/webx-top/com"
@@ -33,7 +35,7 @@ type Mapper interface {
 
 func NewCodec(data Mapper, keystyle ...string) *Codec {
 	c := &Codec{
-		data: data,
+		Mapper: data,
 	}
 	if len(keystyle) > 0 {
 		c.keystyle = keystyle[0]
@@ -42,14 +44,40 @@ func NewCodec(data Mapper, keystyle ...string) *Codec {
 }
 
 type Codec struct {
-	data     Mapper
+	Mapper
 	columns  []string // SnakeCase
 	fields   []string // PascalCase
 	keystyle string
 }
 
 func (c *Codec) SetModel(data Mapper) {
-	c.data = data
+	c.Mapper = data
+}
+
+func CreateNewInstance(instance interface{}) interface{} {
+	t := reflect.Indirect(reflect.ValueOf(instance)).Type()
+	if t.Kind() != reflect.Struct {
+		panic(fmt.Sprintf(`unsupported instance type: %T`, instance))
+	}
+	return reflect.New(t).Interface()
+}
+
+func (c *Codec) Clone(data ...Mapper) *Codec {
+	copied := &Codec{
+		Mapper:   c.Mapper,
+		columns:  make([]string, len(c.columns)),
+		fields:   make([]string, len(c.fields)),
+		keystyle: c.keystyle,
+	}
+	copy(copied.columns, c.columns)
+	copy(copied.fields, c.fields)
+	if len(data) > 0 {
+		copied.Mapper = data[0]
+	}
+	// else if c.Mapper != nil {
+	// 	copied.Mapper = CreateNewInstance(c.Mapper).(Mapper)
+	// }
+	return copied
 }
 
 func (c *Codec) SetColumns(columns ...string) {
@@ -97,17 +125,17 @@ func (c Codec) MakeMap() map[string]interface{} {
 	switch c.keystyle {
 	case KeystyleCamelCase:
 		m = map[string]interface{}{}
-		am := c.data.AsMap(c.Fields()...)
+		am := c.AsMap(c.Fields()...)
 		for k, v := range am {
 			k = com.LowerCaseFirst(k)
 			m[k] = v
 		}
 	case KeystylePascalCase:
-		m = c.data.AsMap(c.Fields()...)
+		m = c.AsMap(c.Fields()...)
 	case KeystyleSnakeCase:
 		fallthrough
 	default:
-		m = c.data.AsRow(c.columns...)
+		m = c.AsRow(c.columns...)
 	}
 	return m
 }
@@ -117,14 +145,14 @@ func (c Codec) Import(m map[string]interface{}) {
 	case KeystyleCamelCase:
 		for k, v := range m {
 			k = com.PascalCase(k)
-			c.data.Set(k, v)
+			c.Set(k, v)
 		}
 	case KeystylePascalCase:
-		c.data.Set(m)
+		c.Set(m)
 	case KeystyleSnakeCase:
 		fallthrough
 	default:
-		c.data.FromRow(m)
+		c.FromRow(m)
 	}
 }
 

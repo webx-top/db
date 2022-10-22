@@ -13,7 +13,6 @@ type Base struct {
 	connID   int
 	context  echo.Context
 	eventOff bool
-	*Codec
 }
 
 type ModelBaseSetter interface {
