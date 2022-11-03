@@ -31,6 +31,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.19.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.7.0
 	github.com/webx-top/captcha v0.0.1 // indirect
 	github.com/webx-top/com v0.5.0

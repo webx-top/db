@@ -253,7 +253,7 @@ func (d *database) Name() string {
 }
 
 func (d *database) PrimaryKeys(tableName string) ([]string, error) {
-	h := cache.String(tableName)
+	h := cache.NewHashable(hashTypePrimaryKeys, tableName)
 	cachedPK, ok := d.cachedPKs.ReadRaw(h)
 	if ok {
 		return cachedPK.([]string), nil
@@ -400,7 +400,7 @@ func (d *database) Collection(name string) db.Collection {
 	d.cacheMu.Lock()
 	defer d.cacheMu.Unlock()
 
-	h := cache.String(name)
+	h := cache.NewHashable(hashTypeCollection, name)
 
 	ccol, ok := d.cachedCollections.ReadRaw(h)
 	if ok {
