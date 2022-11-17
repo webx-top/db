@@ -4,19 +4,42 @@ import (
 	"context"
 	"testing"
 
-	"test/settings"
+	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/db/_tools/test/dbschema"
+	"github.com/webx-top/db/_tools/test/settings"
 
+	"github.com/admpub/log"
 	"github.com/admpub/null"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/defaults"
 	"github.com/webx-top/echo/testing/test"
 )
 
 var (
 	id   = 1
 	cond = db.Cond{`id`: id}
+	c    db.Database
 )
+
+func TestMain(m *testing.M) {
+	defer log.Close()
+	c = settings.Connect()
+	m.Run()
+	c.Close()
+}
+
+/*
+func TestOneMap(t *testing.T) {
+	recv := map[string]*null.String{}
+	err := factory.NewParam().SetCollection(`nging_vhost`).SetRecv(&recv).SetArgs(cond).One()
+	if err != nil {
+		panic(err)
+	}
+	com.Dump(recv)
+}
+*/
 
 func verifyResult(t *testing.T, result string) null.StringMap {
 	recv := null.StringMap{}
@@ -30,7 +53,6 @@ func verifyResult(t *testing.T, result string) null.StringMap {
 }
 
 func TestTransaction(t *testing.T) {
-	c := settings.Connect()
 	//reset
 	_, err := factory.NewParam().SQLBuilder().Update(`nging_vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
 	if err != nil {
@@ -47,7 +69,7 @@ func TestTransaction(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = trans.Rollback()
+	err = param.Rollback(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -66,12 +88,9 @@ func TestTransaction(t *testing.T) {
 		panic(err)
 	}
 	verifyResult(t, `N`)
-
-	_ = c
 }
 
 func TestTransaction2(t *testing.T) {
-	c := settings.Connect()
 	//reset
 	_, err := factory.NewParam().SQLBuilder().Update(`nging_vhost`).Set(echo.H{`disabled`: `N`}).Where(cond).Exec()
 	if err != nil {
@@ -88,7 +107,7 @@ func TestTransaction2(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	err = tx.Rollback()
+	err = p.Rollback(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -113,5 +132,20 @@ func TestTransaction2(t *testing.T) {
 		panic(err)
 	}
 	test.Eq(t, int64(0), n)
-	_ = c
+}
+
+// TestContext 测试用ctx初始化后再开启事物也能生效
+func TestContext(t *testing.T) {
+	ctx := defaults.NewMockContext()
+	ctx.SetTransaction(echo.NewTransaction(factory.NewParam()))
+	m := dbschema.NewNgingVhost(ctx)
+	err := m.UpdateField(nil, `disabled`, `Y`, `id`, 1)
+	assert.NoError(t, err)
+	verifyResult(t, `Y`)
+
+	ctx.Begin()
+	err = m.UpdateField(nil, `disabled`, `N`, `id`, 1)
+	assert.NoError(t, err)
+	ctx.Rollback()
+	verifyResult(t, `Y`)
 }

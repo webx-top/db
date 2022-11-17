@@ -110,11 +110,11 @@ type {{.StructName}} struct {
 
 // - base function
 
-func (a *{{.StructName}}) Trans() *factory.Transaction {
+func (a *{{.StructName}}) Trans() factory.Transactioner {
 	return a.base.Trans()
 }
 
-func (a *{{.StructName}}) Use(trans *factory.Transaction) factory.Model {
+func (a *{{.StructName}}) Use(trans factory.Transactioner) factory.Model {
 	a.base.Use(trans)
 	return a
 }
@@ -141,6 +141,10 @@ func (a *{{.StructName}}) Context() echo.Context {
 func (a *{{.StructName}}) SetConnID(connID int) factory.Model {
 	a.base.SetConnID(connID)
 	return a
+}
+
+func (a *{{.StructName}}) ConnID() int {
+	return a.base.ConnID()
 }
 
 func (a *{{.StructName}}) SetNamer(namer func (factory.Model) string) factory.Model {
@@ -214,7 +218,7 @@ func (a *{{.StructName}}) Name_() string {
 
 func (a *{{.StructName}}) CPAFrom(source factory.Model) factory.Model {
 	a.SetContext(source.Context())
-	a.Use(source.Trans())
+	a.SetConnID(source.ConnID())
 	a.SetNamer(source.Namer())
 	return a
 }
