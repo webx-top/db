@@ -144,8 +144,14 @@ func TestContext(t *testing.T) {
 	verifyResult(t, `Y`)
 
 	ctx.Begin()
-	err = m.UpdateField(nil, `disabled`, `N`, `id`, 1)
+	err = m.UpdateField(nil, `disabled`, `N`, `id`, 1) // 事物操作
 	assert.NoError(t, err)
 	ctx.Rollback()
-	verifyResult(t, `Y`)
+	verifyResult(t, `Y`) // 非事物操作
+
+	ctx.Begin()
+	err = m.UpdateField(nil, `disabled`, `N`, `id`, 1) // 事物操作
+	assert.NoError(t, err)
+	ctx.Commit()
+	verifyResult(t, `N`) // 非事物操作
 }
