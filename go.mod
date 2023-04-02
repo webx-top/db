@@ -37,7 +37,7 @@ require (
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.8.2
 	github.com/webx-top/captcha v0.1.0 // indirect
-	github.com/webx-top/com v0.9.1
+	github.com/webx-top/com v0.9.2
 	github.com/webx-top/echo v2.33.3+incompatible
 	github.com/webx-top/pagination v0.2.1
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 // indirect
