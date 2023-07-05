@@ -168,11 +168,15 @@ func (a *{{.StructName}}) Param(mw func(db.Result) db.Result, args ...interface{
 	return a.base.Param().SetMiddleware(mw).SetArgs(args...)
 }
 
-// - current function
-
 func (a *{{.StructName}}) New(structName string, connID ...int) factory.Model {
 	return a.base.New(structName, connID...)
 }
+
+func (a *{{.StructName}}) Base_() factory.Baser {
+	return a.base
+}
+
+// - current function
 
 func (a *{{.StructName}}) Objects() []*{{.StructName}} {
 	if a.objects == nil {
