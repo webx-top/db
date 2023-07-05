@@ -173,7 +173,7 @@ func (a *OfficialFilmType) New(structName string, connID ...int) factory.Model {
 }
 
 func (a *OfficialFilmType) Base_() factory.Baser {
-	return a.base
+	return &a.base
 }
 
 // - current function

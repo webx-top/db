@@ -173,7 +173,7 @@ func (a *{{.StructName}}) New(structName string, connID ...int) factory.Model {
 }
 
 func (a *{{.StructName}}) Base_() factory.Baser {
-	return a.base
+	return &a.base
 }
 
 // - current function

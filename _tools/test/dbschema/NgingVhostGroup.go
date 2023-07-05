@@ -174,7 +174,7 @@ func (a *NgingVhostGroup) New(structName string, connID ...int) factory.Model {
 }
 
 func (a *NgingVhostGroup) Base_() factory.Baser {
-	return a.base
+	return &a.base
 }
 
 // - current function
