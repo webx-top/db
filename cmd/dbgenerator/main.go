@@ -99,7 +99,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{base:*((&factory.Base{}).SetConnID(connID))} },"` + com.AddSlashes(structComment, '"') + `")`
+		modelInstancers[structName] = `factory.NewMI("` + tableName + `",func(connID int) factory.Model { return &` + structName + `{base:*factory.NewBase(connID)} },"` + com.AddSlashes(structComment, '"') + `")`
 		var typeFields []string
 		if idf, ok := hashids[tableName]; ok {
 			typeFields = append(typeFields, idf)

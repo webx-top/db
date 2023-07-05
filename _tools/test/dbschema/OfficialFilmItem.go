@@ -155,9 +155,9 @@ type OfficialFilmItem struct {
 	Completed          string  `db:"completed" bson:"completed" comment:"是否(Y/N)已完结" json:"completed" xml:"completed"`
 	LatestEpisode      uint    `db:"latest_episode" bson:"latest_episode" comment:"连续剧的最新一集" json:"latest_episode" xml:"latest_episode"`
 	Playable           string  `db:"playable" bson:"playable" comment:"是否(Y/N)可播放" json:"playable" xml:"playable"`
-	Price              float64 `db:"price" bson:"price" comment:"每集价格" json:"price" xml:"price"`
-	Eticket            uint    `db:"eticket" bson:"eticket" comment:"每集观影券" json:"eticket" xml:"eticket"`
-	WithEticketPrice   float64 `db:"with_eticket_price" bson:"with_eticket_price" comment:"带观影券时的每集价格" json:"with_eticket_price" xml:"with_eticket_price"`
+	Price              float64 `db:"price" bson:"price" comment:"价格" json:"price" xml:"price"`
+	Eticket            uint    `db:"eticket" bson:"eticket" comment:"观影券" json:"eticket" xml:"eticket"`
+	WithEticketPrice   float64 `db:"with_eticket_price" bson:"with_eticket_price" comment:"带观影券时的价格" json:"with_eticket_price" xml:"with_eticket_price"`
 	Trys               uint    `db:"trys" bson:"trys" comment:"每集试看(秒,0代表不限制)" json:"trys" xml:"trys"`
 	FreeLevel          uint    `db:"free_level" bson:"free_level" comment:"免费观看最低等级" json:"free_level" xml:"free_level"`
 	FirstLetter        string  `db:"first_letter" bson:"first_letter" comment:"首字母" json:"first_letter" xml:"first_letter"`
@@ -645,6 +645,12 @@ func (a *OfficialFilmItem) UpdateField(mw func(db.Result) db.Result, field strin
 	}, args...)
 }
 
+func (a *OfficialFilmItem) UpdatexField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (affected int64, err error) {
+	return a.UpdatexFields(mw, map[string]interface{}{
+		field: value,
+	}, args...)
+}
+
 func (a *OfficialFilmItem) UpdateFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (err error) {
 
 	if val, ok := kvset["owner_type"]; ok && val != nil {
@@ -718,6 +724,82 @@ func (a *OfficialFilmItem) UpdateFields(mw func(db.Result) db.Result, kvset map[
 		return
 	}
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
+}
+
+func (a *OfficialFilmItem) UpdatexFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (affected int64, err error) {
+
+	if val, ok := kvset["owner_type"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["owner_type"] = "customer"
+		}
+	}
+	if val, ok := kvset["contype"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["contype"] = "markdown"
+		}
+	}
+	if val, ok := kvset["disabled"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["disabled"] = "N"
+		}
+	}
+	if val, ok := kvset["close_comment"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["close_comment"] = "N"
+		}
+	}
+	if val, ok := kvset["comment_auto_display"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["comment_auto_display"] = "N"
+		}
+	}
+	if val, ok := kvset["is_preview"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["is_preview"] = "N"
+		}
+	}
+	if val, ok := kvset["is_mutiple"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["is_mutiple"] = "N"
+		}
+	}
+	if val, ok := kvset["completed"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["completed"] = "Y"
+		}
+	}
+	if val, ok := kvset["playable"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["playable"] = "N"
+		}
+	}
+	if val, ok := kvset["recommend"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["recommend"] = "N"
+		}
+	}
+	if val, ok := kvset["licensed"]; ok && val != nil {
+		if v, ok := val.(string); ok && len(v) == 0 {
+			kvset["licensed"] = "N"
+		}
+	}
+	if !a.base.Eventable() {
+		return a.Param(mw, args...).SetSend(kvset).Updatex()
+	}
+	m := *a
+	m.FromRow(kvset)
+	var editColumns []string
+	for column := range kvset {
+		editColumns = append(editColumns, column)
+	}
+	if err = DBI.FireUpdate("updating", &m, editColumns, mw, args...); err != nil {
+		return
+	}
+	if affected, err = a.Param(mw, args...).SetSend(kvset).Updatex(); err != nil {
+		return
+	}
+	err = DBI.FireUpdate("updated", &m, editColumns, mw, args...)
+	return
 }
 
 func (a *OfficialFilmItem) UpdateValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) (err error) {

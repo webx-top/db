@@ -6,6 +6,10 @@ import (
 	"github.com/webx-top/echo/param"
 )
 
+func NewBase(connID int) *Base {
+	return &Base{connID: connID}
+}
+
 var _ Baser = &Base{}
 
 type Base struct {
