@@ -17,12 +17,12 @@ var (
 )
 
 func FindInSet(key string, value string, useFulltextIndex ...bool) db.Compound {
-	key = strings.Replace(key, "`", "``", -1)
 	if len(useFulltextIndex) > 0 && useFulltextIndex[0] {
 		v := CleanFulltextOperator(value)
 		v = strings.ReplaceAll(v, `,`, ``)
-		return db.Raw("MATCH(`" + key + "`) AGAINST ('\"" + v + ",\" \"," + v + ",\" \"," + v + "\"' IN BOOLEAN MODE)")
+		return match(`"`+v+`," ",`+v+`," ",`+v+`"`, true, key)
 	}
+	key = strings.Replace(key, "`", "``", -1)
 	return db.Raw("FIND_IN_SET(?,`"+key+"`)", value)
 }
 
