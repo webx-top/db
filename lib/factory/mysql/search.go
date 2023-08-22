@@ -9,28 +9,12 @@ import (
 )
 
 var (
-	searchMultiKwRule        = regexp.MustCompile(`[\s]+`)                        //多个关键词
-	splitMultiIDRule         = regexp.MustCompile(`[^\d-]+`)                      //多个Id
-	searchCompareRule        = regexp.MustCompile(`^[><!][=]?[\d]+(?:\.[\d]+)?$`) //多个Id
-	searchIDRule             = regexp.MustCompile(`^[\s\d-,]+$`)                  //多个Id
-	searchParagraphRule      = regexp.MustCompile(`"[^"]+"`)                      //段落
-	fulltextOperatorReplacer = strings.NewReplacer(
-		`'`, ``,
-		`+`, ``,
-		`-`, ``,
-		`*`, ``,
-		`"`, ``,
-		`\`, ``,
-	)
+	searchMultiKwRule   = regexp.MustCompile(`[\s]+`)                        //多个关键词
+	splitMultiIDRule    = regexp.MustCompile(`[^\d-]+`)                      //多个Id
+	searchCompareRule   = regexp.MustCompile(`^[><!][=]?[\d]+(?:\.[\d]+)?$`) //多个Id
+	searchIDRule        = regexp.MustCompile(`^[\s\d-,]+$`)                  //多个Id
+	searchParagraphRule = regexp.MustCompile(`"[^"]+"`)                      //段落
 )
-
-func CleanFulltextOperator(v string) string {
-	if com.StrIsAlphaNumeric(v) {
-		return v
-	}
-
-	return fulltextOperatorReplacer.Replace(v)
-}
 
 func FindInSet(key string, value string, useFulltextIndex ...bool) db.Compound {
 	key = strings.Replace(key, "`", "``", -1)
@@ -40,24 +24,6 @@ func FindInSet(key string, value string, useFulltextIndex ...bool) db.Compound {
 		return db.Raw("MATCH(`" + key + "`) AGAINST ('\"" + v + ",\" \"," + v + ",\" \"," + v + "\"' IN BOOLEAN MODE)")
 	}
 	return db.Raw("FIND_IN_SET(?,`"+key+"`)", value)
-}
-
-func Match(value string, keys ...string) db.Compound {
-	for idx, key := range keys {
-		key = strings.ReplaceAll(key, "`", "``")
-		keys[idx] = "`" + key + "`"
-	}
-	v := CleanFulltextOperator(value)
-	return db.Raw("MATCH(" + strings.Join(keys, ",") + ") AGAINST ('" + v + "')")
-}
-
-func MatchAll(value string, keys ...string) db.Compound {
-	for idx, key := range keys {
-		key = strings.ReplaceAll(key, "`", "``")
-		keys[idx] = "`" + key + "`"
-	}
-	v := CleanFulltextOperator(value)
-	return db.Raw("MATCH(" + strings.Join(keys, ",") + ") AGAINST ('+" + v + "')")
 }
 
 func CompareField(idField string, keywords string) db.Compound {
@@ -108,91 +74,6 @@ func MatchAnyField(field string, keywords string, idFields ...string) *db.Compou
 	field = strings.Trim(field, `,`)
 	fields := strings.Split(field, `,`)
 	return SearchFields(fields, keywords, idFields...)
-}
-
-type Operator string
-
-const (
-	OperatorEQ           = `eq`
-	OperatorMatch        = `match`
-	OperatorSearchSuffix = `seachSuffix`
-	OperatorSearchPrefix = `searchPrefix`
-	OperatorSearchMiddle = `searchMiddle`
-)
-
-type fieldOp struct {
-	field    string
-	operator Operator
-}
-
-func (f fieldOp) isLikeQuery() bool {
-	return f.operator == OperatorSearchMiddle || f.operator == OperatorSearchPrefix || f.operator == OperatorSearchSuffix
-}
-
-func (f fieldOp) buildCondMatch(originalValues []string, matchValues *map[string][]string) bool {
-	if f.operator == OperatorMatch {
-		if _, ok := (*matchValues)[f.field]; !ok {
-			(*matchValues)[f.field] = originalValues
-		} else {
-			(*matchValues)[f.field] = append((*matchValues)[f.field], originalValues...)
-		}
-		return true
-	}
-	return false
-}
-
-func (f fieldOp) buildCondOther(values []string, cond ...*db.Compounds) *db.Compounds {
-	var c *db.Compounds
-	if len(cond) > 0 && cond[0] != nil {
-		c = cond[0]
-	} else {
-		c = db.NewCompounds()
-	}
-	switch f.operator {
-	case OperatorEQ:
-		for _, val := range values {
-			c.AddKV(f, val)
-		}
-	case OperatorSearchPrefix:
-		for _, val := range values {
-			c.AddKV(f, db.Like(val+`%`))
-		}
-	case OperatorSearchSuffix:
-		for _, val := range values {
-			c.AddKV(f, db.Like(`%`+val))
-		}
-	default:
-		for _, val := range values {
-			c.AddKV(f, db.Like(`%`+val+`%`))
-		}
-	}
-	return c
-}
-
-func parseFieldOp(fields []string) []fieldOp {
-	fieldConds := make([]fieldOp, len(fields))
-	for i, f := range fields {
-		if len(f) <= 1 {
-			fieldConds[i] = fieldOp{field: f, operator: OperatorSearchMiddle}
-			continue
-		}
-		switch f[0] {
-		case '=':
-			fieldConds[i] = fieldOp{field: f[1:], operator: OperatorEQ}
-		case '~':
-			fieldConds[i] = fieldOp{field: f[1:], operator: OperatorMatch}
-		case '%':
-			fieldConds[i] = fieldOp{field: f[1:], operator: OperatorSearchSuffix}
-		default:
-			if strings.HasSuffix(f, `%`) {
-				f = f[0 : len(f)-1]
-				fieldConds[i] = fieldOp{field: f, operator: OperatorSearchPrefix}
-			} else {
-				fieldConds[i] = fieldOp{field: f, operator: OperatorSearchMiddle}
-			}
-		}
-	}
-	return fieldConds
 }
 
 // SearchFields 搜索某个字段(多个字段任一匹配)
@@ -256,7 +137,7 @@ func searchAllField(field string, keywords string, idFields ...string) *db.Compo
 	kws := searchMultiKwRule.Split(keywords, -1)
 	kws = append(kws, paragraphs...)
 	fieldMode := parseFieldOp([]string{field})[0]
-	var matchValues []string
+	var safelyMatchValues []string
 	for _, v := range kws {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
@@ -265,7 +146,9 @@ func searchAllField(field string, keywords string, idFields ...string) *db.Compo
 		if strings.Contains(v, "||") {
 			vals := strings.Split(v, "||")
 			if fieldMode.operator == OperatorMatch {
-				matchValues = append(matchValues, vals...)
+				for _, val := range vals {
+					safelyMatchValues = append(safelyMatchValues, buildSafelyMatchValues(val, false)...)
+				}
 				continue
 			}
 			if fieldMode.isLikeQuery() {
@@ -274,21 +157,22 @@ func searchAllField(field string, keywords string, idFields ...string) *db.Compo
 					vals[key] = val
 				}
 			}
-			cond := fieldMode.buildCondOther(vals)
+			cond := fieldMode.buildCondOther(vals, vals)
 			cd.Add(cond.Or())
 			continue
 		}
 		if fieldMode.operator == OperatorMatch {
-			matchValues = append(matchValues, v)
+			safelyMatchValues = append(safelyMatchValues, buildSafelyMatchValues(v, true)...)
 			continue
 		}
 		if fieldMode.isLikeQuery() {
 			v = com.AddSlashes(v, '_', '%')
 		}
-		fieldMode.buildCondOther([]string{v}, cd)
+		vals := []string{v}
+		fieldMode.buildCondOther(vals, vals, cd)
 	}
-	if len(matchValues) > 0 {
-		cd.Add(Match(strings.Join(matchValues, ` `), fieldMode.field))
+	if len(safelyMatchValues) > 0 {
+		cd.Add(match(strings.Join(safelyMatchValues, ` `), fieldMode.field))
 	}
 	return cd
 }
@@ -320,40 +204,72 @@ func searchAllFields(fields []string, keywords string, idFields ...string) *db.C
 	kws := searchMultiKwRule.Split(keywords, -1)
 	kws = append(kws, paragraphs...)
 	fieldModes := parseFieldOp(fields)
-	matchValues := map[string][]string{}
+	var hasLike, hasMatch bool
+	for _, fieldMode := range fieldModes {
+		if hasLike && hasMatch {
+			break
+		}
+		if fieldMode.isMatchQuery() {
+			hasMatch = true
+			continue
+		}
+		if fieldMode.isLikeQuery() {
+			hasLike = true
+			continue
+		}
+	}
+	safelyMatchValues := map[string][]string{}
 	for _, v := range kws {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
 			continue
 		}
 		var originalValues []string
-		var values []string
-		if strings.Contains(v, "||") {
+		var likeValues []string
+		var matchValues []string
+		orQuery := strings.Contains(v, "||")
+		if orQuery {
 			originalValues = strings.Split(v, "||")
-			for _, val := range originalValues {
-				val = com.AddSlashes(val, '_', '%')
-				values = append(values, val)
+			if hasLike {
+				for _, val := range originalValues {
+					val = com.AddSlashes(val, '_', '%')
+					likeValues = append(likeValues, val)
+				}
+			}
+			if hasMatch {
+				for _, val := range originalValues {
+					matchValues = append(matchValues, buildSafelyMatchValues(val, false)...)
+				}
 			}
 		} else {
 			originalValues = append(originalValues, v)
-			v = com.AddSlashes(v, '_', '%')
-			values = append(values, v)
+			if hasLike {
+				v = com.AddSlashes(v, '_', '%')
+				likeValues = append(likeValues, v)
+			}
+			if hasMatch {
+				matchValues = append(matchValues, buildSafelyMatchValues(v, true)...)
+			}
 		}
 		_cond := db.NewCompounds()
 		for _, f := range fieldModes {
-			if f.buildCondMatch(originalValues, &matchValues) {
+			if f.buildCondMatch(matchValues, &safelyMatchValues) {
 				continue
 			}
-			c := f.buildCondOther(values)
-			_cond.Add(c.Or())
+			c := f.buildCondOther(likeValues, originalValues)
+			if orQuery {
+				_cond.Add(c.Or())
+			} else {
+				_cond.Add(c.And())
+			}
 		}
 		cd.From(_cond)
 	}
-	if len(matchValues) > 0 {
+	if len(safelyMatchValues) > 0 {
 		for _, f := range fieldModes {
-			values, ok := matchValues[f.field]
+			values, ok := safelyMatchValues[f.field]
 			if ok {
-				cd.Add(Match(strings.Join(values, ` `), f.field))
+				cd.Add(match(strings.Join(values, ` `), f.field))
 			}
 		}
 	}
