@@ -24,6 +24,11 @@ func TestObjectsSize(t *testing.T) {
 	size := pagination.ObjectsSize(m)
 	assert.Equal(t, 3, len(m.Objects()))
 	assert.Equal(t, 3, size)
+	size = pagination.ObjectsSize(&[]*dbschema.NgingVhost{
+		{},
+		{},
+	})
+	assert.Equal(t, 2, size)
 }
 
 func TestTransaction(t *testing.T) {
