@@ -29,11 +29,12 @@ var (
 	_                  = gob.Register
 )
 
-func NewJoin(joinType string, collection string, alias string, condition string) *Join {
+func NewJoin(joinType string, collection string, alias string, condition string, args ...interface{}) *Join {
 	return &Join{
 		Collection: collection,
 		Alias:      alias,
 		Condition:  condition,
+		Args:       args,
 		Type:       joinType,
 	}
 }
@@ -59,11 +60,12 @@ type Join struct {
 	Collection string
 	Alias      string
 	Condition  string
+	Args       []interface{}
 	Type       string
 }
 
 func (j *Join) String() string {
-	return fmt.Sprintf(`{Collection:%q,Alias:%q,Condition:%q,Type:%q}`, j.Collection, j.Alias, j.Condition, j.Type)
+	return fmt.Sprintf(`{Collection:%q,Alias:%q,Condition:%q,Args:%+v,Type:%q}`, j.Collection, j.Alias, j.Condition, j.Args, j.Type)
 }
 
 type Param struct {
@@ -257,18 +259,19 @@ func (p *Param) SetWrite() *Param {
 	return p
 }
 
-func (p *Param) AddJoin(joinType string, collection string, alias string, condition string) *Param {
+func (p *Param) AddJoin(joinType string, collection string, alias string, condition string, args ...interface{}) *Param {
 	for i, v := range p.joins {
 		if v.Type == joinType && v.Collection == collection {
 			if len(v.Condition) > 0 {
 				v.Condition += ` AND `
 			}
 			v.Condition += condition
+			v.Args = append(v.Args, args...)
 			p.joins[i] = v
 			return p
 		}
 	}
-	p.joins = append(p.joins, NewJoin(joinType, collection, alias, condition))
+	p.joins = append(p.joins, NewJoin(joinType, collection, alias, condition, args...))
 	return p
 }
 

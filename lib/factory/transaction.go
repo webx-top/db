@@ -72,7 +72,7 @@ func (t *Transaction) Result(param *Param) db.Result {
 		res = param.middleware(res)
 	}
 	if param.middlewareSelector != nil || len(param.joins) > 0 {
-		res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector {
+		res = res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector {
 			if param.middlewareSelector != nil {
 				s = param.middlewareSelector(s)
 			}
@@ -201,7 +201,14 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 			selector = selector.FullJoin(coll)
 		}
 		if len(join.Condition) > 0 {
-			selector = selector.On(join.Condition)
+			if len(join.Args) > 0 {
+				terms := make([]interface{}, 0, len(join.Args)+1)
+				terms = append(terms, join.Condition)
+				terms = append(terms, join.Args...)
+				selector = selector.On(terms...)
+			} else {
+				selector = selector.On(join.Condition)
+			}
 		}
 	}
 	return selector
