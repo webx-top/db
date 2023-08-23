@@ -19,6 +19,8 @@
 package pagination
 
 import (
+	"strconv"
+
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	clientPagination "github.com/webx-top/db/lib/factory/pagination/client"
@@ -56,6 +58,22 @@ func Paging(ctx echo.Context) (page int, size int) {
 	return
 }
 
+// PagingPosition 获取偏移值
+func PagingPosition(ctx echo.Context) (offset int, size int) {
+	offset = ctx.Formx(`offset`).Int()
+	if offset < 0 {
+		offset = 0
+	}
+	size = ctx.Formx(`size`, ctx.Form(`pageSize`)).Int()
+	if size < 1 || size > PageMaxSize {
+		size = ctx.Internal().Int(`paging.pageDefaultSize`)
+		if size < 1 {
+			size = PageDefaultSize
+		}
+	}
+	return
+}
+
 // PagingWithPagination 获取分页信息
 func PagingWithPagination(ctx echo.Context, delKeys ...string) (page int, size int, totalRows int, p *pagination.Pagination) {
 	page, size = Paging(ctx)
@@ -72,6 +90,29 @@ func PagingWithPagination(ctx echo.Context, delKeys ...string) (page int, size i
 	return
 }
 
+// PagingWithPosition 获取分页信息
+func PagingWithPosition(ctx echo.Context, delKeys ...string) (offset int, size int, p *pagination.Pagination) {
+	offset, size = PagingPosition(ctx)
+	pjax := ctx.PjaxContainer()
+	if len(pjax) > 0 {
+		delKeys = append(delKeys, `_pjax`)
+	}
+	next := strconv.FormatInt(int64(offset+size), 10)
+	curr := strconv.FormatInt(int64(offset), 10)
+	var prev string
+	prevN := offset - size
+	if prevN > 0 {
+		prev = strconv.FormatInt(int64(prevN), 10)
+	}
+	p = pagination.New(ctx).SetPosition(prev, next, curr).SetURL(map[string]string{
+		//`prev`: `prev`,
+		//`curr`: `curr`,
+		`next`: `offset`,
+		`size`: `size`,
+	}, delKeys...)
+	return
+}
+
 // PagingWithLister 通过分页查询接口获取分页信息
 func PagingWithLister(ctx echo.Context, m Lister, varSuffix ...string) (*pagination.Pagination, error) {
 	page, size, totalRows, p := PagingWithPagination(ctx)
@@ -80,6 +121,18 @@ func PagingWithLister(ctx echo.Context, m Lister, varSuffix ...string) (*paginat
 		totalRows = int(cnt())
 		p.SetRows(totalRows)
 	}
+	if len(varSuffix) > 0 {
+		ctx.Set(`pagination`+varSuffix[0], p)
+	} else {
+		ctx.Set(`pagination`, p)
+	}
+	return p, err
+}
+
+// PagingWithOffsetLister 通过分页查询接口获取分页信息
+func PagingWithOffsetLister(ctx echo.Context, m OffsetLister, varSuffix ...string) (*pagination.Pagination, error) {
+	offset, size, p := PagingWithPosition(ctx)
+	_, err := m.ListByOffset(nil, nil, offset, size)
 	if len(varSuffix) > 0 {
 		ctx.Set(`pagination`+varSuffix[0], p)
 	} else {
