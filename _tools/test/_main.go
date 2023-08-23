@@ -7,7 +7,7 @@ import (
 
 	"database/sql"
 
-	"./dbschema"
+	"github.com/webx-top/db/_tools/test/dbschema"
 
 	"github.com/webx-top/cache/ttlmap"
 	"github.com/webx-top/db"

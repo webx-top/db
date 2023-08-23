@@ -1,4 +1,4 @@
-package factory_test
+package main_test
 
 import (
 	"bytes"
@@ -7,11 +7,24 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"./dbschema"
+	"github.com/webx-top/db/_tools/test/dbschema"
 
 	"github.com/webx-top/db/lib/factory"
+	"github.com/webx-top/db/lib/factory/pagination"
 	"github.com/webx-top/echo"
 )
+
+func TestObjectsSize(t *testing.T) {
+	m := dbschema.NewNgingVhost(nil)
+	m.SetObjects([]*dbschema.NgingVhost{
+		{},
+		{},
+		{},
+	})
+	size := pagination.ObjectsSize(m)
+	assert.Equal(t, 3, len(m.Objects()))
+	assert.Equal(t, 3, size)
+}
 
 func TestTransaction(t *testing.T) {
 	var tr echo.Transaction = echo.NewTransaction(factory.NewParam())

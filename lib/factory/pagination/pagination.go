@@ -19,6 +19,7 @@
 package pagination
 
 import (
+	"reflect"
 	"strconv"
 
 	"github.com/webx-top/db"
@@ -129,6 +130,10 @@ func PagingWithLister(ctx echo.Context, m Lister, varSuffix ...string) (*paginat
 	return p, err
 }
 
+type ListSizer interface {
+	ListSize() int
+}
+
 // PagingWithOffsetLister 通过分页查询接口获取分页信息
 func PagingWithOffsetLister(ctx echo.Context, m OffsetLister, varSuffix ...string) (*pagination.Pagination, error) {
 	offset, size, p := PagingWithPosition(ctx)
@@ -138,7 +143,32 @@ func PagingWithOffsetLister(ctx echo.Context, m OffsetLister, varSuffix ...strin
 	} else {
 		ctx.Set(`pagination`, p)
 	}
+	if sz, ok := m.(ListSizer); ok {
+		if sz.ListSize() < size {
+			p.SetPosition(p.PrevPosition(), ``, p.Position())
+		}
+	} else {
+		if ObjectsSize(m) < size {
+			p.SetPosition(p.PrevPosition(), ``, p.Position())
+		}
+	}
 	return p, err
+}
+
+func ObjectsSize(m interface{}) int {
+	rv := reflect.ValueOf(m)
+	if !rv.IsValid() {
+		return 0
+	}
+	rv = rv.MethodByName("Objects")
+	if rv.IsValid() {
+		rv = rv.Call(nil)[0]
+		rv = reflect.Indirect(rv)
+		if rv.Kind() == reflect.Slice {
+			return rv.Len()
+		}
+	}
+	return 0
 }
 
 // PagingWithListerCond 通过分页查询接口和附加条件获取分页信息
