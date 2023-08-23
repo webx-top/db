@@ -258,6 +258,16 @@ func (p *Param) SetWrite() *Param {
 }
 
 func (p *Param) AddJoin(joinType string, collection string, alias string, condition string) *Param {
+	for i, v := range p.joins {
+		if v.Type == joinType && v.Collection == collection {
+			if len(v.Condition) > 0 {
+				v.Condition += ` AND `
+			}
+			v.Condition += condition
+			p.joins[i] = v
+			return p
+		}
+	}
 	p.joins = append(p.joins, NewJoin(joinType, collection, alias, condition))
 	return p
 }
