@@ -110,7 +110,7 @@ func PagingWithPosition(ctx echo.Context, delKeys ...string) (offset int, size i
 	if prevN > 0 {
 		prev = strconv.FormatInt(int64(prevN), 10)
 	}
-	p = pagination.New(ctx).SetPosition(prev, next, curr).SetURL(map[string]string{
+	p = pagination.New(ctx).SetSize(size).SetPosition(prev, next, curr).SetURL(map[string]string{
 		//`prev`: `prev`,
 		//`curr`: `curr`,
 		`next`: `offset`,
