@@ -268,7 +268,7 @@ func (sel *selector) OrderBy(columns ...interface{}) Selector {
 				if len(fnArgs) == 0 {
 					fnName = fnName + "()"
 				} else {
-					fnName = fnName + "(?" + strings.Repeat("?, ", len(fnArgs)-1) + ")"
+					fnName = fnName + "(?" + strings.Repeat(", ?", len(fnArgs)-1) + ")"
 				}
 				fnName, fnArgs = Preprocess(fnName, fnArgs)
 				sort = &exql.SortColumn{
