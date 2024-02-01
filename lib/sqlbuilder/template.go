@@ -178,7 +178,7 @@ func (tu *templateWithUtils) toColumnValues(term interface{}) (cv exql.ColumnVal
 				fnName = fnName + "()"
 			} else {
 				// A function with one or more arguments.
-				fnName = fnName + "(?" + strings.Repeat("?, ", len(fnArgs)-1) + ")"
+				fnName = fnName + "(?" + strings.Repeat(", ?", len(fnArgs)-1) + ")"
 			}
 			fnName, fnArgs = Preprocess(fnName, fnArgs)
 			columnValue.Value = exql.RawValue(fnName)
