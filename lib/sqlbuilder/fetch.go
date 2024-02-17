@@ -243,8 +243,15 @@ func fetchResult(iter *iterator, itemT reflect.Type, columns []string) (reflect.
 						sc.Scan(reflectValue.Interface())
 					}
 				} else {
-					value := param.AsType(nonPtrType.Kind().String(), reflectValue.Interface())
-					elemValue.Set(reflect.ValueOf(value))
+					var value interface{}
+					if reflectValue.Kind() == reflect.Ptr {
+						value = param.AsType(nonPtrType.Kind().String(), reflectValue.Elem().Interface())
+					} else {
+						value = param.AsType(nonPtrType.Kind().String(), reflectValue.Interface())
+					}
+					rv := reflect.ValueOf(value)
+					//panic(rv.Type().AssignableTo(elemValue.Elem().Type()))
+					elemValue.Elem().Set(rv)
 				}
 				if !isPtr {
 					elemValue = elemValue.Elem()

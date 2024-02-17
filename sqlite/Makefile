@@ -23,3 +23,6 @@ reset-db: require-client
 test: reset-db generate
 	#go test -tags generated -v -race # race: limit on 8192 simultaneously alive goroutines is exceeded, dying
 	go test -tags generated -v
+
+testgo: reset-db generate
+	go test -tags generated,sqlitego -v
