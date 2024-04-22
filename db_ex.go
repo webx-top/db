@@ -95,6 +95,28 @@ func (c *Compounds) AddKV(key, value interface{}) *Compounds {
 	return c
 }
 
+func (c *Compounds) AddKVOnce(key, value interface{}) *Compounds {
+	if c.Exists(key) {
+		return c
+	}
+	*c = append(*c, Cond{key: value})
+	return c
+}
+
+func (c *Compounds) Exists(key interface{}) bool {
+	for _, v := range *c {
+		r, y := v.(Cond)
+		if !y {
+			continue
+		}
+		_, ok := r[key]
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Compounds) AddKVNotEmpty(key, value interface{}) *Compounds {
 	switch v := value.(type) {
 	case nil:
