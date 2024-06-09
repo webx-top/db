@@ -232,6 +232,13 @@ func (b *sqlBuilder) Update(table string) Updater {
 	return qu.setTable(table)
 }
 
+func (b *sqlBuilder) ConvertValues(values []interface{}) []interface{} {
+	if converter, ok := b.sess.(hasConvertValues); ok {
+		values = converter.ConvertValues(values)
+	}
+	return values
+}
+
 // Mapper [SWH|+] For external use
 func Mapper() *reflectx.Mapper {
 	return mapper

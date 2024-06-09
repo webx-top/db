@@ -188,7 +188,7 @@ func fetchResult(iter *iterator, itemT reflect.Type, columns []string) (reflect.
 			}
 		}
 
-		if converter, ok := iter.SQLBuilder.(*sqlBuilder).sess.(hasConvertValues); ok {
+		if converter, ok := iter.SQLBuilder.(hasConvertValues); ok {
 			values = converter.ConvertValues(values)
 		}
 
