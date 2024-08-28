@@ -477,7 +477,7 @@ func (sel *selector) IteratorContext(ctx context.Context) Iterator {
 	sess := sel.SQLBuilder().sess
 	sq, err := sel.build()
 	if err != nil {
-		return &iterator{sel.SQLBuilder(), nil, err, sq.relationMap}
+		return &iterator{sel.SQLBuilder(), nil, err, nil}
 	}
 
 	rows, err := sess.StatementQuery(ctx, sq.statement(), sq.arguments()...)
