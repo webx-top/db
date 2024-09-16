@@ -34,12 +34,12 @@ func CleanFulltextOperator(v string) string {
 	return fulltextOperatorReplacer.Replace(v)
 }
 
-func Match(value string, booleanMode bool, keys ...string) db.Compound {
+func Match(value string, booleanMode bool, keys ...string) db.RawValue {
 	value = CleanFulltextOperator(value)
 	return match(value, booleanMode, keys...)
 }
 
-func match(safelyMatchValue string, booleanMode bool, keys ...string) db.Compound {
+func match(safelyMatchValue string, booleanMode bool, keys ...string) db.RawValue {
 	fields := make([]string, 0, len(keys))
 	for _, key := range keys {
 		if len(key) == 0 {

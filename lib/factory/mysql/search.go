@@ -16,14 +16,40 @@ var (
 	searchParagraphRule = regexp.MustCompile(`"[^"]+"`)                      //段落
 )
 
-func FindInSet(key string, value string, useFulltextIndex ...bool) db.Compound {
+func FindInSet(fieldName string, value string, useFulltextIndex ...bool) db.RawValue {
 	if len(useFulltextIndex) > 0 && useFulltextIndex[0] {
 		v := CleanFulltextOperator(value)
 		v = strings.ReplaceAll(v, `,`, ``)
-		return match(`"`+v+`," ",`+v+`," ",`+v+`"`, true, key)
+		return match(`"`+v+`," ",`+v+`," ",`+v+`"`, true, fieldName)
 	}
-	key = strings.Replace(key, "`", "``", -1)
-	return db.Raw("FIND_IN_SET(?,`"+key+"`)", value)
+	fieldName = strings.Replace(fieldName, "`", "``", -1)
+	return db.Raw("FIND_IN_SET(?,`"+fieldName+"`)", value)
+}
+
+func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.RawValue {
+	fieldName = strings.Replace(fieldName, "`", "``", -1)
+	var jsonPath string
+	for index, jsonField := range jsonFields {
+		if len(jsonField) == 0 {
+			continue
+		}
+		if index == 0 && jsonField == `*` {
+			jsonPath = `$[*]`
+			continue
+		}
+		if strings.HasPrefix(jsonField, `[`) {
+			jsonPath += jsonField
+			continue
+		}
+		jsonPath += `.` + jsonField
+	}
+	if len(jsonPath) > 0 {
+		if !strings.HasPrefix(jsonPath, `$`) {
+			jsonPath = `$` + jsonPath
+		}
+		jsonPath = `->'` + jsonPath + `'`
+	}
+	return db.Raw("? MEMBER OF(`"+fieldName+"`"+jsonPath+")", value)
 }
 
 func CompareField(idField string, keywords string) db.Compound {
