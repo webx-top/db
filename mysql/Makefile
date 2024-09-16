@@ -15,6 +15,9 @@ export DB_PASSWORD
 export DB_PORT
 export DB_USERNAME
 
+createUser="GRANT ALL PRIVILEGES ON $(DB_NAME).* TO $(DB_USERNAME) IDENTIFIED BY '$(DB_PASSWORD)';"
+createUser=""
+
 build:
 	go build && go install
 
@@ -32,9 +35,12 @@ reset-db: require-client
 	SQL="" && \
 	SQL+="DROP DATABASE IF EXISTS $(DB_NAME);" && \
 	SQL+="CREATE DATABASE $(DB_NAME);" && \
-	SQL+="GRANT ALL PRIVILEGES ON $(DB_NAME).* TO $(DB_USERNAME) IDENTIFIED BY '$(DB_PASSWORD)';" && \
-	mysql -uroot -h"$(DB_HOST)" -P$(DB_PORT) <<< $$SQL
+	SQL+="${createUser}" && \
+	mysql -uroot -h"$(DB_HOST)" -P$(DB_PORT) -p${DB_PASSWORD} <<< $$SQL
 
 test: reset-db generate
 	#go test -tags generated -v -race # race: limit on 8192 simultaneously alive goroutines is exceeded, dying
 	go test -tags generated -v $(TEST_FLAGS)
+
+test2:
+	go test -v --count=1 -run TestJSON
