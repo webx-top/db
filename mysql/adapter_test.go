@@ -50,7 +50,7 @@ var settings = ConnectionURL{
 		// See https://github.com/go-sql-driver/mysql/issues/9
 		"parseTime": "true",
 		// Might require you to use mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root -p mysql
-		"time_zone": fmt.Sprintf(`"%s"`, testTimeZone),
+		//"time_zone": fmt.Sprintf(`"%s"`, testTimeZone),
 	},
 }
 

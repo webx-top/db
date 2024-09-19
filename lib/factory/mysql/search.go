@@ -29,8 +29,6 @@ func FindInSet(fieldName string, value string, useFulltextIndex ...bool) db.RawV
 func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.RawValue {
 	fieldName = strings.Replace(fieldName, "`", "``", -1)
 	var jsonPath string
-	args := make([]interface{}, 0, 2)
-	args = append(args, value)
 	for index, jsonField := range jsonFields {
 		if len(jsonField) == 0 {
 			continue
@@ -40,8 +38,13 @@ func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.Ra
 			continue
 		}
 		if strings.HasPrefix(jsonField, `[`) {
-			jsonPath += jsonField
+			jsonPath += com.AddSlashes(jsonField)
 			continue
+		}
+		if com.StrIsNumeric(jsonField) {
+			jsonField = `"` + jsonField + `"`
+		} else {
+			jsonField = com.AddSlashes(jsonField)
 		}
 		jsonPath += `.` + jsonField
 	}
@@ -49,10 +52,9 @@ func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.Ra
 		if !strings.HasPrefix(jsonPath, `$`) {
 			jsonPath = `$` + jsonPath
 		}
-		jsonPath = `->?`
-		args = append(args, jsonPath)
+		jsonPath = `->'` + jsonPath + `'`
 	}
-	return db.Raw("? MEMBER OF(`"+fieldName+"`"+jsonPath+")", args...)
+	return db.Raw("? MEMBER OF(`"+fieldName+"`"+jsonPath+")", value)
 }
 
 func CompareField(idField string, keywords string) db.Compound {

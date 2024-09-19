@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/db/lib/factory/mysql"
 	"github.com/webx-top/db/lib/sqlbuilder"
 )
 
@@ -43,4 +44,21 @@ func TestJSON(t *testing.T) {
 	assert.Equal(t, int64(1), actual.ID)
 	assert.Equal(t, `[1, 2, 3, 4]`, actual.JSONArray)
 	assert.Equal(t, `[{"name": "Hello", "value": 0}, {"name": "World", "value": 0}]`, actual.AutoCustomJSONObjectArray)
+
+	var actual2 _MyType
+	err = sess.Collection("my_types").Find(mysql.FindInJSON(`json_array`, 3, `[2]`)).One(&actual2)
+	assert.NoError(t, err)
+	assert.Equal(t, `[1, 2, 3, 4]`, actual2.JSONArray)
+
+	var actual3 _MyType
+	err = sess.Collection("my_types").Find(mysql.FindInJSON(`auto_custom_json_object_array`, `World`, `*`, `name`)).One(&actual3)
+	assert.NoError(t, err)
+	assert.Equal(t, `[1, 2, 3, 4]`, actual3.JSONArray)
+
+	var actual4 _MyType
+	err = sess.Collection("my_types").Find(mysql.FindInJSON(`auto_custom_json_object_array`, `World`, `*`, `"name"`)).One(&actual4)
+	assert.NoError(t, err)
+	assert.Equal(t, `[1, 2, 3, 4]`, actual4.JSONArray)
+	err = sess.Collection("my_types").Find(mysql.FindInJSON(`auto_custom_json_object_array`, `World`, `*`, `'name'`)).One(&actual4)
+	assert.Error(t, err)
 }
