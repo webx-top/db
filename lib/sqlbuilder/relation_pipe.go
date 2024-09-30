@@ -91,6 +91,9 @@ var (
 			}
 			if val[0] == '[' {
 				val = strings.Trim(val, `[]`)
+				if len(val) == 0 {
+					return nil
+				}
 			}
 			items := strings.Split(val, `,`)
 			result := make([]interface{}, 0, len(items))
