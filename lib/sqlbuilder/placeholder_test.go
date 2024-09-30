@@ -1,6 +1,7 @@
 package sqlbuilder
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -143,4 +144,5 @@ func TestPlaceholderReplace(t *testing.T) {
 		assert.Equal(t, "?, foo, ?", ret)
 		assert.Equal(t, []interface{}{1, 3}, args)
 	}
+	assert.Equal(t, `1`, strings.Trim(`[1]`, `[]`))
 }

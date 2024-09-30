@@ -85,8 +85,15 @@ var (
 	}
 	PipeList = Pipes{
 		`split`: func(_ reflect.Value, v interface{}) interface{} {
-			items := strings.Split(v.(string), `,`)
-			result := []interface{}{}
+			val := v.(string)
+			if len(val) == 0 {
+				return nil
+			}
+			if val[0] == '[' {
+				val = strings.Trim(val, `[]`)
+			}
+			items := strings.Split(val, `,`)
+			result := make([]interface{}, 0, len(items))
 			for _, item := range items {
 				item = strings.TrimSpace(item)
 				if len(item) == 0 {
