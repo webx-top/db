@@ -67,7 +67,10 @@ func (t *table) Insert(item interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	pKey := t.BaseCollection.PrimaryKeys()
+	pKey, err := t.BaseCollection.PrimaryKeys()
+	if err != nil {
+		return nil, err
+	}
 
 	var hasKeys bool
 	for i := range columnNames {

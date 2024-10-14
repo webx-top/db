@@ -59,7 +59,10 @@ func (c *collection) Database() sqladapter.Database {
 
 // Insert inserts an item (map or struct) into the collection.
 func (c *collection) Insert(item interface{}) (interface{}, error) {
-	pKey := c.BaseCollection.PrimaryKeys()
+	pKey, err := c.BaseCollection.PrimaryKeys()
+	if err != nil {
+		return nil, err
+	}
 
 	q := c.d.InsertInto(c.Name()).Values(item)
 

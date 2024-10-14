@@ -111,6 +111,8 @@ type BaseDatabase interface {
 	// number of times before failing.
 	WaitForConnection(func() error) error
 
+	CachedPrimaryKeys(tableName string) ([]string, error)
+
 	// BindSession sets the *sql.DB the session will use.
 	BindSession(*sql.DB) error
 
@@ -256,7 +258,7 @@ func (d *database) Name() string {
 	return d.name
 }
 
-func (d *database) PrimaryKeys(tableName string) ([]string, error) {
+func (d *database) CachedPrimaryKeys(tableName string) ([]string, error) {
 	h := cache.NewHashable(hashTypePrimaryKeys, tableName)
 	cachedPK, ok := d.cachedPKs.ReadRaw(h)
 	if ok {
@@ -350,8 +352,6 @@ func (d *database) NewClone(p PartialDatabase, checkConn bool) (BaseDatabase, er
 	nd.name = d.name
 	nd.sess = d.sess
 	nd.cachedPKs = d.cachedPKs
-	nd.cachedCollections = d.cachedCollections
-	nd.cachedStatements = d.cachedStatements
 
 	if checkConn {
 		if err := nd.Ping(); err != nil {

@@ -53,7 +53,7 @@ type BaseCollection interface {
 	UpdateReturning(interface{}) error
 
 	// PrimaryKeys returns the table's primary keys.
-	PrimaryKeys() []string
+	PrimaryKeys() ([]string, error)
 }
 
 type condsFilter interface {
@@ -64,9 +64,6 @@ type condsFilter interface {
 type collection struct {
 	BaseCollection
 	PartialCollection
-
-	pk  []string
-	err error
 }
 
 var (
@@ -76,38 +73,44 @@ var (
 // NewBaseCollection returns a collection with basic methods.
 func NewBaseCollection(p PartialCollection) BaseCollection {
 	c := &collection{PartialCollection: p}
-	c.pk, c.err = c.Database().PrimaryKeys(c.Name())
 	return c
 }
 
 // PrimaryKeys returns the collection's primary keys, if any.
-func (c *collection) PrimaryKeys() []string {
-	return c.pk
+func (c *collection) PrimaryKeys() ([]string, error) {
+	return c.Database().CachedPrimaryKeys(c.Name())
 }
 
-func (c *collection) filterConds(conds ...interface{}) []interface{} {
+func (c *collection) filterConds(conds ...interface{}) ([]interface{}, error) {
 	if tr, ok := c.PartialCollection.(condsFilter); ok {
-		return tr.FilterConds(conds...)
+		return tr.FilterConds(conds...), nil
 	}
-	if len(conds) == 1 && len(c.pk) == 1 {
-		if id := conds[0]; IsKeyValue(id) {
-			conds[0] = db.Cond{c.pk[0]: db.Eq(id)}
+	if len(conds) == 1 {
+		pks, err := c.PrimaryKeys()
+		if err != nil {
+			return conds, err
+		}
+		if len(pks) == 1 {
+			if id := conds[0]; IsKeyValue(id) {
+				conds[0] = db.Cond{pks[0]: db.Eq(id)}
+			}
 		}
 	}
-	return conds
+	return conds, nil
 }
 
 // Find creates a result set with the given conditions.
 func (c *collection) Find(conds ...interface{}) db.Result {
-	if c.err != nil {
+	conds, err := c.filterConds(conds...)
+	if err != nil {
 		res := &Result{}
-		res.setErr(c.err)
+		res.setErr(err)
 		return res
 	}
 	return NewResult(
 		c.Database(),
 		c.Name(),
-		c.filterConds(conds...),
+		conds,
 	)
 }
 
@@ -126,7 +129,10 @@ func (c *collection) InsertReturning(item interface{}) error {
 	}
 
 	// Grab primary keys
-	pks := c.PrimaryKeys()
+	pks, err := c.PrimaryKeys()
+	if err != nil {
+		return err
+	}
 	if len(pks) == 0 {
 		if !c.Exists() {
 			return db.ErrCollectionDoesNotExist
@@ -230,7 +236,10 @@ func (c *collection) UpdateReturning(item interface{}) error {
 	}
 
 	// Grab primary keys
-	pks := c.PrimaryKeys()
+	pks, err := c.PrimaryKeys()
+	if err != nil {
+		return err
+	}
 	if len(pks) == 0 {
 		if !c.Exists() {
 			return db.ErrCollectionDoesNotExist
@@ -267,7 +276,7 @@ func (c *collection) UpdateReturning(item interface{}) error {
 
 	col := tx.(Database).Collection(c.Name())
 
-	err := col.Find(conds).Update(item)
+	err = col.Find(conds).Update(item)
 	if err != nil {
 		goto cancel
 	}
