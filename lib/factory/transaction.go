@@ -8,6 +8,7 @@ import (
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
+	"github.com/webx-top/echo"
 )
 
 type Transaction struct {
@@ -19,6 +20,13 @@ type Transaction struct {
 func (t *Transaction) T() *Transaction {
 	return t
 }
+
+type ctxKey struct{}
+
+var (
+	dbR = ctxKey{}
+	dbW = ctxKey{}
+)
 
 func (t *Transaction) Database(param *Param) db.Database {
 	if t.cluster == nil {
@@ -40,7 +48,22 @@ func (t *Transaction) Database(param *Param) db.Database {
 	}
 	if param.ctx != nil {
 		if sd, ok := d.(sqlbuilder.Database); ok {
-			d = sd.WithContext(param.ctx)
+			if ec, ok := param.ctx.(echo.Context); ok {
+				var key ctxKey
+				if param.readOnly {
+					key = dbR
+				} else {
+					key = dbW
+				}
+				d, ok := ec.Internal().Get(key).(db.Database)
+				if ok {
+					return d
+				}
+				d = sd.WithContext(param.ctx)
+				ec.Internal().Set(key, d)
+			} else {
+				d = sd.WithContext(param.ctx)
+			}
 		}
 	}
 	return d
