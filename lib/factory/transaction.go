@@ -55,7 +55,7 @@ func (t *Transaction) Database(param *Param) db.Database {
 				} else {
 					key = dbW
 				}
-				d, ok := ec.Internal().Get(key).(db.Database)
+				d, ok = ec.Internal().Get(key).(db.Database)
 				if ok {
 					return d
 				}
