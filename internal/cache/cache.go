@@ -23,7 +23,6 @@ package cache
 
 import (
 	"container/list"
-	"errors"
 	"sync"
 )
 
@@ -44,24 +43,17 @@ type cacheItem struct {
 
 // NewCacheWithCapacity initializes a new caching space with the given
 // capacity.
-func NewCacheWithCapacity(capacity int) (*Cache, error) {
-	if capacity < 1 {
-		return nil, errors.New("Capacity must be greater than zero.")
-	}
+func NewCacheWithCapacity(capacity int) *Cache {
 	c := &Cache{
 		capacity: capacity,
 	}
 	c.init()
-	return c, nil
+	return c
 }
 
 // NewCache initializes a new caching space with default settings.
 func NewCache() *Cache {
-	c, err := NewCacheWithCapacity(defaultCapacity)
-	if err != nil {
-		panic(err.Error()) // Should never happen as we're not providing a negative defaultCapacity.
-	}
-	return c
+	return NewCacheWithCapacity(defaultCapacity)
 }
 
 func (c *Cache) init() {
@@ -109,6 +101,9 @@ func (c *Cache) Write(h Hashable, value interface{}) {
 
 	c.items[key] = c.keys.PushFront(&cacheItem{key, value})
 
+	if c.capacity <= 0 {
+		return
+	}
 	for c.keys.Len() > c.capacity {
 		item := c.keys.Remove(c.keys.Back()).(*cacheItem)
 		delete(c.items, item.key)

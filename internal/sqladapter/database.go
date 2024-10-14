@@ -145,9 +145,9 @@ func NewBaseDatabase(p PartialDatabase) BaseDatabase {
 	d := &database{
 		Settings:          db.NewSettings(),
 		PartialDatabase:   p,
-		cachedPKs:         cache.NewCache(),
-		cachedCollections: cache.NewCache(),
-		cachedStatements:  cache.NewCache(),
+		cachedPKs:         cache.NewCacheWithCapacity(-1),
+		cachedCollections: cache.NewCacheWithCapacity(-1),
+		cachedStatements:  cache.NewCacheWithCapacity(-1),
 	}
 	return d
 }
@@ -350,6 +350,8 @@ func (d *database) NewClone(p PartialDatabase, checkConn bool) (BaseDatabase, er
 	nd.name = d.name
 	nd.sess = d.sess
 	nd.cachedPKs = d.cachedPKs
+	nd.cachedCollections = d.cachedCollections
+	nd.cachedStatements = d.cachedStatements
 
 	if checkConn {
 		if err := nd.Ping(); err != nil {
