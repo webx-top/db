@@ -32,10 +32,18 @@ func (t *Transaction) Database(param *Param) db.Database {
 		}
 		t.tx = nil
 	}
+	var d db.Database
 	if param.readOnly {
-		return param.cluster.Slave()
+		d = param.cluster.Slave()
+	} else {
+		d = param.cluster.Master()
 	}
-	return param.cluster.Master()
+	if param.ctx != nil {
+		if sd, ok := d.(sqlbuilder.Database); ok {
+			d = sd.WithContext(param.ctx)
+		}
+	}
+	return d
 }
 
 func (t *Transaction) Driver(param *Param) interface{} {
