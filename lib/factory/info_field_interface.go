@@ -20,4 +20,5 @@ type FieldInfor interface {
 	// - utils
 	HTMLAttrBuilder(required bool) HTMLAttrs
 	Validate(value interface{}) error
+	TrimOverflowText(value string) string
 }

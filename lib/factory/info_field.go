@@ -187,6 +187,34 @@ func (f *FieldInfo) Validate(value interface{}) error {
 	return nil
 }
 
+func (f *FieldInfo) TrimOverflowText(value string) string {
+	switch {
+	case f.DataType == `enum`:
+		return value
+	case f.DataType == `set`:
+		return value
+	case strings.HasPrefix(f.DataType, `char`):
+		if f.MaxSize > 3 {
+			return com.Substr(value, `...`, f.MaxSize-3)
+		}
+		if f.MaxSize > 0 {
+			return com.Substr(value, ``, f.MaxSize)
+		}
+	default:
+		//case f.DataType == `decimal`:
+		//case f.DataType == `double`:
+		//case f.DataType == `float`:
+		//case strings.HasPrefix(f.DataType, `int`):
+		if f.Max <= 0 && f.MaxSize > 0 {
+			if f.MaxSize > 3 {
+				return com.Substr(value, `...`, f.MaxSize-3)
+			}
+			return com.Substr(value, ``, f.MaxSize)
+		}
+	}
+	return value
+}
+
 // FieldValidator 字段验证器
 type FieldValidator map[string]map[string]*FieldInfo
 
@@ -238,6 +266,18 @@ func (f FieldValidator) BatchValidate(table string, row map[string]interface{}) 
 		}
 	}
 	return nil
+}
+
+func (f FieldValidator) TrimOverflowText(table string, field string, value string) string {
+	tb, ok := f[table]
+	if !ok {
+		return value
+	}
+	fieldInfo, ok := tb[field]
+	if !ok {
+		return value
+	}
+	return fieldInfo.TrimOverflowText(value)
 }
 
 // ExistTable 表是否存在(表名不带前缀)
