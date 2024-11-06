@@ -175,6 +175,10 @@ func buildCond(fieldInfo *reflectx.FieldInfo, refVal reflect.Value, relations []
 	return buildCondPrepare(fieldInfo, cond)
 }
 
+type ColumnSelector interface {
+	SelectColumns() []interface{}
+}
+
 func buildSelector(fieldInfo *reflectx.FieldInfo, sel Selector, mustColumnName string, hasMustCol *bool, dataTypes *map[string]string) Selector {
 	r := getRelationCache(fieldInfo.Field)
 	args := r.SelectorArgs()
@@ -223,6 +227,22 @@ func buildSelector(fieldInfo *reflectx.FieldInfo, sel Selector, mustColumnName s
 				}
 				col.colStr = param.AsString(col.col)
 				args.columns = append(args.columns, col)
+			}
+		} else if fieldInfo.Zero.CanInterface() {
+			if cs, ok := fieldInfo.Zero.Interface().(ColumnSelector); ok {
+				for _, v := range cs.SelectColumns() {
+					col := &colType{col: v}
+					if str, ok := col.col.(string); ok {
+						parts := strings.SplitN(str, `:`, 2)
+						if len(parts) == 2 {
+							col.typ = parts[1]
+						}
+						col.col = parts[0]
+					}
+					col.typ = fmt.Sprintf(`%T`, v)
+					col.colStr = param.AsString(col.col)
+					args.columns = append(args.columns, col)
+				}
 			}
 		}
 		r.setSelectorArgs(args)
