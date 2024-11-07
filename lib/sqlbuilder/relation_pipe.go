@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/echo/param"
 )
 
@@ -94,6 +95,7 @@ var (
 					if !fv.IsValid() {
 						return v
 					}
+					fv = reflect.Indirect(fv)
 				}
 				if fv.Kind() == reflect.Ptr && fv.IsNil() {
 					return v
@@ -105,6 +107,15 @@ var (
 			if len(structField) == 0 {
 				return nil
 			}
+			if !com.IsUpperLetter(rune(structField[0])) {
+				return func(row reflect.Value, v interface{}) interface{} {
+					fv := mapper.FieldByName(row, structField)
+					if reflect.Indirect(fv).IsZero() {
+						return v
+					}
+					return nil
+				}
+			}
 			structFieldPath := strings.Split(structField, `.`)
 			return func(row reflect.Value, v interface{}) interface{} {
 				fv := reflect.Indirect(row)
@@ -113,11 +124,35 @@ var (
 					if !fv.IsValid() {
 						return v
 					}
+					fv = reflect.Indirect(fv)
 				}
 				if fv.IsZero() {
 					return v
 				}
 				return nil
+			}
+		},
+		`notZero`: func(structField string) Pipe {
+			if len(structField) == 0 {
+				return nil
+			}
+			if !com.IsUpperLetter(rune(structField[0])) {
+				structField = com.PascalCaseWith(structField, '.')
+			}
+			structFieldPath := strings.Split(structField, `.`)
+			return func(row reflect.Value, v interface{}) interface{} {
+				fv := reflect.Indirect(row)
+				for _, structField := range structFieldPath {
+					fv = fv.FieldByName(structField)
+					if !fv.IsValid() {
+						return nil
+					}
+					fv = reflect.Indirect(fv)
+				}
+				if fv.IsZero() {
+					return nil
+				}
+				return v
 			}
 		},
 	}

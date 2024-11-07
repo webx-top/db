@@ -16,7 +16,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.9.0
-	github.com/webx-top/com v1.3.10
+	github.com/webx-top/com v1.3.14
 	github.com/webx-top/echo v1.11.0
 	github.com/webx-top/pagination v0.3.1
 	github.com/webx-top/qmgo v1.3.1

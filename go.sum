@@ -296,8 +296,8 @@ github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49u
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
 github.com/webx-top/captcha v0.1.0 h1:uBTGMevM0tlII5Zyj4QbJPI6vTPI0uF+BA4zKLA8avU=
 github.com/webx-top/captcha v0.1.0/go.mod h1:E7chb3O5Dqbcta3hBEGRGXGreItjbjPy72ihuqS4+d4=
-github.com/webx-top/com v1.3.10 h1:1LXcGoAL7+9TmcmVFRIPgPbWzhy7J9Pm9qQTy825yfI=
-github.com/webx-top/com v1.3.10/go.mod h1:Pw5Yr5UU0ZtwZU0xVyfyRdqf77wyzh+oRNYnOpX9Oyc=
+github.com/webx-top/com v1.3.14 h1:9YO6nFO+Vx49CfkbYiGgy8Gs+nG1Aygq9307qcQDdoY=
+github.com/webx-top/com v1.3.14/go.mod h1:Pw5Yr5UU0ZtwZU0xVyfyRdqf77wyzh+oRNYnOpX9Oyc=
 github.com/webx-top/echo v1.11.0 h1:oTdUDmYyBx9iz0criZevDPpXPZUD7JnwfyUltj4g5z0=
 github.com/webx-top/echo v1.11.0/go.mod h1:rfDnwxpdXvlCFdanSlXlyg5ulomiy0+CRwR/4faLkJg=
 github.com/webx-top/pagination v0.3.1 h1:0jX1hCG6DmAXQW06Ns9hySjxsvcsM1JVAvXOeFv+bfA=

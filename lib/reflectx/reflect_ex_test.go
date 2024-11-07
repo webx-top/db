@@ -2,9 +2,11 @@ package reflectx
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/webx-top/com"
 )
 
 type User struct {
@@ -33,6 +35,14 @@ func TestFind(t *testing.T) {
 	mapper := NewMapper(`db`)
 	data := &Data{}
 	typeMap := mapper.StructMap(data)
+
+	assert.Equal(t, `UserProfile.EMail`, com.PascalCaseWith(`user_profile.e_mail`, '.'))
+
+	row := reflect.ValueOf(data)
+	fv := mapper.FieldByName(row, `profile`)
+	assert.True(t, reflect.Indirect(fv).IsZero())
+	fv = mapper.FieldByName(row, `profile.email`)
+	assert.True(t, reflect.Indirect(fv).IsZero())
 
 	_, exists := typeMap.Find(`user.name`, true)
 	assert.True(t, exists)
