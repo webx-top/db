@@ -82,6 +82,30 @@ var (
 				return nil
 			}
 		},
+		`isNil`: func(structField string) Pipe {
+			if len(structField) == 0 {
+				return nil
+			}
+			return func(row reflect.Value, v interface{}) interface{} {
+				fv := reflect.Indirect(row).FieldByName(structField)
+				if fv.IsValid() && fv.Kind() == reflect.Ptr && fv.IsNil() {
+					return v
+				}
+				return nil
+			}
+		},
+		`isZero`: func(structField string) Pipe {
+			if len(structField) == 0 {
+				return nil
+			}
+			return func(row reflect.Value, v interface{}) interface{} {
+				fv := reflect.Indirect(row).FieldByName(structField)
+				if fv.IsValid() && fv.IsZero() {
+					return v
+				}
+				return nil
+			}
+		},
 	}
 	PipeList = Pipes{
 		`split`: func(_ reflect.Value, v interface{}) interface{} {

@@ -238,8 +238,9 @@ func buildSelector(fieldInfo *reflectx.FieldInfo, sel Selector, mustColumnName s
 							col.typ = parts[1]
 						}
 						col.col = parts[0]
+					} else {
+						col.typ = fmt.Sprintf(`%T`, v)
 					}
-					col.typ = fmt.Sprintf(`%T`, v)
 					col.colStr = param.AsString(col.col)
 					args.columns = append(args.columns, col)
 				}
