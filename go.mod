@@ -17,7 +17,7 @@ require (
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.9.0
 	github.com/webx-top/com v1.3.14
-	github.com/webx-top/echo v1.11.0
+	github.com/webx-top/echo v1.12.7
 	github.com/webx-top/pagination v0.3.1
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
@@ -43,7 +43,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.22.1 // indirect
@@ -70,6 +70,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/webx-top/captcha v0.1.0 // indirect
+	github.com/webx-top/codec v0.3.0 // indirect
 	github.com/webx-top/poolx v0.0.0-20210912044716-5cfa2d58e380 // indirect
 	github.com/webx-top/validation v0.0.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
