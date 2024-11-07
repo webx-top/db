@@ -86,9 +86,16 @@ var (
 			if len(structField) == 0 {
 				return nil
 			}
+			structFieldPath := strings.Split(structField, `.`)
 			return func(row reflect.Value, v interface{}) interface{} {
-				fv := reflect.Indirect(row).FieldByName(structField)
-				if fv.IsValid() && fv.Kind() == reflect.Ptr && fv.IsNil() {
+				fv := reflect.Indirect(row)
+				for _, structField := range structFieldPath {
+					fv = fv.FieldByName(structField)
+					if !fv.IsValid() {
+						return v
+					}
+				}
+				if fv.Kind() == reflect.Ptr && fv.IsNil() {
 					return v
 				}
 				return nil
@@ -98,9 +105,16 @@ var (
 			if len(structField) == 0 {
 				return nil
 			}
+			structFieldPath := strings.Split(structField, `.`)
 			return func(row reflect.Value, v interface{}) interface{} {
-				fv := reflect.Indirect(row).FieldByName(structField)
-				if fv.IsValid() && fv.IsZero() {
+				fv := reflect.Indirect(row)
+				for _, structField := range structFieldPath {
+					fv = fv.FieldByName(structField)
+					if !fv.IsValid() {
+						return v
+					}
+				}
+				if fv.IsZero() {
 					return v
 				}
 				return nil
