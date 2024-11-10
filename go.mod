@@ -16,7 +16,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.9.0
-	github.com/webx-top/com v1.3.14
+	github.com/webx-top/com v1.3.17
 	github.com/webx-top/echo v1.12.7
 	github.com/webx-top/pagination v0.3.1
 	github.com/webx-top/qmgo v1.3.1
@@ -36,7 +36,7 @@ require (
 	github.com/admpub/go-reuseport v0.0.4 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
 	github.com/admpub/realip v0.2.7 // indirect
-	github.com/admpub/timeago v1.2.1 // indirect
+	github.com/admpub/timeago v1.2.2 // indirect
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20240916140612-caecf3c00c06 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -77,12 +77,12 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
