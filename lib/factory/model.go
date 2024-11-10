@@ -211,6 +211,7 @@ type Model interface {
 	AsRow(onlyFields ...string) param.Store
 	FromRow(row map[string]interface{})
 	Set(key interface{}, value ...interface{})
+	GetField(field string) interface{}
 	BatchValidate(kvset map[string]interface{}) error
 	Validate(field string, value interface{}) error
 	EventON(on ...bool) Model

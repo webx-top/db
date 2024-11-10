@@ -429,7 +429,7 @@ func (a *{{.StructName}}) UpdateFields(mw func(db.Result) db.Result, kvset map[s
 	}
 	m := *a
 	m.FromRow(kvset)
-	var editColumns []string
+	editColumns := make([]string, 0, len(kvset))
 	for column := range kvset {
 		editColumns = append(editColumns, column)
 	}
@@ -449,7 +449,7 @@ func (a *{{.StructName}}) UpdatexFields(mw func(db.Result) db.Result, kvset map[
 	}
 	m := *a
 	m.FromRow(kvset)
-	var editColumns []string
+	editColumns := make([]string, 0, len(kvset))
 	for column := range kvset {
 		editColumns = append(editColumns, column)
 	}
@@ -565,11 +565,23 @@ func (a *{{.StructName}}) AsMap(onlyFields ...string) param.Store {
 
 func (a *{{.StructName}}) FromRow(row map[string]interface{}) {
 	for key, value := range row {
+		if _, ok := value.(db.RawValue); ok {
+			continue
+		}
 		switch key {
 			{{- range $k, $v := .TableAndStructFields}}
 			case "{{$v.K}}": a.{{$v.V}} = {{$v.H.convertStart}}param.As{{$v.H.dataType}}(value){{$v.H.convertEnd -}}
 			{{end}}
 		}
+	}
+}
+
+func (a *{{.StructName}}) GetField(field string) interface{} {
+	switch field {
+		{{- range $k, $v := .TableAndStructFields}}
+		case "{{$v.V}}": return a.{{$v.V -}}
+		{{end}}
+		default: return nil
 	}
 }
 
