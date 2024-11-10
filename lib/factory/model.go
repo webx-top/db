@@ -220,4 +220,6 @@ type Model interface {
 	EventOFF(off ...bool) Model
 	ListPage(cond *db.Compounds, sorts ...interface{}) error
 	ListPageAs(recv interface{}, cond *db.Compounds, sorts ...interface{}) error
+	ListPageByOffset(cond *db.Compounds, sorts ...interface{}) error
+	ListPageByOffsetAs(recv interface{}, cond *db.Compounds, sorts ...interface{}) error
 }
