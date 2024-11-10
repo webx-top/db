@@ -587,17 +587,17 @@ func (a *{{.StructName}}) GetField(field string) interface{} {
 
 func (a *{{.StructName}}) GetAllFieldNames() []string {
 	return []string{
-		{{range $k, $v := .TableAndStructFields}}
+		{{range $k, $v := .TableAndStructFields -}}
 		"{{$v.V}}",
-		{{end}}
+		{{end -}}
 	}
 }
 
 func (a *{{.StructName}}) HasField(field string) bool {
 	switch field {
-		{{- range $k, $v := .TableAndStructFields}}
+		{{range $k, $v := .TableAndStructFields -}}
 		case "{{$v.V}}": return true
-		{{end}}
+		{{end -}}
 		default: return false
 	}
 }
