@@ -585,6 +585,23 @@ func (a *{{.StructName}}) GetField(field string) interface{} {
 	}
 }
 
+func (a *{{.StructName}}) GetAllFieldNames() []string {
+	return []string{
+		{{range $k, $v := .TableAndStructFields}}
+		"{{$v.V}}",
+		{{end}}
+	}
+}
+
+func (a *{{.StructName}}) HasField(field string) bool {
+	switch field {
+		{{- range $k, $v := .TableAndStructFields}}
+		case "{{$v.V}}": return true
+		{{end}}
+		default: return false
+	}
+}
+
 func (a *{{.StructName}}) Set(key interface{}, value ...interface{}) {
 	switch k := key.(type) {
 		case map[string]interface{}:
