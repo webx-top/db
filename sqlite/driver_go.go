@@ -1,4 +1,4 @@
-//go:build sqlitego
+//go:build !sqlitecgo
 
 package sqlite
 
