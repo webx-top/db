@@ -360,7 +360,7 @@ func EqField(field string, keywords string) db.Compound {
 
 // GenDateRange 生成日期范围条件
 // 生成日期范围条件
-// @param field 字段名。支持搜索多个字段，各个字段之间用半角逗号“,”隔开
+// @param field 字段名
 // @param keywords 关键词
 func GenDateRange(field string, keywords string, seperators ...string) *db.Compounds {
 	cond := db.NewCompounds()
@@ -374,7 +374,7 @@ func GenDateRange(field string, keywords string, seperators ...string) *db.Compo
 	if len(seperator) == 0 {
 		seperator = ` - `
 	}
-	dataRange := strings.Split(keywords, seperator)
+	dataRange := strings.SplitN(keywords, seperator, 2)
 	dateStart = dataRange[0]
 	if len(dataRange) > 1 {
 		dateEnd = dataRange[1]

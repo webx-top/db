@@ -23,6 +23,7 @@ package db
 
 import (
 	"fmt"
+	"strings"
 )
 
 // RawValue interface represents values that can bypass SQL filters. This is an
@@ -93,3 +94,72 @@ func Raw(value string, args ...interface{}) RawValue {
 }
 
 var _ = RawValue(&rawValue{})
+var _ = RawValue(&rawValues{})
+
+func AndRawValues(values ...RawValue) *rawValues {
+	return &rawValues{values: values, operator: OperatorAnd}
+}
+
+func OrRawValues(values ...RawValue) *rawValues {
+	return &rawValues{values: values, operator: OperatorOr}
+}
+
+type rawValues struct {
+	values   []RawValue
+	operator CompoundOperator
+}
+
+func (r *rawValues) Add(v RawValue) *rawValues {
+	r.values = append(r.values, v)
+	return r
+}
+
+func (r rawValues) Arguments() []interface{} {
+	var n int
+	for i := range r.values {
+		n += len(r.values[i].Arguments())
+	}
+	args := make([]interface{}, 0, n)
+	for i := range r.values {
+		args = append(args, r.values[i].Arguments()...)
+	}
+	return args
+}
+
+func (r rawValues) Raw() string {
+	sqls := make([]string, len(r.values))
+	for i := range r.values {
+		sqls[i] = r.values[i].Raw()
+	}
+	oprt := `AND`
+	if r.operator == OperatorOr {
+		oprt = `OR`
+	}
+	if len(sqls) > 1 {
+		return `(` + strings.Join(sqls, `) `+oprt+` (`) + `)`
+	}
+	return strings.Join(sqls, ` `+oprt+` `)
+}
+
+func (r rawValues) String() string {
+	return r.Raw()
+}
+
+// Sentences return each one of the map records as a compound.
+func (r rawValues) Sentences() []Compound {
+	compounds := make([]Compound, len(r.values))
+	for i := range r.values {
+		compounds[i] = r.values[i]
+	}
+	return compounds
+}
+
+// Operator returns the default compound operator.
+func (r rawValues) Operator() CompoundOperator {
+	return r.operator
+}
+
+// Empty return false if this struct holds no value.
+func (r rawValues) Empty() bool {
+	return len(r.values) == 0
+}
