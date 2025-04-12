@@ -182,7 +182,7 @@ func templateDbschemaGotpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "template/dbschema.gotpl", size: 17762, mode: os.FileMode(420), modTime: time.Unix(1731219723, 0)}
+	info := bindataFileInfo{name: "template/dbschema.gotpl", size: 17762, mode: os.FileMode(420), modTime: time.Unix(1734614919, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

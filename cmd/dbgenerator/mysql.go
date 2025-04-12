@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -58,6 +57,8 @@ func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[stri
 		err = rows.Scan(&colField, &colType, &colCollation, &colNull, &colKey, &colDefault, &colExtra, &colPrivileges, &colComment)
 		if err != nil {
 			log.Println(err)
+		} else if colExtra.String == `VIRTUAL GENERATED` || colExtra.String == `STORED GENERATED` {
+			continue
 		}
 		result := map[string]string{
 			"Field":      colField.String,
@@ -463,12 +464,12 @@ func execBackupCommand(cfg *config, tables []string) {
 		}
 		close()
 		if index == 0 {
-			b, err := ioutil.ReadFile(saveFile)
+			b, err := os.ReadFile(saveFile)
 			if err != nil {
 				log.Fatal(err)
 			}
 			b = cleanRegExp.ReplaceAll(b, []byte(` `))
-			err = ioutil.WriteFile(saveFile, b, 0666)
+			err = os.WriteFile(saveFile, b, 0666)
 			if err != nil {
 				log.Fatal(err)
 			}
