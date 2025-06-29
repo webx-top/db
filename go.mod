@@ -18,7 +18,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/webx-top/com v1.3.30
 	github.com/webx-top/echo v1.16.7
-	github.com/webx-top/pagination v0.3.1
+	github.com/webx-top/pagination v0.3.2
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
 	go.mongodb.org/mongo-driver v1.17.4
