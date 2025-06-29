@@ -66,6 +66,9 @@ func (f *OffsetList) ListByOffset(recv interface{}, mw func(db.Result) db.Result
 
 // ListSize 列表尺寸
 func (f *OffsetList) ListSize() int {
+	if f.recv == nil {
+		return ObjectsSize(f.ls)
+	}
 	return ObjectsSize(f.recv)
 }
 
