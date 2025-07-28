@@ -159,7 +159,8 @@ func (f *FieldInfo) Validate(value interface{}) error {
 		}
 	case strings.HasPrefix(f.DataType, `char`):
 		r := param.AsString(value)
-		if len(r) > f.MaxSize {
+		v := []rune(r)
+		if len(v) > f.MaxSize {
 			return errors.Errorf(`Content "%v" cannot exceed %d characters`, value, f.MaxSize)
 		}
 	default:
@@ -170,7 +171,8 @@ func (f *FieldInfo) Validate(value interface{}) error {
 		if f.Max <= 0 {
 			if f.MaxSize > 0 {
 				r := param.AsString(value)
-				if len(r) > f.MaxSize {
+				v := []rune(r)
+				if len(v) > f.MaxSize {
 					return errors.Errorf(`Content "%v" cannot exceed %d characters`, value, f.MaxSize)
 				}
 			}
