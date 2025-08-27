@@ -435,7 +435,14 @@ func execBackupCommand(cfg *config, tables []string) {
 		if index > 0 {
 			cmdArgs[4] = `-t` //导出数据
 		}
-		cmd := exec.Command("mysqldump", cmdArgs...)
+		var cmd *exec.Cmd
+		if len(cfg.Container) > 0 {
+			cmd = exec.Command("docker", append([]string{
+				`exec`, cfg.Container, "mysqldump",
+			}, cmdArgs...)...)
+		} else {
+			cmd = exec.Command("mysqldump", cmdArgs...)
+		}
 		cmd.Stderr = os.Stderr
 		fp, err := os.Create(saveFile)
 		if err != nil {

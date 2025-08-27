@@ -1,6 +1,6 @@
 module github.com/webx-top/db
 
-go 1.24.0
+go 1.24.5
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
@@ -12,18 +12,18 @@ require (
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-sqlite3 v1.14.29
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.10.0
-	github.com/webx-top/com v1.3.31
-	github.com/webx-top/echo v1.16.10
+	github.com/webx-top/com v1.4.0
+	github.com/webx-top/echo v1.21.7
 	github.com/webx-top/pagination v0.3.2
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
 	go.mongodb.org/mongo-driver v1.17.4
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	modernc.org/ql v1.4.16
+	modernc.org/ql v1.4.23
 )
 
 require (
@@ -31,12 +31,12 @@ require (
 	github.com/admpub/color v1.8.1 // indirect
 	github.com/admpub/decimal v1.3.2 // indirect
 	github.com/admpub/events v1.3.6 // indirect
-	github.com/admpub/fsnotify v1.7.0 // indirect
+	github.com/admpub/fsnotify v1.7.1 // indirect
 	github.com/admpub/go-isatty v0.0.11 // indirect
 	github.com/admpub/go-reuseport v0.5.0 // indirect
 	github.com/admpub/humanize v0.0.0-20190501023926-5f826e92c8ca // indirect
 	github.com/admpub/realip v0.2.7 // indirect
-	github.com/admpub/timeago v1.2.2 // indirect
+	github.com/admpub/timeago v1.3.0 // indirect
 	github.com/admpub/xencoding v0.0.3 // indirect
 	github.com/araddon/gou v0.0.0-20190110011759-c797efecbb61 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20240916140612-caecf3c00c06 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.27.0 // indirect
@@ -78,26 +78,26 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
-	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792 // indirect
-	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
-	modernc.org/db v1.0.16 // indirect
-	modernc.org/file v1.0.12 // indirect
-	modernc.org/fileutil v1.3.8 // indirect
+	modernc.org/db v1.0.21 // indirect
+	modernc.org/file v1.0.15 // indirect
+	modernc.org/fileutil v1.3.25 // indirect
 	modernc.org/golex v1.1.0 // indirect
-	modernc.org/internal v1.1.3 // indirect
-	modernc.org/libc v1.66.6 // indirect
+	modernc.org/internal v1.1.6 // indirect
+	modernc.org/libc v1.66.7 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sortutil v1.2.1 // indirect
-	modernc.org/sqlite v1.38.1 // indirect
+	modernc.org/sqlite v1.38.2 // indirect
 	modernc.org/strutil v1.2.1 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )

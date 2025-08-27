@@ -26,6 +26,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.Match, `match`, ``, `-match "^publish_"`)
 	flag.BoolVar(&cfg.NotGenerated, `notGenerated`, false, `-notGenerated=true`)
 	flag.StringVar(&cfg.Backup, `backup`, ``, `-backup "./install.0.sql|./install-data.sql:table1,table2"`)
+	flag.StringVar(&cfg.Container, `container`, ``, `-container "mysql"`)
 
 	//DBSchema
 	flag.StringVar(&cfg.SchemaConfig.ImportPath, `import`, `../dbschema`, `-import github.com/webx-top/project/app/dbschema`)
@@ -88,6 +89,7 @@ type config struct {
 	EncFieldFormat  string          `json:"encFieldFormat"`
 	DBKey           string          `json:"dbKey"`
 	TemplateDir     string          `json:"templateDir"`
+	Container       string          `json:"container"`
 	encFieldFormats map[string]string
 }
 
