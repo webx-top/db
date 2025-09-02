@@ -87,12 +87,12 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
-	modernc.org/db v1.0.21 // indirect
-	modernc.org/file v1.0.15 // indirect
-	modernc.org/fileutil v1.3.25 // indirect
+	modernc.org/db v1.0.23 // indirect
+	modernc.org/file v1.0.16 // indirect
+	modernc.org/fileutil v1.3.29 // indirect
 	modernc.org/golex v1.1.0 // indirect
-	modernc.org/internal v1.1.6 // indirect
-	modernc.org/libc v1.66.7 // indirect
+	modernc.org/internal v1.1.7 // indirect
+	modernc.org/libc v1.66.8 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
