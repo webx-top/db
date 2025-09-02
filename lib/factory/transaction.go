@@ -320,6 +320,26 @@ func (t *Transaction) Exists(param *Param) (bool, error) {
 	return t.Result(param).OrderBy().Exists()
 }
 
+// Stat Stat(param,`max`,`score`)
+func (t *Transaction) Stat(param *Param, fn string, field string) (float64, error) {
+	counter := struct {
+		Stat sql.NullFloat64 `db:"_t"`
+	}{}
+	selector := t.SQLBuilder(param).Select(db.Raw(fn + "(" + field + ") AS _t")).From(param.TableName()).Where(param.args...)
+	selector = t.joinSelect(param, selector)
+	if param.middlewareSelector != nil {
+		selector = param.middlewareSelector(selector)
+	}
+	selector = selector.Offset(0).Limit(1).OrderBy()
+	if err := selector.IteratorContext(param.Context()).One(&counter); err != nil {
+		if err == db.ErrNoMoreRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return counter.Stat.Float64, nil
+}
+
 // Write ==========================
 
 func (t *Transaction) Insert(param *Param) (interface{}, error) {
@@ -386,24 +406,4 @@ func (t *Transaction) Deletex(param *Param) (affected int64, err error) {
 		return 0, err
 	}
 	return res.RowsAffected()
-}
-
-// Stat Stat(param,`max`,`score`)
-func (t *Transaction) Stat(param *Param, fn string, field string) (float64, error) {
-	counter := struct {
-		Stat sql.NullFloat64 `db:"_t"`
-	}{}
-	selector := t.SQLBuilder(param).Select(db.Raw(fn + "(" + field + ") AS _t")).From(param.TableName()).Where(param.args...)
-	selector = t.joinSelect(param, selector)
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
-	selector = selector.Offset(0).Limit(1).OrderBy()
-	if err := selector.IteratorContext(param.Context()).One(&counter); err != nil {
-		if err == db.ErrNoMoreRows {
-			return 0, nil
-		}
-		return 0, err
-	}
-	return counter.Stat.Float64, nil
 }

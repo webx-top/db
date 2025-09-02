@@ -99,9 +99,10 @@ type Param struct {
 
 func NewParam(args ...interface{}) *Param {
 	p := &Param{
-		factory: DefaultFactory,
-		page:    1,
-		offset:  -1,
+		factory:  DefaultFactory,
+		page:     1,
+		offset:   -1,
+		readOnly: true,
 	}
 	p.init(args...)
 	return p
