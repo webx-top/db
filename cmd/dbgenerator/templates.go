@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,17 +15,22 @@ import (
 )
 
 type structField struct {
-	field   string
-	typ     string
-	dbTag   string
-	bsonTag string
-	jsonTag string
-	xmlTag  string
-	comment string
+	field    string
+	typ      string
+	dbTag    string
+	bsonTag  string
+	jsonTag  string
+	xmlTag   string
+	otherTag string
+	comment  string
 }
 
 func (f *structField) String() string {
-	return fmt.Sprintf(memberTemplate, f.field, f.typ, f.dbTag, f.bsonTag, f.comment, f.jsonTag, f.xmlTag)
+	otherTag := f.otherTag
+	if len(otherTag) > 0 {
+		otherTag = ` ` + otherTag
+	}
+	return fmt.Sprintf(memberTemplate, f.field, f.typ, f.dbTag, f.bsonTag, f.comment, f.jsonTag, f.xmlTag, otherTag)
 }
 
 var structFuncs = map[string]string{
@@ -117,7 +122,7 @@ type tempateModelData struct {
 	SchemaPackageName string
 }
 
-var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`"
+var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`%s"
 
 var (
 	structTemplateObj *template.Template
@@ -154,9 +159,9 @@ func getTemplateContent(name string) (string, error) {
 			return "", err
 		}
 		defer fs.Close()
-		b, err = ioutil.ReadAll(fs)
+		b, err = io.ReadAll(fs)
 	} else {
-		b, err = ioutil.ReadFile(tempfile)
+		b, err = os.ReadFile(tempfile)
 	}
 	if err != nil {
 		return ``, err

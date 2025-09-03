@@ -250,3 +250,19 @@ func (a *AutoTimeFields) parseInsertTime(par string) {
 		}
 	}
 }
+
+func (a *AutoTimeFields) GetInsertFieldNames(tableName string) ([]string, bool) {
+	_fieldNames, ok := a.Insert[`*`]
+	if !ok {
+		_fieldNames, ok = a.Insert[tableName]
+	}
+	return _fieldNames, ok
+}
+
+func (a *AutoTimeFields) GetUpdateFieldNames(tableName string) ([]string, bool) {
+	_fieldNames, ok := a.Update[`*`]
+	if !ok {
+		_fieldNames, ok = a.Update[tableName]
+	}
+	return _fieldNames, ok
+}

@@ -104,7 +104,7 @@ func main() {
 		if idf, ok := hashids[tableName]; ok {
 			typeFields = append(typeFields, idf)
 		}
-		goFields, fields, fieldNames := GetTableFields(cfg.Engine, sess, tableName, map[string][]string{`hashids`: typeFields})
+		goFields, fields, fieldNames := GetTableFields(cfg, sess, tableName, map[string][]string{`hashids`: typeFields})
 		noPrefixTableName := tableName
 		if hasPrefix {
 			noPrefixTableName = strings.TrimPrefix(tableName, cfg.Prefix)
@@ -141,10 +141,7 @@ func main() {
 
 		importTime := false
 		if cfg.AutoTimeFields != nil {
-			_fieldNames, ok := cfg.AutoTimeFields.Insert[`*`]
-			if !ok {
-				_fieldNames, ok = cfg.AutoTimeFields.Insert[tableName]
-			}
+			_fieldNames, ok := cfg.AutoTimeFields.GetInsertFieldNames(tableName)
 			if ok && len(_fieldNames) > 0 {
 				beforeInsert := ``
 				newLine := ``
@@ -198,10 +195,7 @@ func main() {
 				tplSchema.AfterInsert = afterInsert
 				tplSchema.BeforeInsert = beforeInsert
 			}
-			_fieldNames, ok = cfg.AutoTimeFields.Update[`*`]
-			if !ok {
-				_fieldNames, ok = cfg.AutoTimeFields.Update[tableName]
-			}
+			_fieldNames, ok = cfg.AutoTimeFields.GetUpdateFieldNames(tableName)
 			if ok && len(_fieldNames) > 0 {
 				beforeUpdate := ``
 				setUpdatedAt := ``

@@ -15,9 +15,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/webx-top/com v1.4.0
-	github.com/webx-top/echo v1.21.7
+	github.com/webx-top/echo v1.21.8
 	github.com/webx-top/pagination v0.3.2
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
@@ -29,6 +29,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/admpub/color v1.8.1 // indirect
+	github.com/admpub/dateparse v0.0.0-20250903020633-d86d3f2a4cfd // indirect
 	github.com/admpub/decimal v1.3.2 // indirect
 	github.com/admpub/events v1.3.6 // indirect
 	github.com/admpub/fsnotify v1.7.1 // indirect

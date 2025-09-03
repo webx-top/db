@@ -81,24 +81,42 @@ func getMySQLTableInfo(d sqlbuilder.Database, tableName string) (int, []map[stri
 	return fieldMaxLength, fieldsInfo
 }
 
-func getMySQLTableFields(db sqlbuilder.Database, tableName string, typeMap map[string][]string) ([]string, map[string]factory.FieldInfo, []string) {
+func getMySQLTableFields(cfg *config, db sqlbuilder.Database, tableName string, typeMap map[string][]string) ([]string, map[string]factory.FieldInfo, []string) {
 
 	fieldMaxLength, fieldsInfo := getMySQLTableInfo(db, tableName)
 	goFields := []string{}
 	fields := map[string]factory.FieldInfo{}
 	fieldNames := make([]string, len(fieldsInfo))
-	for key, field := range fieldsInfo {
-		goField, fieldInfo := getMySQLFieldInfo(field, fieldMaxLength, fields)
-		if typeMap != nil {
-			for typee, typef := range typeMap {
-				switch typee {
-				case `hashids`:
-					if com.InSlice(fieldInfo.Name, typef) {
-						goField.typ = `hashseq.ID`
-						fieldInfo.MyType = goField.typ
+	var sets []func(*structField, *factory.FieldInfo)
+	if typeMap != nil {
+		if typef, ok := typeMap[`hashids`]; ok && len(typef) > 0 {
+			sets = append(sets, func(sf *structField, fi *factory.FieldInfo) {
+				if com.InSlice(fi.Name, typef) {
+					sf.typ = `hashseq.ID`
+					fi.MyType = sf.typ
+				}
+			})
+		}
+	}
+	if cfg.AutoTimeFields != nil {
+		_fieldNames, ok := cfg.AutoTimeFields.GetUpdateFieldNames(tableName)
+		if ok && len(_fieldNames) > 0 {
+			sets = append(sets, func(sf *structField, fi *factory.FieldInfo) {
+				if com.InSlice(fi.Name, _fieldNames) {
+					switch fi.GoType {
+					case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
+						sf.otherTag = `form_decoder:"time2unix" form_encoder:"unix2time"`
+					case `string`:
+						//TODO
 					}
 				}
-			}
+			})
+		}
+	}
+	for key, field := range fieldsInfo {
+		goField, fieldInfo := getMySQLFieldInfo(cfg, field, fieldMaxLength, fields)
+		for _, set := range sets {
+			set(goField, &fieldInfo)
 		}
 		goFields = append(goFields, goField.String())
 		fields[fieldInfo.Name] = fieldInfo
@@ -107,7 +125,7 @@ func getMySQLTableFields(db sqlbuilder.Database, tableName string, typeMap map[s
 	return goFields, fields, fieldNames
 }
 
-func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (*structField, factory.FieldInfo) {
+func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fields map[string]factory.FieldInfo) (*structField, factory.FieldInfo) {
 
 	fieldInfo := factory.FieldInfo{Options: []string{}}
 	p := strings.Index(field["Type"], `(`)
@@ -203,10 +221,11 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 	typeP := fmt.Sprintf(`%-8s`, fieldInfo.GoType)
 	dbTag := fieldInfo.Name
 	bsonTag := fieldInfo.Name
+	var otherTag string
 	fieldInfo.Comment = field["Comment"]
 	fieldInfo.DefaultValue = field["Default"]
 	var magicTags []string
-	if strings.HasPrefix(fieldInfo.Comment, "`") {
+	if strings.HasPrefix(fieldInfo.Comment, "`") { // `magicTag1,magicTag2`
 		p := strings.Index(fieldInfo.Comment[1:], "`")
 		if p > -1 {
 			magicTags = strings.Split(fieldInfo.Comment[1:p+1], `,`)
@@ -238,6 +257,11 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 					case `pk`:
 						dbTag += ",pk"
 						fieldInfo.PrimaryKey = true
+					case `timestamp`:
+						switch fieldInfo.GoType {
+						case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
+							otherTag = `form_decoder:"time2unix" form_encoder:"unix2time"`
+						}
 					}
 				}
 			}
@@ -274,7 +298,7 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 		dbTag = fieldInfo.GoName
 	}
 	for _, t := range magicTags {
-		parts := strings.SplitN(t, `:`, 2)
+		parts := strings.SplitN(t, `:`, 2) // omit:json|xml or omit:encode
 		if len(parts) != 2 {
 			continue
 		}
@@ -321,13 +345,14 @@ func getMySQLFieldInfo(field map[string]string, maxLength int, fields map[string
 		}
 	}
 	fieldBlock := &structField{
-		field:   fieldP,
-		typ:     typeP,
-		comment: fieldInfo.Comment,
-		dbTag:   dbTag,
-		bsonTag: bsonTag,
-		jsonTag: jsonTag,
-		xmlTag:  xmlTag,
+		field:    fieldP,
+		typ:      typeP,
+		comment:  fieldInfo.Comment,
+		dbTag:    dbTag,
+		bsonTag:  bsonTag,
+		jsonTag:  jsonTag,
+		xmlTag:   xmlTag,
+		otherTag: otherTag,
 	}
 	return fieldBlock, fieldInfo
 }
