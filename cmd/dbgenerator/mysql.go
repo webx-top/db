@@ -258,8 +258,7 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 						dbTag += ",pk"
 						fieldInfo.PrimaryKey = true
 					case `timestamp`:
-						switch fieldInfo.GoType {
-						case `uint`, `int`, `uint32`, `int32`, `int64`, `uint64`:
+						if fieldInfo.IsInteger() {
 							otherTag = `form_decoder:"time2unix" form_encoder:"unix2time"`
 						}
 					}
@@ -340,6 +339,27 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 					xmlTag += `,omitempty`
 					jsonTag += `,omitempty`
 				default:
+				}
+			}
+		case `time`:
+			if len(targets) > 0 && len(targets[0]) > 0 {
+				switch targets[0] {
+				case `unix`:
+					if fieldInfo.IsInteger() {
+						otherTag = `form_decoder:"time2unix" form_encoder:"unix2time"`
+					}
+				case `unixmilli`:
+					if fieldInfo.IsInteger() {
+						otherTag = `form_decoder:"time2unixmilli" form_encoder:"unixmilli2time"`
+					}
+				case `unixmicro`:
+					if fieldInfo.IsInteger() {
+						otherTag = `form_decoder:"time2unixmicro" form_encoder:"unixmicro2time"`
+					}
+				case `unixnano`:
+					if fieldInfo.IsDecimal() {
+						otherTag = `form_decoder:"time2unixnano" form_encoder:"unixnano2time"`
+					}
 				}
 			}
 		}

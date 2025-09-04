@@ -113,8 +113,20 @@ func (f *FieldInfo) HTMLAttrBuilder(required bool) HTMLAttrs {
 	return attrs
 }
 
+func (f *FieldInfo) IsInteger() bool {
+	return isInteger(f.GoType)
+}
+
+func (f *FieldInfo) IsNumeric() bool {
+	return isNumeric(f.GoType)
+}
+
+func (f *FieldInfo) IsDecimal() bool {
+	return isDecimal(f.GoType)
+}
+
 var (
-	integerTypes = []string{`int`, `uint`, `int64`, `uint64`}
+	integerTypes = []string{`uint8`, `int8`, `uint16`, `int16`, `uint32`, `int32`, `int`, `uint`, `int64`, `uint64`}
 	decimalTypes = []string{`float64`, `float32`}
 )
 
