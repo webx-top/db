@@ -356,8 +356,8 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 					if fieldInfo.IsInteger() {
 						otherTag = `form_decoder:"time2unixmicro" form_encoder:"unixmicro2time"`
 					}
-				case `unixnano`:
-					if fieldInfo.IsDecimal() {
+				case `unixnano`: // 整数/小数/字符串
+					if fieldInfo.IsNumeric() || fieldInfo.GoType == `string` {
 						otherTag = `form_decoder:"time2unixnano" form_encoder:"unixnano2time"`
 					}
 				}
