@@ -122,7 +122,7 @@ type tempateModelData struct {
 	SchemaPackageName string
 }
 
-var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q`%s"
+var memberTemplate = "\t%v\t%v\t`db:%q bson:%q comment:%q json:%q xml:%q%s`"
 
 var (
 	structTemplateObj *template.Template
