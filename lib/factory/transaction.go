@@ -94,6 +94,11 @@ func (t *Transaction) result(param *Param) db.Result {
 	if len(param.cols) > 0 {
 		res = res.Select(param.cols...)
 	}
+	if param.amend != nil {
+		res = res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector { return s.Amend(param.amend) }).
+			Callback(func(s sqlbuilder.Updater) sqlbuilder.Updater { return s.Amend(param.amend) }).
+			Callback(func(s sqlbuilder.Deleter) sqlbuilder.Deleter { return s.Amend(param.amend) })
+	}
 	return res
 }
 
@@ -104,9 +109,7 @@ func (t *Transaction) Result(param *Param) db.Result {
 	}
 	if param.middlewareSelector != nil || len(param.joins) > 0 {
 		res = res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector {
-			if param.middlewareSelector != nil {
-				s = param.middlewareSelector(s)
-			}
+			s = t.setSelector(param, s)
 			return t.joinSelect(param, s)
 		})
 	}
@@ -158,25 +161,19 @@ func (t *Transaction) SelectAll(param *Param) error {
 	if param.size > 0 {
 		selector = selector.Limit(param.size).Offset(param.GetOffset())
 	}
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
+	selector = t.setSelector(param, selector)
 	return selector.All(param.result)
 }
 
 func (t *Transaction) SelectOne(param *Param) error {
 	selector := t.Select(param).Limit(1)
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
+	selector = t.setSelector(param, selector)
 	return selector.One(param.result)
 }
 
 func (t *Transaction) SelectList(param *Param) (func() int64, error) {
 	selector := t.Select(param).Limit(param.size).Offset(param.GetOffset())
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
+	selector = t.setSelector(param, selector)
 	countFn := func() int64 {
 		cnt, err := t.SelectCount(param)
 		if err != nil {
@@ -196,9 +193,7 @@ func (t *Transaction) SelectCount(param *Param) (int64, error) {
 	}{}
 	selector := t.SQLBuilder(param).Select(db.Raw("count(1) AS _t")).From(param.TableName()).Where(param.args...)
 	selector = t.joinSelect(param, selector)
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
+	selector = t.setSelector(param, selector)
 	selector = selector.Offset(0).Limit(1).OrderBy()
 	if err := selector.IteratorContext(param.Context()).One(&counter); err != nil {
 		if err == db.ErrNoMoreRows {
@@ -247,6 +242,7 @@ func (t *Transaction) joinSelect(param *Param, selector sqlbuilder.Selector) sql
 
 func (t *Transaction) Select(param *Param) sqlbuilder.Selector {
 	selector := t.SQLBuilder(param).Select(param.cols...).From(param.TableName()).Where(param.args...)
+	selector = t.setSelector(param, selector)
 	return t.joinSelect(param, selector)
 }
 
@@ -320,6 +316,16 @@ func (t *Transaction) Exists(param *Param) (bool, error) {
 	return t.Result(param).OrderBy().Exists()
 }
 
+func (t *Transaction) setSelector(param *Param, selector sqlbuilder.Selector) sqlbuilder.Selector {
+	if param.middlewareSelector != nil {
+		selector = param.middlewareSelector(selector)
+	}
+	if param.amend != nil {
+		selector = selector.Amend(param.amend)
+	}
+	return selector
+}
+
 // Stat Stat(param,`max`,`score`)
 func (t *Transaction) Stat(param *Param, fn string, field string) (float64, error) {
 	counter := struct {
@@ -327,9 +333,7 @@ func (t *Transaction) Stat(param *Param, fn string, field string) (float64, erro
 	}{}
 	selector := t.SQLBuilder(param).Select(db.Raw(fn + "(" + field + ") AS _t")).From(param.TableName()).Where(param.args...)
 	selector = t.joinSelect(param, selector)
-	if param.middlewareSelector != nil {
-		selector = param.middlewareSelector(selector)
-	}
+	selector = t.setSelector(param, selector)
 	selector = selector.Offset(0).Limit(1).OrderBy()
 	if err := selector.IteratorContext(param.Context()).One(&counter); err != nil {
 		if err == db.ErrNoMoreRows {
@@ -355,7 +359,7 @@ func (t *Transaction) Update(param *Param) error {
 
 func (t *Transaction) Updatex(param *Param) (affected int64, err error) {
 	param.readOnly = false
-	res, err := t.SQLBuilder(param).Update(param.TableName()).Set(param.save).Where(param.args...).ExecContext(param.Context())
+	res, err := t.SQLBuilder(param).Update(param.TableName()).Set(param.save).Where(param.args...).Amend(param.amend).ExecContext(param.Context())
 	if err != nil {
 		return 0, err
 	}
@@ -401,7 +405,7 @@ func (t *Transaction) Delete(param *Param) error {
 
 func (t *Transaction) Deletex(param *Param) (affected int64, err error) {
 	param.readOnly = false
-	res, err := t.SQLBuilder(param).DeleteFrom(param.TableName()).Where(param.args...).ExecContext(param.Context())
+	res, err := t.SQLBuilder(param).DeleteFrom(param.TableName()).Where(param.args...).Amend(param.amend).ExecContext(param.Context())
 	if err != nil {
 		return 0, err
 	}

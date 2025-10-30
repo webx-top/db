@@ -77,6 +77,7 @@ type Param struct {
 	readOnly           bool
 	collection         string //集合名或表名称
 	alias              string //表别名
+	amend              func(queryIn string) (queryOut string)
 	middleware         func(db.Result) db.Result
 	middlewareName     string
 	middlewareSelector func(sqlbuilder.Selector) sqlbuilder.Selector
@@ -116,6 +117,7 @@ func (p *Param) Reset() {
 	p.readOnly = false
 	p.collection = ``
 	p.alias = ``
+	p.amend = nil
 	p.middleware = nil
 	p.middlewareName = ``
 	p.middlewareSelector = nil
@@ -409,6 +411,10 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 		}
 		prefix += table + `.`
 	}
+	return p
+}
+func (p *Param) SetAmend(amend func(queryIn string) (queryOut string)) *Param {
+	p.amend = amend
 	return p
 }
 
