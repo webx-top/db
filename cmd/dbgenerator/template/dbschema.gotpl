@@ -12,7 +12,6 @@ import (
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/db/lib/factory/pagination"
-	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/param"
 )
@@ -162,7 +161,7 @@ func (a *{{.StructName}}) SetParam(param *factory.Param) factory.Model {
 	return a
 }
 
-func (a *{{.StructName}}) Param(mw interface{}, args ...interface{}) *factory.Param {
+func (a *{{.StructName}}) Param(mw func(db.Result) db.Result, args ...interface{}) *factory.Param {
 	if a.base.Param() == nil {
 		return a.NewParam().SetMiddleware(mw).SetArgs(args...)
 	}
@@ -328,7 +327,7 @@ func (a *{{.StructName}}) ListByOffset(recv interface{}, mw func(db.Result) db.R
 	return cnt, err
 }
 
-func (a *{{.StructName}}) Insert(mw ...func(sqlbuilder.Inserter) sqlbuilder.Inserter) (pk interface{}, err error) {
+func (a *{{.StructName}}) Insert() (pk interface{}, err error) {
 	{{.BeforeInsert}}
 	if a.base.Eventable() {
 		err = DBI.Fire("creating", a, nil)
@@ -336,11 +335,7 @@ func (a *{{.StructName}}) Insert(mw ...func(sqlbuilder.Inserter) sqlbuilder.Inse
 			return
 		}
 	}
-	var _mw func(sqlbuilder.Inserter) sqlbuilder.Inserter
-	if len(mw) > 0 {
-		_mw = mw[0]
-	}
-	pk, err = a.Param(_mw).SetSend(a).Insert()
+	pk, err = a.Param(nil).SetSend(a).Insert()
 	{{.AfterInsert}}
 	if err == nil && a.base.Eventable() {
 		err = DBI.Fire("created", a, nil)
@@ -362,7 +357,7 @@ func (a *{{.StructName}}) Update(mw func(db.Result) db.Result, args ...interface
 	return DBI.Fire("updated", a, mw, args...)
 }
 
-func (a *{{.StructName}}) Updatex(mw func(sqlbuilder.Updater) sqlbuilder.Updater, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(a).Updatex()
@@ -396,7 +391,7 @@ func (a *{{.StructName}}) UpdateByFields(mw func(db.Result) db.Result, fields []
 	return
 }
 
-func (a *{{.StructName}}) UpdatexByFields(mw func(sqlbuilder.Updater) sqlbuilder.Updater, fields []string, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) UpdatexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).UpdatexByStruct(a, fields...)
@@ -421,7 +416,7 @@ func (a *{{.StructName}}) UpdateField(mw func(db.Result) db.Result, field string
 	}, args...)
 }
 
-func (a *{{.StructName}}) UpdatexField(mw func(sqlbuilder.Updater) sqlbuilder.Updater, field string, value interface{}, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) UpdatexField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (affected int64, err error) {
 	return a.UpdatexFields(mw, map[string]interface{}{
 		field: value,
 	}, args...)
@@ -447,7 +442,7 @@ func (a *{{.StructName}}) UpdateFields(mw func(db.Result) db.Result, kvset map[s
 	return DBI.FireUpdate("updated", &m, editColumns, mw, args...)
 }
 
-func (a *{{.StructName}}) UpdatexFields(mw func(sqlbuilder.Updater) sqlbuilder.Updater, kvset map[string]interface{}, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) UpdatexFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (affected int64, err error) {
 	{{.SetUpdatedAt}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).SetSend(kvset).Updatex()
@@ -520,7 +515,7 @@ func (a *{{.StructName}}) Delete(mw func(db.Result) db.Result, args ...interface
 	return DBI.Fire("deleted", a, mw, args...)
 }
 
-func (a *{{.StructName}}) Deletex(mw func(sqlbuilder.Deleter) sqlbuilder.Deleter, args ...interface{}) (affected int64, err error) {
+func (a *{{.StructName}}) Deletex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
 	{{.BeforeDelete}}
 	if !a.base.Eventable() {
 		return a.Param(mw, args...).Deletex()
