@@ -2,7 +2,6 @@ package factory
 
 import (
 	"github.com/webx-top/db"
-	"github.com/webx-top/db/lib/sqlbuilder"
 	"github.com/webx-top/echo"
 	"github.com/webx-top/echo/param"
 )
@@ -188,25 +187,25 @@ type Model interface {
 	New(structName string, connID ...int) Model
 	NewParam() *Param
 	SetParam(param *Param) Model
-	Param(mw interface{}, args ...interface{}) *Param
+	Param(mw func(db.Result) db.Result, args ...interface{}) *Param
 	NewObjects() Ranger
 	Get(mw func(db.Result) db.Result, args ...interface{}) error
 	List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error)
 	ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error)
-	Insert(mw ...func(sqlbuilder.Inserter) sqlbuilder.Inserter) (interface{}, error)
+	Insert() (interface{}, error)
 	Update(mw func(db.Result) db.Result, args ...interface{}) error
-	Updatex(mw func(sqlbuilder.Updater) sqlbuilder.Updater, args ...interface{}) (affected int64, err error)
+	Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error)
 	UpdateByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error)
-	UpdatexByFields(mw func(sqlbuilder.Updater) sqlbuilder.Updater, fields []string, args ...interface{}) (affected int64, err error)
+	UpdatexByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (affected int64, err error)
 	Upsert(mw func(db.Result) db.Result, args ...interface{}) (interface{}, error)
 	Delete(mw func(db.Result) db.Result, args ...interface{}) error
-	Deletex(mw func(sqlbuilder.Deleter) sqlbuilder.Deleter, args ...interface{}) (affected int64, err error)
+	Deletex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error)
 	Count(mw func(db.Result) db.Result, args ...interface{}) (int64, error)
 	Exists(mw func(db.Result) db.Result, args ...interface{}) (bool, error)
 	UpdateField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) error
-	UpdatexField(mw func(sqlbuilder.Updater) sqlbuilder.Updater, field string, value interface{}, args ...interface{}) (int64, error)
+	UpdatexField(mw func(db.Result) db.Result, field string, value interface{}, args ...interface{}) (int64, error)
 	UpdateFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) error
-	UpdatexFields(mw func(sqlbuilder.Updater) sqlbuilder.Updater, kvset map[string]interface{}, args ...interface{}) (int64, error)
+	UpdatexFields(mw func(db.Result) db.Result, kvset map[string]interface{}, args ...interface{}) (int64, error)
 	UpdateValues(mw func(db.Result) db.Result, keysValues *db.KeysValues, args ...interface{}) error
 	AsMap(onlyFields ...string) param.Store
 	AsRow(onlyFields ...string) param.Store
