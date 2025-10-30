@@ -94,11 +94,6 @@ func (t *Transaction) result(param *Param) db.Result {
 	if len(param.cols) > 0 {
 		res = res.Select(param.cols...)
 	}
-	if param.amend != nil {
-		res = res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector { return s.Amend(param.amend) }).
-			Callback(func(s sqlbuilder.Updater) sqlbuilder.Updater { return s.Amend(param.amend) }).
-			Callback(func(s sqlbuilder.Deleter) sqlbuilder.Deleter { return s.Amend(param.amend) })
-	}
 	return res
 }
 
@@ -111,6 +106,21 @@ func (t *Transaction) Result(param *Param) db.Result {
 		res = res.Callback(func(s sqlbuilder.Selector) sqlbuilder.Selector {
 			s = t.setSelector(param, s)
 			return t.joinSelect(param, s)
+		})
+	}
+	if param.middlewareUpdater != nil {
+		res = res.Callback(func(u sqlbuilder.Updater) sqlbuilder.Updater {
+			return t.setUpdater(param, u)
+		})
+	}
+	if param.middlewareDeleter != nil {
+		res = res.Callback(func(d sqlbuilder.Deleter) sqlbuilder.Deleter {
+			return t.setDeleter(param, d)
+		})
+	}
+	if param.middlewareInserter != nil {
+		res = res.Callback(func(d sqlbuilder.Inserter) sqlbuilder.Inserter {
+			return t.setInserter(param, d)
 		})
 	}
 	return res
@@ -320,10 +330,28 @@ func (t *Transaction) setSelector(param *Param, selector sqlbuilder.Selector) sq
 	if param.middlewareSelector != nil {
 		selector = param.middlewareSelector(selector)
 	}
-	if param.amend != nil {
-		selector = selector.Amend(param.amend)
-	}
 	return selector
+}
+
+func (t *Transaction) setUpdater(param *Param, updater sqlbuilder.Updater) sqlbuilder.Updater {
+	if param.middlewareUpdater != nil {
+		updater = param.middlewareUpdater(updater)
+	}
+	return updater
+}
+
+func (t *Transaction) setDeleter(param *Param, deleter sqlbuilder.Deleter) sqlbuilder.Deleter {
+	if param.middlewareDeleter != nil {
+		deleter = param.middlewareDeleter(deleter)
+	}
+	return deleter
+}
+
+func (t *Transaction) setInserter(param *Param, inserter sqlbuilder.Inserter) sqlbuilder.Inserter {
+	if param.middlewareInserter != nil {
+		inserter = param.middlewareInserter(inserter)
+	}
+	return inserter
 }
 
 // Stat Stat(param,`max`,`score`)
@@ -359,7 +387,7 @@ func (t *Transaction) Update(param *Param) error {
 
 func (t *Transaction) Updatex(param *Param) (affected int64, err error) {
 	param.readOnly = false
-	res, err := t.SQLBuilder(param).Update(param.TableName()).Set(param.save).Where(param.args...).Amend(param.amend).ExecContext(param.Context())
+	res, err := t.setUpdater(param, t.SQLBuilder(param).Update(param.TableName()).Set(param.save).Where(param.args...)).ExecContext(param.Context())
 	if err != nil {
 		return 0, err
 	}
@@ -405,7 +433,7 @@ func (t *Transaction) Delete(param *Param) error {
 
 func (t *Transaction) Deletex(param *Param) (affected int64, err error) {
 	param.readOnly = false
-	res, err := t.SQLBuilder(param).DeleteFrom(param.TableName()).Where(param.args...).Amend(param.amend).ExecContext(param.Context())
+	res, err := t.setDeleter(param, t.SQLBuilder(param).DeleteFrom(param.TableName()).Where(param.args...)).ExecContext(param.Context())
 	if err != nil {
 		return 0, err
 	}

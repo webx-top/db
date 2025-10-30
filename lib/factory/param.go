@@ -77,10 +77,12 @@ type Param struct {
 	readOnly           bool
 	collection         string //集合名或表名称
 	alias              string //表别名
-	amend              func(queryIn string) (queryOut string)
 	middleware         func(db.Result) db.Result
 	middlewareName     string
 	middlewareSelector func(sqlbuilder.Selector) sqlbuilder.Selector
+	middlewareUpdater  func(sqlbuilder.Updater) sqlbuilder.Updater
+	middlewareDeleter  func(sqlbuilder.Deleter) sqlbuilder.Deleter
+	middlewareInserter func(sqlbuilder.Inserter) sqlbuilder.Inserter
 	middlewareTx       func(*Transaction) error
 	result             interface{}   //查询后保存的结果
 	args               []interface{} //Find方法的条件参数
@@ -117,10 +119,12 @@ func (p *Param) Reset() {
 	p.readOnly = false
 	p.collection = ``
 	p.alias = ``
-	p.amend = nil
 	p.middleware = nil
-	p.middlewareName = ``
 	p.middlewareSelector = nil
+	p.middlewareUpdater = nil
+	p.middlewareDeleter = nil
+	p.middlewareInserter = nil
+	p.middlewareName = ``
 	p.middlewareTx = nil
 	p.result = nil
 	p.args = nil
@@ -413,13 +417,38 @@ func (p *Param) TableField(m interface{}, structField *string, tableField ...*st
 	}
 	return p
 }
-func (p *Param) SetAmend(amend func(queryIn string) (queryOut string)) *Param {
-	p.amend = amend
-	return p
-}
 
-func (p *Param) SetMiddleware(middleware func(db.Result) db.Result, name ...string) *Param {
-	p.middleware = middleware
+func (p *Param) SetMiddleware(middleware interface{}, name ...string) *Param {
+	switch mw := middleware.(type) {
+	case func(db.Result) db.Result:
+		p.middleware = mw
+	case func(sqlbuilder.Selector) sqlbuilder.Selector:
+		p.middlewareSelector = mw
+	case func(sqlbuilder.Updater) sqlbuilder.Updater:
+		p.middlewareUpdater = mw
+	case func(sqlbuilder.Deleter) sqlbuilder.Deleter:
+		p.middlewareDeleter = mw
+	case func(sqlbuilder.Inserter) sqlbuilder.Inserter:
+		p.middlewareInserter = mw
+	case nil:
+		if p.middleware != nil {
+			p.middleware = nil
+		}
+		if p.middlewareSelector != nil {
+			p.middlewareSelector = nil
+		}
+		if p.middlewareUpdater != nil {
+			p.middlewareUpdater = nil
+		}
+		if p.middlewareDeleter != nil {
+			p.middlewareDeleter = nil
+		}
+		if p.middlewareInserter != nil {
+			p.middlewareInserter = nil
+		}
+	default:
+		panic(`[db] unsupported middleware type in Param: ` + fmt.Sprintf(`%T`, mw))
+	}
 	if len(name) > 0 {
 		p.middlewareName = name[0]
 	}
@@ -435,7 +464,7 @@ func (p *Param) SetMiddlewareSelector(middleware func(sqlbuilder.Selector) sqlbu
 }
 
 // SetMW is SetMiddleware's alias.
-func (p *Param) SetMW(middleware func(db.Result) db.Result, name ...string) *Param {
+func (p *Param) SetMW(middleware interface{}, name ...string) *Param {
 	p.SetMiddleware(middleware, name...)
 	return p
 }
