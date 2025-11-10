@@ -99,8 +99,10 @@ func getMySQLTableFields(cfg *config, db sqlbuilder.Database, tableName string, 
 		}
 	}
 	if cfg.AutoTimeFields != nil {
-		_fieldNames, ok := cfg.AutoTimeFields.GetUpdateFieldNames(tableName)
-		if ok && len(_fieldNames) > 0 {
+		_fieldNames, _ := cfg.AutoTimeFields.GetUpdateFieldNames(tableName)
+		_ifieldNames, _ := cfg.AutoTimeFields.GetInsertFieldNames(tableName)
+		_fieldNames = append(_fieldNames, _ifieldNames...)
+		if len(_fieldNames) > 0 {
 			sets = append(sets, func(sf *structField, fi *factory.FieldInfo) {
 				if com.InSlice(fi.Name, _fieldNames) {
 					switch fi.GoType {
