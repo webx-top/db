@@ -29,9 +29,10 @@ type FieldInfo struct {
 	Comment       string   `json:"comment" xml:"comment" bson:"comment"`                   //备注
 
 	//以下为Golang中的信息
-	GoType string `json:"goType" xml:"goType" bson:"goType"` //Golang数据类型
-	MyType string `json:"myType" xml:"myType" bson:"myType"` //自定义数据类型
-	GoName string `json:"goName" xml:"goName" bson:"goName"` //Golang字段名
+	GoType       string `json:"goType" xml:"goType" bson:"goType"`                   //Golang数据类型
+	MyType       string `json:"myType" xml:"myType" bson:"myType"`                   //自定义数据类型
+	GoName       string `json:"goName" xml:"goName" bson:"goName"`                   //Golang字段名
+	Multilingual bool   `json:"multilingual" xml:"multilingual" bson:"multilingual"` //是否支持多语言
 }
 
 func (f *FieldInfo) GetName() string {

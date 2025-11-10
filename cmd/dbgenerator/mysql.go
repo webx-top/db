@@ -300,21 +300,20 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 	}
 	for _, t := range magicTags {
 		parts := strings.SplitN(t, `:`, 2) // omit:json|xml or omit:encode
-		if len(parts) != 2 {
-			continue
-		}
-		temp := map[string]struct{}{}
 		var targets []string
-		for _, tg := range strings.Split(parts[1], `|`) {
-			tg := strings.TrimSpace(tg)
-			if len(tg) == 0 {
-				continue
+		if len(parts) >= 2 {
+			temp := map[string]struct{}{}
+			for _, tg := range strings.Split(parts[1], `|`) {
+				tg := strings.TrimSpace(tg)
+				if len(tg) == 0 {
+					continue
+				}
+				if _, ok := temp[tg]; ok {
+					continue
+				}
+				temp[tg] = struct{}{}
+				targets = append(targets, tg)
 			}
-			if _, ok := temp[tg]; ok {
-				continue
-			}
-			temp[tg] = struct{}{}
-			targets = append(targets, tg)
 		}
 		switch parts[0] {
 		case `omit`:
@@ -364,6 +363,8 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 					}
 				}
 			}
+		case `i18n`:
+			fieldInfo.Multilingual = true
 		}
 	}
 	fieldBlock := &structField{
