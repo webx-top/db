@@ -1,21 +1,47 @@
 package factory
 
-import "github.com/webx-top/db"
+import (
+	"sync"
+
+	"github.com/webx-top/db"
+)
 
 func NewEvents() Events {
-	return Events{}
+	return Events{m: map[string]*Event{}}
 }
 
-type Events map[string]*Event
+type Events struct {
+	m  map[string]*Event
+	mu sync.RWMutex
+}
 
-func (e Events) getEventList(event string, table string) []*Event {
+func (e *Events) GetOk(table string) (*Event, bool) {
+	e.mu.RLock()
+	evt, ok := e.m[table]
+	e.mu.RUnlock()
+	return evt, ok
+}
+
+func (e *Events) MustGetEvent(table string) *Event {
+	evt, ok := e.GetOk(table)
+	if ok {
+		return evt
+	}
+	evt = NewEvent()
+	e.mu.Lock()
+	e.m[table] = evt
+	e.mu.Unlock()
+	return evt
+}
+
+func (e *Events) getEventList(event string, table string) []*Event {
 	events := []*Event{}
-	if evt, ok := e[table]; ok {
+	if evt, ok := e.GetOk(table); ok {
 		if evt.Exists(event) {
 			events = append(events, evt)
 		}
 	}
-	if evt, ok := e[`*`]; ok {
+	if evt, ok := e.GetOk(`*`); ok {
 		if evt.Exists(event) {
 			events = append(events, evt)
 		}
@@ -23,14 +49,14 @@ func (e Events) getEventList(event string, table string) []*Event {
 	return events
 }
 
-func (e Events) Exists(event string, model Model) bool {
+func (e *Events) Exists(event string, model Model) bool {
 	table := model.Short_()
-	if evt, ok := e[table]; ok {
+	if evt, ok := e.GetOk(table); ok {
 		if evt.Exists(event) {
 			return true
 		}
 	}
-	if evt, ok := e[`*`]; ok {
+	if evt, ok := e.GetOk(`*`); ok {
 		if evt.Exists(event) {
 			return true
 		}
@@ -38,7 +64,7 @@ func (e Events) Exists(event string, model Model) bool {
 	return false
 }
 
-func (e Events) Call(event string, model Model, editColumns []string, mw func(db.Result) db.Result, args ...interface{}) error {
+func (e *Events) Call(event string, model Model, editColumns []string, mw func(db.Result) db.Result, args ...interface{}) error {
 	if event == EventDeleted {
 		return e.call(event, model)
 	}
@@ -90,31 +116,31 @@ func (e Events) Call(event string, model Model, editColumns []string, mw func(db
 	return nil
 }
 
-func (e Events) call(event string, model Model, editColumns ...string) error {
+func (e *Events) call(event string, model Model, editColumns ...string) (err error) {
 	for _, evt := range e.getEventList(event, model.Short_()) {
-		err := evt.Call(event, model, editColumns...)
+		err = evt.Call(event, model, editColumns...)
 		if err != nil {
-			return err
+			return
 		}
 	}
-	return nil
+	return
 }
 
-func (e Events) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
+func (e *Events) CallRead(event string, model Model, param *Param, rangers ...Ranger) error {
 	table := model.Short_()
 	if len(rangers) < 1 { // 单行数据
-		if evt, ok := e[table]; ok {
+		if evt, ok := e.GetOk(table); ok {
 			err := evt.CallRead(event, model, param)
 			if err != nil {
 				return err
 			}
 		}
-		if evt, ok := e[`*`]; ok {
+		if evt, ok := e.GetOk(`*`); ok {
 			return evt.CallRead(event, model, param)
 		}
 		return nil
 	}
-	if evt, ok := e[table]; ok {
+	if evt, ok := e.GetOk(table); ok {
 		err := rangers[0].Range(func(m Model) error {
 			m.CPAFrom(model)
 			return evt.CallRead(event, m, param)
@@ -123,7 +149,7 @@ func (e Events) CallRead(event string, model Model, param *Param, rangers ...Ran
 			return err
 		}
 	}
-	if evt, ok := e[`*`]; ok {
+	if evt, ok := e.GetOk(`*`); ok {
 		err := rangers[0].Range(func(m Model) error {
 			m.CPAFrom(model)
 			return evt.CallRead(event, m, param)
@@ -136,19 +162,11 @@ func (e Events) CallRead(event string, model Model, param *Param, rangers ...Ran
 }
 
 func (e *Events) On(event string, h EventHandler, table string, async ...bool) {
-	evt, ok := (*e)[table]
-	if !ok {
-		evt = NewEvent()
-		(*e)[table] = evt
-	}
+	evt := e.MustGetEvent(table)
 	evt.On(event, h, async...)
 }
 
 func (e *Events) OnRead(event string, h EventReadHandler, table string, async ...bool) {
-	evt, ok := (*e)[table]
-	if !ok {
-		evt = NewEvent()
-		(*e)[table] = evt
-	}
+	evt := e.MustGetEvent(table)
 	evt.OnRead(event, h, async...)
 }
