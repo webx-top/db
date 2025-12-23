@@ -7,7 +7,7 @@ type EventManager interface {
 	MustGetEvent(table string) *Event
 }
 
-var UnsafeEventManager bool
+var UnsafeEventManager = true
 
 func NewEventManager(unsafe bool) EventManager {
 	if unsafe {
