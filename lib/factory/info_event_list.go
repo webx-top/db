@@ -148,3 +148,12 @@ func (e *Events) OnRead(event string, h EventReadHandler, table string, async ..
 	evt := e.mgr.MustGetEvent(table)
 	evt.OnRead(event, h, async...)
 }
+
+func (e Events) Tables() []string {
+	tables := []string{}
+	e.mgr.Range(func(table string, _ *Event) bool {
+		tables = append(tables, table)
+		return true
+	})
+	return tables
+}
