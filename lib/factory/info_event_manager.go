@@ -5,6 +5,7 @@ import "sync"
 type EventManager interface {
 	GetOk(table string) (*Event, bool)
 	MustGetEvent(table string) *Event
+	Range(f func(table string, evt *Event) bool)
 }
 
 var UnsafeEventManager = true
@@ -40,6 +41,16 @@ func (e *SafeMapEvents) MustGetEvent(table string) *Event {
 	return evt
 }
 
+func (e *SafeMapEvents) Range(f func(table string, evt *Event) bool) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	for k, v := range e.m {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
 type UnsafeMapEvents map[string]*Event
 
 func (e UnsafeMapEvents) GetOk(table string) (*Event, bool) {
@@ -55,4 +66,12 @@ func (e *UnsafeMapEvents) MustGetEvent(table string) *Event {
 	evt = NewEvent()
 	(*e)[table] = evt
 	return evt
+}
+
+func (e UnsafeMapEvents) Range(f func(table string, evt *Event) bool) {
+	for k, v := range e {
+		if !f(k, v) {
+			break
+		}
+	}
 }
