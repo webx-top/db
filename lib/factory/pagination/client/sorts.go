@@ -19,19 +19,29 @@
 package client
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/webx-top/db/lib/factory"
 	"github.com/webx-top/echo"
 )
 
+// CanSort 是否允许排序
+func CanSort(ctx echo.Context, table interface{}, field string) bool {
+	if csf, ok := table.(ICanSortFields); ok {
+		return slices.Contains(csf.CanSortFields(ctx), field)
+	}
+
+	noPrefixTableName := factory.NoPrefixTableName(table)
+	return factory.ExistField(noPrefixTableName, field)
+}
+
 // Sorts 获取数据查询时的排序方式
 func Sorts(ctx echo.Context, table interface{}, defaultSorts ...string) []interface{} {
 	sorts := make([]interface{}, 0, len(defaultSorts)+1)
 	sort := ctx.Form(`sort`)
 	field := strings.TrimPrefix(sort, `-`)
-	noPrefixTableName := factory.NoPrefixTableName(table)
-	if len(field) > 0 && factory.ExistField(noPrefixTableName, field) {
+	if len(field) > 0 && CanSort(ctx, table, field) {
 		sorts = append(sorts, sort)
 		for _, defaultSort := range defaultSorts {
 			if field != strings.TrimPrefix(defaultSort, `-`) {
@@ -44,4 +54,20 @@ func Sorts(ctx echo.Context, table interface{}, defaultSorts ...string) []interf
 		}
 	}
 	return sorts
+}
+
+type CanSortFieldsFunc func(echo.Context) []string
+
+func (f CanSortFieldsFunc) CanSortFields(ctx echo.Context) []string {
+	return f(ctx)
+}
+
+func CanSortFields(fields ...string) CanSortFieldsFunc {
+	return func(_ echo.Context) []string {
+		return fields
+	}
+}
+
+type ICanSortFields interface {
+	CanSortFields(echo.Context) []string
 }

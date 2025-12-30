@@ -17,13 +17,13 @@ require (
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.11.1
 	github.com/webx-top/com v1.4.1
-	github.com/webx-top/echo v1.22.19
+	github.com/webx-top/echo v1.22.25
 	github.com/webx-top/pagination v0.3.2
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
 	go.mongodb.org/mongo-driver v1.17.6
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	modernc.org/ql v1.4.29
+	modernc.org/ql v1.4.30
 )
 
 require (
@@ -48,7 +48,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.30.0 // indirect
+	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
@@ -89,17 +89,17 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
-	modernc.org/db v1.0.28 // indirect
+	modernc.org/db v1.0.29 // indirect
 	modernc.org/file v1.0.19 // indirect
 	modernc.org/fileutil v1.3.40 // indirect
 	modernc.org/golex v1.1.0 // indirect
 	modernc.org/internal v1.1.9 // indirect
-	modernc.org/libc v1.67.1 // indirect
+	modernc.org/libc v1.67.2 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sortutil v1.2.1 // indirect
-	modernc.org/sqlite v1.41.0 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 	modernc.org/strutil v1.2.1 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )
