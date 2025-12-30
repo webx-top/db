@@ -27,6 +27,9 @@ import (
 )
 
 // CanSort 是否允许排序
+// ctx: echo.Context
+// table: factory.Short | string | ICanSortFields
+// field: 字段
 func CanSort(ctx echo.Context, table interface{}, field string) bool {
 	if csf, ok := table.(ICanSortFields); ok {
 		return slices.Contains(csf.CanSortFields(ctx), field)
@@ -37,6 +40,9 @@ func CanSort(ctx echo.Context, table interface{}, field string) bool {
 }
 
 // Sorts 获取数据查询时的排序方式
+// ctx: echo.Context
+// table: factory.Short | string | ICanSortFields
+// defaultSorts: 默认排序
 func Sorts(ctx echo.Context, table interface{}, defaultSorts ...string) []interface{} {
 	sorts := make([]interface{}, 0, len(defaultSorts)+1)
 	sort := ctx.Form(`sort`)
