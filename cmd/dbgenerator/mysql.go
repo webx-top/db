@@ -329,6 +329,9 @@ func getMySQLFieldInfo(cfg *config, field map[string]string, maxLength int, fiel
 				default:
 				}
 			}
+		case `-`:
+			xmlTag = `-`
+			jsonTag = `-`
 		case `omitempty`:
 			for _, tg := range targets {
 				switch tg {
