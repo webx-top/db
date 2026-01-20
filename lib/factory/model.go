@@ -13,6 +13,7 @@ func NewBase(connID int) *Base {
 var _ Baser = &Base{}
 
 type Base struct {
+	dbi   *DBI
 	param *Param
 
 	context       echo.Context
@@ -147,6 +148,50 @@ func (b Base) New(structName string, connID ...int) Model {
 	return m.SetContext(b.context)
 }
 
+func (a Base) CtxFrom(source Model) {
+	a.SetContext(source.Context())
+	a.SetConnID(source.ConnID())
+	a.SetNamer(source.Namer())
+}
+
+func (a Base) DBI(keys ...string) *DBI {
+	if a.dbi == nil {
+		a.dbi = DBIGet(keys...)
+	}
+	return a.dbi
+}
+
+func (a Base) BatchValidate(m Model, kvset map[string]interface{}) error {
+	if kvset == nil {
+		kvset = m.AsRow()
+	}
+	return a.DBI().Fields.BatchValidate(m.Short_(), kvset)
+}
+
+func (a Base) Validate(m Model, column string, value interface{}) error {
+	return a.DBI().Fields.Validate(m.Short_(), column, value)
+}
+
+func (a Base) TrimOverflowText(m Model, column string, value string) string {
+	return a.DBI().Fields.TrimOverflowText(m.Short_(), column, value)
+}
+
+func (a Base) Fire(event string, model Model, mw func(db.Result) db.Result, args ...interface{}) error {
+	return a.DBI().Fire(event, model, mw, args...)
+}
+
+func (a Base) FireUpdate(event string, model Model, editColumns []string, mw func(db.Result) db.Result, args ...interface{}) error {
+	return a.DBI().FireUpdate(event, model, editColumns, mw, args...)
+}
+
+func (a Base) FireReading(model Model, param *Param, rangers ...Ranger) error {
+	return a.DBI().FireReading(model, param, rangers...)
+}
+
+func (a Base) FireReaded(model Model, param *Param, rangers ...Ranger) error {
+	return a.DBI().FireReaded(model, param, rangers...)
+}
+
 type Baser interface {
 	EventOFF(off ...bool) Baser
 	Eventable() bool
@@ -164,6 +209,15 @@ type Baser interface {
 	Namer() func(Model) string
 	FieldInfo(dbi *DBI, tableName, columnName string) FieldInfor
 	New(structName string, connID ...int) Model
+	CtxFrom(source Model)
+	DBI(keys ...string) *DBI
+	BatchValidate(m Model, kvset map[string]interface{}) error
+	Validate(m Model, column string, value interface{}) error
+	TrimOverflowText(m Model, column string, value string) string
+	Fire(event string, model Model, mw func(db.Result) db.Result, args ...interface{}) error
+	FireUpdate(event string, model Model, editColumns []string, mw func(db.Result) db.Result, args ...interface{}) error
+	FireReading(model Model, param *Param, rangers ...Ranger) error
+	FireReaded(model Model, param *Param, rangers ...Ranger) error
 }
 
 type Transactioner interface {
@@ -177,7 +231,8 @@ type Model interface {
 	Context() echo.Context
 	SetNamer(func(Model) string) Model
 	Namer() func(Model) string
-	CPAFrom(source Model) Model //CopyAttrFrom
+	CPAFrom(source Model) Model //Deprecated: Use CtxFrom instead.
+	CtxFrom(source Model) Model //CopyAttrFrom
 	Base_() Baser
 	Name_() string
 	Short_() string
@@ -215,7 +270,8 @@ type Model interface {
 	HasField(field string) bool
 	GetAllFieldNames() []string
 	BatchValidate(kvset map[string]interface{}) error
-	Validate(field string, value interface{}) error
+	Validate(column string, value interface{}) error
+	TrimOverflowText(column string, value string) string
 	EventON(on ...bool) Model
 	EventOFF(off ...bool) Model
 	ListPage(cond *db.Compounds, sorts ...interface{}) error

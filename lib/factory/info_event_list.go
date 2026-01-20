@@ -79,7 +79,7 @@ func (e *Events) Call(event string, model Model, editColumns []string, mw func(d
 			}
 		}
 		err = rows.Range(func(m Model) error {
-			m.CPAFrom(model).FromRow(kvset)
+			m.CtxFrom(model).FromRow(kvset)
 			for _, evt := range events {
 				if err := evt.Call(event, m, editColumns...); err != nil {
 					return err
@@ -120,7 +120,7 @@ func (e *Events) CallRead(event string, model Model, param *Param, rangers ...Ra
 	}
 	if evt, ok := e.mgr.GetOk(table); ok {
 		err := rangers[0].Range(func(m Model) error {
-			m.CPAFrom(model)
+			m.CtxFrom(model)
 			return evt.CallRead(event, m, param)
 		})
 		if err != nil {
@@ -129,7 +129,7 @@ func (e *Events) CallRead(event string, model Model, param *Param, rangers ...Ra
 	}
 	if evt, ok := e.mgr.GetOk(`*`); ok {
 		err := rangers[0].Range(func(m Model) error {
-			m.CPAFrom(model)
+			m.CtxFrom(model)
 			return evt.CallRead(event, m, param)
 		})
 		if err != nil {
