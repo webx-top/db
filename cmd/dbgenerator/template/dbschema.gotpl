@@ -491,6 +491,16 @@ func (a *{{.StructName}}) AsMap(onlyFields ...string) param.Store {
 	return r
 }
 
+func (a *{{.StructName}}) Clone() *{{.StructName}} {
+	cloned := {{.StructName}}{
+		{{- range $k, $v := .TableAndStructFields}}
+		{{- $v.V}}: a.{{$v.V}},
+		{{- end}}
+	}
+	cloned.CtxFrom(a)
+	return &cloned
+}
+
 func (a *{{.StructName}}) FromRow(row map[string]interface{}) {
 	for key, value := range row {
 		if _, ok := value.(db.RawValue); ok {
