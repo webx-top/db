@@ -8,8 +8,6 @@ type EventManager interface {
 	Range(f func(table string, evt *Event) bool)
 }
 
-var UnsafeEventManager = true
-
 func NewEventManager(unsafe bool) EventManager {
 	if unsafe {
 		return &UnsafeMapEvents{}
