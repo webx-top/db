@@ -2,4 +2,6 @@
 
 package factory
 
-var SafelyEventManager = false
+import "github.com/webx-top/com"
+
+var SafelyEventManager = com.GetenvBool(`DB_SAFELY_EVENT_MANAGER`, true)
