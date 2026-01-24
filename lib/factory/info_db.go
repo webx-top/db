@@ -43,7 +43,7 @@ func NewDBI() *DBI {
 		Columns:     map[string][]string{},
 		Models:      ModelInstancers{},
 		TableNamers: map[string]func(Model) string{},
-		Events:      NewEvents(UnsafeEventManager),
+		Events:      NewEvents(SafelyEventManager),
 	}
 }
 

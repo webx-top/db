@@ -8,8 +8,8 @@ type EventManager interface {
 	Range(f func(table string, evt *Event) bool)
 }
 
-func NewEventManager(unsafe bool) EventManager {
-	if unsafe {
+func NewEventManager(safely bool) EventManager {
+	if !safely {
 		return &UnsafeMapEvents{}
 	}
 	return &SafeMapEvents{m: map[string]*Event{}}

@@ -4,8 +4,8 @@ import (
 	"github.com/webx-top/db"
 )
 
-func NewEvents(unsafe bool) Events {
-	return Events{mgr: NewEventManager(unsafe)}
+func NewEvents(safely bool) Events {
+	return Events{mgr: NewEventManager(safely)}
 }
 
 type Events struct {

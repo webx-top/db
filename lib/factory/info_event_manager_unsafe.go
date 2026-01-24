@@ -1,5 +1,7 @@
-//go:build !dbsafeeventmanager
+//go:build !db_safelyeventmanager
 
 package factory
 
-var UnsafeEventManager = true
+import "github.com/webx-top/com"
+
+var SafelyEventManager = com.GetenvBool(`DB_SAFELY_EVENT_MANAGER`, false)

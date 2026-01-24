@@ -12,18 +12,18 @@ require (
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-sqlite3 v1.14.32
+	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.11.1
 	github.com/webx-top/com v1.4.1
-	github.com/webx-top/echo v1.22.25
+	github.com/webx-top/echo v1.22.26
 	github.com/webx-top/pagination v0.3.2
 	github.com/webx-top/qmgo v1.3.1
 	github.com/webx-top/tagfast v0.0.1
-	go.mongodb.org/mongo-driver v1.17.6
+	go.mongodb.org/mongo-driver v1.17.7
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	modernc.org/ql v1.4.30
+	modernc.org/ql v1.4.31
 )
 
 require (
@@ -58,7 +58,7 @@ require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.8.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -80,12 +80,12 @@ require (
 	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
-	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
+	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
@@ -94,12 +94,12 @@ require (
 	modernc.org/fileutil v1.3.40 // indirect
 	modernc.org/golex v1.1.0 // indirect
 	modernc.org/internal v1.1.9 // indirect
-	modernc.org/libc v1.67.2 // indirect
+	modernc.org/libc v1.67.6 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sortutil v1.2.1 // indirect
-	modernc.org/sqlite v1.42.2 // indirect
+	modernc.org/sqlite v1.44.3 // indirect
 	modernc.org/strutil v1.2.1 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )
