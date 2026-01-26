@@ -134,6 +134,9 @@ func (b Base) Namer() func(Model) string {
 }
 
 func (b Base) FieldInfo(dbi *DBI, tableName, columnName string) FieldInfor {
+	if dbi == nil {
+		dbi = b.DBI()
+	}
 	info, _ := dbi.Fields.Find(tableName, columnName)
 	return info
 }
@@ -148,13 +151,13 @@ func (b Base) New(structName string, connID ...int) Model {
 	return m.SetContext(b.context)
 }
 
-func (a Base) CtxFrom(source Model) {
+func (a *Base) CtxFrom(source Model) {
 	a.SetContext(source.Context())
 	a.SetConnID(source.ConnID())
 	a.SetNamer(source.Namer())
 }
 
-func (a Base) DBI(keys ...string) *DBI {
+func (a *Base) DBI(keys ...string) *DBI {
 	if a.dbi == nil {
 		a.dbi = DBIGet(keys...)
 	}
