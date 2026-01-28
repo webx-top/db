@@ -145,6 +145,7 @@ relation=`User表列名`:`Post表列名`|`Post表管道函数1`|`Post表管道�
 * `neq`: 不等于。用法：neq(col:100) // 即Post表中的列col不等于100的时候才进行关联查询
 * `eq`: 等于。用法：eq(col:100) // 即Post表中的列col等于100的时候才进行关联查询
 * `split`: 拆分为切片。用法：split // 即Post表中的关联列的值用 strings.Split(value,",") 拆分成切片后再用 IN 查询
+* `decodeSliceJSON`: 解码JSON为切片。用法：decodeSliceJSON
 * `gtZero`: 大于0。用法：gtZero // 即Post表中的关联列的值大于0时才进行关联查询
 * `notEmpty`: 非空字符串。用法：notEmpty // 即Post表中的关联列的值不为空字符串时才进行关联查询
 ##### 注册自定义管道函数：
