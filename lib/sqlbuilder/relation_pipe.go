@@ -1,6 +1,7 @@
 package sqlbuilder
 
 import (
+	"encoding/json"
 	"reflect"
 	"strings"
 
@@ -176,6 +177,17 @@ var (
 					continue
 				}
 				result = append(result, item)
+			}
+			return result
+		},
+		`decodeSliceJSON`: func(_ reflect.Value, v interface{}) interface{} {
+			val := v.(string)
+			if len(val) == 0 {
+				return nil
+			}
+			var result []interface{}
+			if val[0] == '[' {
+				json.Unmarshal(com.Str2bytes(val), &result)
 			}
 			return result
 		},
