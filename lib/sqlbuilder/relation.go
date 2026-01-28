@@ -160,6 +160,9 @@ func buildCondPrepare(fieldInfo *reflectx.FieldInfo, cond db.Cond, refVal reflec
 	conds := []db.Compound{cond}
 	for _, item := range *kvs {
 		v := item.getValue(refVal, sliceLen)
+		if v == nil {
+			continue
+		}
 		conds = append(conds, db.Cond{
 			item.k: v,
 		})
