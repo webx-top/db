@@ -120,7 +120,7 @@ func parseRelationField(v string) (field string, scope fieldScope) {
 		scope = fieldScopeFirst
 		return
 	}
-	if before, found := strings.CutPrefix(v, `:last`); found {
+	if before, found := strings.CutSuffix(v, `:last`); found {
 		field = before
 		scope = fieldScopeLast
 		return
@@ -701,4 +701,24 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if mlen > 0 && !isMap {
 				ft = mapper.FieldByName(fval.Index(0), fieldName).Kind()
 			}
-			needConversion := relValKind != ft && ft != reflect.Inval
+			needConversion := relValKind != ft && ft != reflect.Invalid
+			// Set the result to the model
+			for j := 0; j < l; j++ {
+				if _, sk := skipped[j]; sk {
+					continue
+				}
+				v := refVal.Index(j)
+				fid := mapper.FieldByName(v, rFieldName)
+				val := fid.Interface()
+				if needConversion {
+					val = param.AsType(ft.String(), val)
+				}
+				if value, has := fmap[val]; has {
+					reflect.Indirect(v).FieldByName(name).Set(value)
+				}
+			}
+		}
+
+		return nil
+	})
+}
