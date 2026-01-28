@@ -146,7 +146,7 @@ func buildCondPrepare(fieldInfo *reflectx.FieldInfo, cond db.Cond, refVal reflec
 			}
 			parts := strings.SplitN(colName, `:`, 2)
 			colName = parts[0]
-			if strings.HasPrefix(parts[1], `>`) {
+			if strings.HasPrefix(parts[1], `>`) { // >field:first 处理大于号开头的特殊字段
 				skv := &kv{k: colName}
 				skv.field, skv.scope = parseRelationField(parts[1][1:])
 				*kvs = append(*kvs, skv)
