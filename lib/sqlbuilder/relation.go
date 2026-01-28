@@ -114,7 +114,22 @@ func parseRelationExtraParam(v string) interface{} {
 	return v
 }
 
-func buildCondPrepare(fieldInfo *reflectx.FieldInfo, cond db.Cond) db.Compound {
+func parseRelationField(v string) (field string, scope fieldScope) {
+	if before, found := strings.CutSuffix(v, `:first`); found {
+		field = before
+		scope = fieldScopeFirst
+		return
+	}
+	if before, found := strings.CutPrefix(v, `:last`); found {
+		field = before
+		scope = fieldScopeLast
+		return
+	}
+	scope = fieldScopeAll
+	return
+}
+
+func buildCondPrepare(fieldInfo *reflectx.FieldInfo, cond db.Cond, refVal reflect.Value, sliceLen int) db.Compound {
 	where, ok := fieldInfo.Options[`where`] // where=col1:val1&col2:val2&col3:val3
 	if !ok {
 		return cond
@@ -131,15 +146,22 @@ func buildCondPrepare(fieldInfo *reflectx.FieldInfo, cond db.Cond) db.Compound {
 			}
 			parts := strings.SplitN(colName, `:`, 2)
 			colName = parts[0]
-			colValue := parseRelationExtraParam(parts[1])
-			*kvs = append(*kvs, &kv{k: colName, v: colValue})
+			if strings.HasPrefix(parts[1], `>`) {
+				skv := &kv{k: colName}
+				skv.field, skv.scope = parseRelationField(parts[1][1:])
+				*kvs = append(*kvs, skv)
+			} else {
+				colValue := parseRelationExtraParam(parts[1])
+				*kvs = append(*kvs, &kv{k: colName, v: colValue})
+			}
 		}
 		r.setWhere(kvs)
 	}
 	conds := []db.Compound{cond}
 	for _, item := range *kvs {
+		v := item.getValue(refVal, sliceLen)
 		conds = append(conds, db.Cond{
-			item.k: item.v,
+			item.k: v,
 		})
 	}
 	return db.And(conds...)
@@ -152,7 +174,7 @@ func buildCond(fieldInfo *reflectx.FieldInfo, refVal reflect.Value, relations []
 	if len(pipes) == 0 {
 		return buildCondPrepare(fieldInfo, db.Cond{
 			fieldName: fieldValue,
-		})
+		}, refVal, -1)
 	}
 	for _, pipe := range pipes {
 		if fieldValue = pipe(refVal, fieldValue); fieldValue == nil {
@@ -172,7 +194,7 @@ func buildCond(fieldInfo *reflectx.FieldInfo, refVal reflect.Value, relations []
 			fieldName: fieldValue,
 		}
 	}
-	return buildCondPrepare(fieldInfo, cond)
+	return buildCondPrepare(fieldInfo, cond, refVal, -1)
 }
 
 type ColumnSelector interface {
@@ -489,7 +511,7 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 		}
 		cond := buildCondPrepare(fieldInfo, db.Cond{
 			fieldName: db.In(relVals),
-		})
+		}, refVal, l)
 		b := GetSQLBuilder(fieldInfo, builder)
 		var foreignModel reflect.Value
 		// if field type is slice then one to many ,eg: []*Struct
@@ -679,24 +701,4 @@ func RelationAll(builder SQLBuilder, data interface{}, relationMap map[string]Bu
 			if mlen > 0 && !isMap {
 				ft = mapper.FieldByName(fval.Index(0), fieldName).Kind()
 			}
-			needConversion := relValKind != ft && ft != reflect.Invalid
-			// Set the result to the model
-			for j := 0; j < l; j++ {
-				if _, sk := skipped[j]; sk {
-					continue
-				}
-				v := refVal.Index(j)
-				fid := mapper.FieldByName(v, rFieldName)
-				val := fid.Interface()
-				if needConversion {
-					val = param.AsType(ft.String(), val)
-				}
-				if value, has := fmap[val]; has {
-					reflect.Indirect(v).FieldByName(name).Set(value)
-				}
-			}
-		}
-
-		return nil
-	})
-}
+			needConversion := relValKind != ft && ft != reflect.Inval

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+
+	"github.com/webx-top/db"
 )
 
 var (
@@ -25,13 +27,63 @@ func setRelationCache(t reflect.StructField, r *parsedRelation) {
 	relationCacheMutex.Unlock()
 }
 
+type fieldScope string
+
+const (
+	fieldScopeAll   fieldScope = `all`
+	fieldScopeFirst fieldScope = `first`
+	fieldScopeLast  fieldScope = `last`
+)
+
 type kv struct {
 	k string
 	v interface{}
+
+	// - cross field -
+	field string
+	scope fieldScope
 }
 
 func (s *kv) String() string {
-	return fmt.Sprintf(`{k: %+v, v: %v}`, s.k, s.v)
+	return fmt.Sprintf(`{k: %+v, v: %v, field: %v, scope: %v}`, s.k, s.v, s.field, s.scope)
+}
+
+func (s *kv) getValue(refVal reflect.Value, sliceLen int) interface{} {
+	if len(s.field) == 0 {
+		return s.v
+	}
+	if sliceLen < 0 {
+		return mapper.FieldByName(refVal, s.field).Interface()
+	}
+	if sliceLen == 0 {
+		return nil
+	}
+	v := s.v
+	switch s.scope {
+	case fieldScopeFirst:
+		v = mapper.FieldByName(refVal.Index(0), s.field).Interface()
+	case fieldScopeLast:
+		v = mapper.FieldByName(refVal.Index(sliceLen-1), s.field).Interface()
+	default:
+		relValsMap := map[interface{}]struct{}{}
+		for j := 0; j < sliceLen; j++ {
+			v := mapper.FieldByName(refVal.Index(j), s.field).Interface()
+			relValsMap[v] = struct{}{}
+		}
+		relVals := make([]interface{}, 0, len(relValsMap))
+		for k := range relValsMap {
+			relVals = append(relVals, k)
+		}
+		if len(relVals) == 0 {
+			return nil
+		}
+		if len(relVals) == 1 {
+			v = relVals[0]
+		} else {
+			v = db.In(relVals)
+		}
+	}
+	return v
 }
 
 type colType struct {
