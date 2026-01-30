@@ -64,10 +64,17 @@ func Sorts(ctx echo.Context, table interface{}, defaultSorts ...string) []interf
 
 type CanSortFieldsFunc func(echo.Context) []string
 
+// CanSortFields returns the fields that can be sorted.
+// The returned fields will be checked in the Sorts function to determine if a field can be sorted.
+// If the returned fields do not contain the field, it will not be sorted.
 func (f CanSortFieldsFunc) CanSortFields(ctx echo.Context) []string {
 	return f(ctx)
 }
 
+// CanSortFields returns a function that implements the ICanSortFields interface.
+// The returned function returns the fields that can be sorted.
+// The returned fields will be checked in the Sorts function to determine if a field can be sorted.
+// If the returned fields do not contain the field, it will not be sorted.
 func CanSortFields(fields ...string) CanSortFieldsFunc {
 	return func(_ echo.Context) []string {
 		return fields

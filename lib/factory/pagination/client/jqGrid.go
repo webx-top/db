@@ -42,10 +42,10 @@ func JqGrid(ctx echo.Context, ls interface{}, searchField string, args ...string
 		pageKey = args[0]
 	}
 	size := ctx.Formx(pageRowsKey).Int()
-	page := ctx.Formx(pageKey).Int()
-	if page < 1 {
-		page = 1
+	if size < 1 || size > 1000 {
+		size = 10
 	}
+	page := max(ctx.Formx(pageKey).Int(), 1)
 	var (
 		cnt     func() int64
 		err     error

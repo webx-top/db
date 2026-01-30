@@ -38,12 +38,9 @@ func DataTable(ctx echo.Context, ls interface{}, args ...string) (map[string]int
 		offsetKey = args[0]
 	}
 	size := ctx.Formx(pageRowsKey).Int()
-	offset := ctx.Formx(offsetKey).Int()
+	offset := max(ctx.Formx(offsetKey).Int(), 0)
 	if size < 1 || size > 1000 {
 		size = 10
-	}
-	if offset < 0 {
-		offset = 0
 	}
 	var (
 		cnt  func() int64

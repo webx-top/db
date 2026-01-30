@@ -31,6 +31,7 @@ func TestRelationCache(t *testing.T) {
 		AID:  10,
 		Name: `10`,
 	}
+	rValue := reflect.ValueOf(c)
 	rType := reflect.TypeOf(c)
 	typeMap := mapper.TypeMap(rType)
 	options, ok := typeMap.Options[`relation`]
@@ -45,7 +46,7 @@ func TestRelationCache(t *testing.T) {
 		r, err := parseRelationData(fieldInfo)
 		assert.NoError(t, err)
 		fmt.Println(r)
-		buildCondPrepare(fieldInfo, db.Cond{})
+		buildCondPrepare(fieldInfo, db.Cond{}, rValue, -1)
 		sel := &selector{}
 		hasMustCol := true
 		buildSelector(fieldInfo, sel, `aid`, &hasMustCol, nil)
@@ -64,6 +65,7 @@ func TestRelationCache(t *testing.T) {
 		AID:  10,
 		Name: `10`,
 	}
+	rValue = reflect.ValueOf(b)
 	rType = reflect.TypeOf(b)
 	typeMap = mapper.TypeMap(rType)
 	options, ok = typeMap.Options[`relation`]
@@ -78,7 +80,7 @@ func TestRelationCache(t *testing.T) {
 		r, err := parseRelationData(fieldInfo)
 		assert.NoError(t, err)
 		fmt.Println(r)
-		buildCondPrepare(fieldInfo, db.Cond{})
+		buildCondPrepare(fieldInfo, db.Cond{}, rValue, -1)
 		sel := &selector{}
 		hasMustCol := true
 		buildSelector(fieldInfo, sel, `aid`, &hasMustCol, nil)

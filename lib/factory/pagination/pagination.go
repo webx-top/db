@@ -32,35 +32,77 @@ import (
 )
 
 var (
-	// PageMaxSize 每页最大数据量
-	PageMaxSize = 1000
-	// PageDefaultSize 默认每页数据量
-	PageDefaultSize = 50
+	// PagingMaxSize 每页最大数据量
+	PagingMaxSize = 1000
+	// PagingDefaultSize 默认每页数据量
+	PagingDefaultSize = 50
 
 	// Sorts 获取数据查询时的排序方式
 	Sorts = clientPagination.Sorts
 )
 
 const (
-	InternalKeyPageDefaultSize  = `paging.pageDefaultSize`
-	InternalKeyPageDisableCount = `paging.disableCount`
+	InternalKeyPagingDefaultSize  = `paging.defaultSize`
+	InternalKeyPagingForceSize    = `paging.forceSize`
+	InternalKeyPagingForcePage    = `paging.forcePage`
+	InternalKeyPagingDisableCount = `paging.disableCount`
 )
 
-func SetPageDefaultSize(ctx echo.Context, pageSize int) {
-	ctx.Internal().Set(InternalKeyPageDefaultSize, pageSize)
+// SetDefaultSize 设置默认每页数据量
+// pageSize: 每页数据量
+//
+// 使用方法：
+// SetDefaultSize(ctx, 50)
+//
+// 等同于ctx.SetInternal(InternalKeyPagingDefaultSize, 50)
+func SetDefaultSize(ctx echo.Context, pageSize int) {
+	ctx.Internal().Set(InternalKeyPagingDefaultSize, pageSize)
+}
+
+// SetForceSize 强制每頁資料量
+// pageSize: 每頁資料量
+//
+// 使用方法:
+// SetForceSize(ctx, 50)
+func SetForceSize(ctx echo.Context, pageSize int) {
+	ctx.Internal().Set(InternalKeyPagingForceSize, pageSize)
+}
+
+// SetForcePage 強制当前頁碼
+//
+// 使用方法:
+// SetForcePage(ctx, 1)
+//
+// 等同於ctx.SetInternal(InternalKeyPagingForcePage, 1)
+func SetForcePage(ctx echo.Context, page int) {
+	ctx.Internal().Set(InternalKeyPagingForcePage, page)
+}
+
+// DisableCount 设置当前页码的查询是否禁用count总数的计算
+// disabled: 如果不设置或disabled[0]为true，则禁用count总数的计算
+// 使用方法:
+// DisableCount(ctx, true)
+// 等同于ctx.SetInternal(InternalKeyPageDisableCount, true)
+func DisableCount(ctx echo.Context, disabled ...bool) {
+	if len(disabled) > 0 && !disabled[0] {
+		ctx.Internal().Set(InternalKeyPagingDisableCount, false)
+		return
+	}
+	ctx.Internal().Set(InternalKeyPagingDisableCount, true)
 }
 
 // Paging 获取当前页码和每页数据量
 func Paging(ctx echo.Context) (page int, size int) {
-	page = ctx.Formx(`page`, ctx.Form(`pageNumber`)).Int()
-	size = ctx.Formx(`size`, ctx.Form(`pageSize`)).Int()
-	if page < 1 {
-		page = 1
+	if page = ctx.Internal().Int(InternalKeyPagingForcePage); page < 1 {
+		page = max(ctx.FormAnyx(`page`, `pageNumber`).Int(), 1)
 	}
-	if size < 1 || size > PageMaxSize {
-		size = ctx.Internal().Int(InternalKeyPageDefaultSize)
+	if size = ctx.Internal().Int(InternalKeyPagingForceSize); size < 1 {
+		size = ctx.FormAnyx(`size`, `pageSize`).Int()
+	}
+	if size < 1 || size > PagingMaxSize {
+		size = ctx.Internal().Int(InternalKeyPagingDefaultSize)
 		if size < 1 {
-			size = PageDefaultSize
+			size = PagingDefaultSize
 		}
 	}
 	return
@@ -72,11 +114,11 @@ func PagingPosition(ctx echo.Context) (offset int, size int) {
 	if offset < 0 {
 		offset = 0
 	}
-	size = ctx.Formx(`size`, ctx.Form(`pageSize`)).Int()
-	if size < 1 || size > PageMaxSize {
-		size = ctx.Internal().Int(InternalKeyPageDefaultSize)
+	size = ctx.FormAnyx(`size`, `pageSize`).Int()
+	if size < 1 || size > PagingMaxSize {
+		size = ctx.Internal().Int(InternalKeyPagingDefaultSize)
 		if size < 1 {
-			size = PageDefaultSize
+			size = PagingDefaultSize
 		}
 	}
 	return
@@ -121,19 +163,11 @@ func PagingWithPosition(ctx echo.Context, delKeys ...string) (offset int, size i
 	return
 }
 
-func DisableCount(ctx echo.Context, disabled ...bool) {
-	if len(disabled) > 0 && !disabled[0] {
-		ctx.Internal().Set(InternalKeyPageDisableCount, false)
-		return
-	}
-	ctx.Internal().Set(InternalKeyPageDisableCount, true)
-}
-
 // PagingWithLister 通过分页查询接口获取分页信息
 func PagingWithLister(ctx echo.Context, m Lister, varSuffix ...string) (*pagination.Pagination, error) {
 	page, size, totalRows, p := PagingWithPagination(ctx)
 	cnt, err := m.List(nil, nil, page, size)
-	disableCount := ctx.Internal().Bool(InternalKeyPageDisableCount)
+	disableCount := ctx.Internal().Bool(InternalKeyPagingDisableCount)
 	if !disableCount && totalRows <= 0 {
 		totalRows = int(cnt())
 		p.SetRows(totalRows)
