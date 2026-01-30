@@ -178,6 +178,9 @@ var (
 				}
 				result = append(result, item)
 			}
+			if len(result) == 0 {
+				return nil
+			}
 			return result
 		},
 		`decodeSliceJSON`: func(_ reflect.Value, v interface{}) interface{} {
@@ -188,6 +191,9 @@ var (
 			var result []interface{}
 			if val[0] == '[' {
 				json.Unmarshal(com.Str2bytes(val), &result)
+			}
+			if len(result) == 0 {
+				return nil
 			}
 			return result
 		},
