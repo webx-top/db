@@ -285,6 +285,15 @@ func (a *{{.StructName}}) Update(mw func(db.Result) db.Result, args ...interface
 	return a.base.Fire(factory.EventUpdated, a, mw, args...)
 }
 
+func (a *{{.StructName}}) GetDiffColumns(old *{{.StructName}}) (changedCols []interface{}) {
+	{{range $k, $v := .TableAndStructFields}}
+	if old.{{$v.V}} != a.{{$v.V}} {
+		changedCols = append(changedCols, `{{$v.K}}`)
+	}
+	{{end}}
+	return
+}
+
 func (a *{{.StructName}}) Updatex(mw func(db.Result) db.Result, args ...interface{}) (affected int64, err error) {
 	{{.BeforeUpdate}}
 	if !a.base.Eventable() {
@@ -298,6 +307,25 @@ func (a *{{.StructName}}) Updatex(mw func(db.Result) db.Result, args ...interfac
 	}
 	err = a.base.Fire(factory.EventUpdated, a, mw, args...)
 	return
+}
+
+func (a *{{.StructName}}) Save(old *{{.StructName}}, args ...interface{}) (affected int64, err error) {
+	{{.BeforeUpdate}}
+	if old == nil {
+		old = New{{.StructName}}(a.Context())
+		old.CtxFrom(a)
+		if err = old.Get(nil, args...); err != nil {
+			return
+		}
+	}
+	changedCols := a.GetDiffColumns(old)
+	if len(changedCols) == 0 {
+		return
+	}
+	mw := func(r db.Result) db.Result{
+		return r.Select(changedCols...).Limit(1)
+	}
+	return a.Updatex(mw, args...)
 }
 
 func (a *{{.StructName}}) UpdateByFields(mw func(db.Result) db.Result, fields []string, args ...interface{}) (err error) {
