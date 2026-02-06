@@ -46,7 +46,7 @@ func match(safelyMatchValue string, booleanMode bool, keys ...string) db.RawValu
 			continue
 		}
 		key = strings.ReplaceAll(key, "`", "``")
-		fields = append(fields, "`"+key+"`")
+		fields = append(fields, "`"+strings.Join(strings.Split(key, `.`), "`.`")+"`")
 	}
 	var mode string
 	if booleanMode {

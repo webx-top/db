@@ -23,7 +23,7 @@ func FindInSet(fieldName string, value string, useFulltextIndex ...bool) db.RawV
 		return match(`"`+v+`," ",`+v+`," ",`+v+`"`, true, fieldName)
 	}
 	fieldName = strings.Replace(fieldName, "`", "``", -1)
-	return db.Raw("FIND_IN_SET(?,`"+fieldName+"`)", value)
+	return db.Raw("FIND_IN_SET(?,`"+strings.Join(strings.Split(fieldName, `.`), "`.`")+"`)", value)
 }
 
 func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.RawValue {
@@ -54,7 +54,7 @@ func FindInJSON(fieldName string, value interface{}, jsonFields ...string) db.Ra
 		}
 		jsonPath = `->'` + jsonPath + `'`
 	}
-	return db.Raw("? MEMBER OF(`"+fieldName+"`"+jsonPath+")", value)
+	return db.Raw("? MEMBER OF(`"+strings.Join(strings.Split(fieldName, `.`), "`.`")+"`"+jsonPath+")", value)
 }
 
 func CompareField(idField string, keywords string) db.Compound {
