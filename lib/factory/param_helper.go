@@ -65,16 +65,16 @@ type lister struct {
 	pr *Param
 }
 
-func (l *lister) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
+func (l lister) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
 	queryParam := l.pr.SetMW(mw).SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv)
 	return queryParam.List()
 }
 
-func (l *lister) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
+func (l lister) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	queryParam := l.pr.SetMW(mw).SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv)
 	return queryParam.List()
 }
 
-func (l *lister) Context() echo.Context {
+func (l lister) Context() echo.Context {
 	return defaults.MustGetContext(l.pr.Context())
 }
