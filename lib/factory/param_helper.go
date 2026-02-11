@@ -5,6 +5,8 @@ import (
 
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/lib/sqlbuilder"
+	"github.com/webx-top/echo"
+	"github.com/webx-top/echo/defaults"
 )
 
 func (p *Param) UsingStructField(bean interface{}, fields ...string) error {
@@ -71,4 +73,8 @@ func (l *lister) ListByOffset(recv interface{}, mw func(db.Result) db.Result, of
 func (l *lister) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
 	queryParam := l.pr.SetMW(mw).SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv)
 	return queryParam.List()
+}
+
+func (l *lister) Context() echo.Context {
+	return defaults.MustGetContext(l.pr.Context())
 }
