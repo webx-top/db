@@ -199,15 +199,16 @@ func initTemplate() {
 	}
 }
 
+var commentReplacer = strings.NewReplacer(
+	`\r`, "\r",
+	`\n`, "\n",
+)
+
 func Template(name string, data interface{}) ([]byte, error) {
 	once.Do(initTemplate)
 	w := bytes.NewBuffer(nil)
 	if len(cfg.Comment) > 0 {
-		repl := strings.NewReplacer(
-			`\r`, "\r",
-			`\n`, "\n",
-		)
-		w.WriteString(repl.Replace(cfg.Comment))
+		w.WriteString(commentReplacer.Replace(cfg.Comment))
 		w.WriteString("\n")
 	}
 	var err error
