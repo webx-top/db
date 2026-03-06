@@ -48,6 +48,7 @@ func parseFlag() {
 	flag.StringVar(&cfg.EncFieldFormat, `enc`, ``, `-enc "json:table;xml:table"`)
 
 	flag.StringVar(&cfg.TemplateDir, `templatedir`, ``, `-templatedir directory`)
+	flag.StringVar(&cfg.Comment, `comment`, ``, `-comment comment`)
 	flag.Parse()
 }
 
