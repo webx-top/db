@@ -90,6 +90,7 @@ type config struct {
 	DBKey           string          `json:"dbKey"`
 	TemplateDir     string          `json:"templateDir"`
 	Container       string          `json:"container"`
+	Comment         string          `json:"comment"`
 	encFieldFormats map[string]string
 }
 

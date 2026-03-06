@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"text/template"
 
@@ -201,6 +202,14 @@ func initTemplate() {
 func Template(name string, data interface{}) ([]byte, error) {
 	once.Do(initTemplate)
 	w := bytes.NewBuffer(nil)
+	if len(cfg.Comment) > 0 {
+		repl := strings.NewReplacer(
+			`\r`, "\r",
+			`\n`, "\n",
+		)
+		w.WriteString(repl.Replace(cfg.Comment))
+		w.WriteString("\n")
+	}
 	var err error
 	switch name {
 	case `dbschema`:
