@@ -114,7 +114,9 @@ func PagingPosition(ctx echo.Context) (offset int, size int) {
 	if offset < 0 {
 		offset = 0
 	}
-	size = ctx.FormAnyx(`size`, `pageSize`).Int()
+	if size = ctx.Internal().Int(InternalKeyPagingForceSize); size < 1 {
+		size = ctx.FormAnyx(`size`, `pageSize`).Int()
+	}
 	if size < 1 || size > PagingMaxSize {
 		size = ctx.Internal().Int(InternalKeyPagingDefaultSize)
 		if size < 1 {
