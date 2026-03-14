@@ -66,12 +66,18 @@ type lister struct {
 }
 
 func (l lister) ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error) {
-	queryParam := l.pr.SetMW(mw).SetArgs(args...).SetOffset(offset).SetSize(size).SetRecv(recv)
+	queryParam := l.pr.SetMW(mw).AddArgs(args...).SetOffset(offset).SetSize(size)
+	if recv != nil {
+		queryParam.SetRecv(recv)
+	}
 	return queryParam.List()
 }
 
 func (l lister) List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error) {
-	queryParam := l.pr.SetMW(mw).SetArgs(args...).SetPage(page).SetSize(size).SetRecv(recv)
+	queryParam := l.pr.SetMW(mw).AddArgs(args...).SetPage(page).SetSize(size)
+	if recv != nil {
+		queryParam.SetRecv(recv)
+	}
 	return queryParam.List()
 }
 
