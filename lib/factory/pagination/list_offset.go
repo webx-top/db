@@ -129,7 +129,9 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond db.Comp
 		if err != nil {
 			return err
 		}
-		args = []interface{}{cond}
+		if cond != nil {
+			args = []interface{}{cond}
+		}
 	}
 	return err
 }
