@@ -102,7 +102,7 @@ func (f *OffsetList) ChunkList(eachPageCallback func() error, size int, offset i
 }
 
 // ChunkList 分批查询列表
-func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond []interface{}, err error), size int) error {
+func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond db.Compound, err error), size int) error {
 	cnt, err := f.ListByOffset(f.recv, f.mw, 0, size)
 	if err != nil {
 		if err == db.ErrNoMoreRows {
@@ -111,6 +111,7 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond []inter
 		return err
 	}
 	args := f.args
+	var cond db.Compound
 	var offset int64
 	initOffset := offset
 	step := int64(size)
@@ -124,10 +125,11 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond []inter
 				return err
 			}
 		}
-		args, err = eachPageCallback()
+		cond, err = eachPageCallback()
 		if err != nil {
 			return err
 		}
+		args = []interface{}{cond}
 	}
 	return err
 }
