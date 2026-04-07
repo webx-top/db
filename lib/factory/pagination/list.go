@@ -32,6 +32,9 @@ type Lister interface {
 	List(recv interface{}, mw func(db.Result) db.Result, page, size int, args ...interface{}) (func() int64, error)
 }
 
+var _ ChunkLister = (*List)(nil)
+var _ Lister = (*List)(nil)
+
 type ChunkLister interface {
 	ChunkList(eachPageCallback func() error, size int, page int) error
 }

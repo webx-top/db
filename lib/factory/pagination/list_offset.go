@@ -30,9 +30,12 @@ type OffsetLister interface {
 	ListByOffset(recv interface{}, mw func(db.Result) db.Result, offset, size int, args ...interface{}) (func() int64, error)
 }
 
+var _ OffsetChunkLister = (*OffsetList)(nil)
+var _ OffsetLister = (*OffsetList)(nil)
+
 type OffsetChunkLister interface {
 	ChunkList(eachPageCallback func() error, size int, offset int) error
-	ChunkListNoOffset(eachPageCallback func() (nextCond []interface{}, err error), size int) error
+	ChunkListNoOffset(eachPageCallback func() (nextCond db.Compound, err error), size int) error
 }
 
 // NewOffsetLister 创建偏移值分页列表查询
