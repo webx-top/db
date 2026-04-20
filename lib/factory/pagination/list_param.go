@@ -39,6 +39,7 @@ type ListParam struct {
 	recv interface{}
 	mw   func(db.Result) db.Result
 	args []interface{}
+	prog func(int64, int64)
 }
 
 // AddMiddleware 添加中间件
@@ -85,4 +86,8 @@ func (f *ListParam) Conds() []interface{} {
 // Model 模型实例
 func (f *ListParam) Model() interface{} {
 	return f.recv
+}
+
+func (f *ListParam) SetProg(prog func(int64, int64)) {
+	f.prog = prog
 }

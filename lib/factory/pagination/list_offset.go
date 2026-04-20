@@ -34,6 +34,7 @@ var _ OffsetChunkLister = (*OffsetList)(nil)
 var _ OffsetLister = (*OffsetList)(nil)
 
 type OffsetChunkLister interface {
+	SetProg(prog func(int64, int64))
 	ChunkList(eachPageCallback func() error, size int, offset int) error
 	ChunkListNoOffset(eachPageCallback func() (nextCond db.Compound, err error), size int) error
 }
@@ -87,6 +88,9 @@ func (f *OffsetList) ChunkList(eachPageCallback func() error, size int, offset i
 	}
 	initOffset := offset
 	for total := cnt(); int64(offset) < total; offset += size {
+		if f.prog != nil {
+			f.prog(int64(offset), int64(total))
+		}
 		if offset > initOffset {
 			_, err = f.ListByOffset(f.recv, f.mw, offset, size)
 			if err != nil {
@@ -119,6 +123,9 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond db.Comp
 	initOffset := offset
 	step := int64(size)
 	for total := cnt(); offset < total; offset += step {
+		if f.prog != nil {
+			f.prog(offset, total)
+		}
 		if offset > initOffset {
 			_, err = f.ListByOffset(f.recv, f.mw, 0, size, args...)
 			if err != nil {

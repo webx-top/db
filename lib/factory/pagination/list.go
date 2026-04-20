@@ -36,6 +36,7 @@ var _ ChunkLister = (*List)(nil)
 var _ Lister = (*List)(nil)
 
 type ChunkLister interface {
+	SetProg(prog func(int64, int64))
 	ChunkList(eachPageCallback func() error, size int, page int) error
 }
 
@@ -85,6 +86,9 @@ func (f *List) ChunkList(eachPageCallback func() error, size int, page int) erro
 	}
 	initPage := page
 	for totalPages := int64(math.Ceil(float64(cnt()) / float64(size))); int64(page) < totalPages; page++ {
+		if f.prog != nil {
+			f.prog(int64(page), totalPages)
+		}
 		if page > initPage {
 			_, err = f.List(f.recv, f.mw, page, size)
 			if err != nil {
