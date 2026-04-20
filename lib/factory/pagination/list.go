@@ -69,6 +69,9 @@ func (f *List) List(recv interface{}, mw func(db.Result) db.Result, page, size i
 
 // ListSize 列表尺寸
 func (f *List) ListSize() int {
+	if sz, ok := f.ls.(ListSizer); ok {
+		return sz.ListSize()
+	}
 	if f.recv == nil {
 		return ObjectsSize(f.ls)
 	}

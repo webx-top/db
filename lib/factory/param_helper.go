@@ -84,3 +84,31 @@ func (l lister) List(recv interface{}, mw func(db.Result) db.Result, page, size 
 func (l lister) Context() echo.Context {
 	return defaults.MustGetContext(l.pr.Context())
 }
+
+// ListSize 列表尺寸
+func (l lister) ListSize() int {
+	if l.pr.result == nil {
+		return 0
+	}
+	return ObjectsSize(l.pr.result)
+}
+
+func ObjectsSize(m interface{}) int {
+	rv := reflect.ValueOf(m)
+	if !rv.IsValid() {
+		return 0
+	}
+	rve := reflect.Indirect(rv)
+	if rve.Kind() == reflect.Slice {
+		return rve.Len()
+	}
+	rv = rv.MethodByName("Objects")
+	if rv.IsValid() {
+		rv = rv.Call(nil)[0]
+		rv = reflect.Indirect(rv)
+		if rv.Kind() == reflect.Slice {
+			return rv.Len()
+		}
+	}
+	return 0
+}

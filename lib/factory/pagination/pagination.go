@@ -19,7 +19,6 @@
 package pagination
 
 import (
-	"reflect"
 	"strconv"
 
 	"github.com/webx-top/echo"
@@ -222,23 +221,7 @@ func PagingWithOffsetLister(ctx echo.Context, m OffsetLister, varSuffix ...strin
 }
 
 func ObjectsSize(m interface{}) int {
-	rv := reflect.ValueOf(m)
-	if !rv.IsValid() {
-		return 0
-	}
-	rve := reflect.Indirect(rv)
-	if rve.Kind() == reflect.Slice {
-		return rve.Len()
-	}
-	rv = rv.MethodByName("Objects")
-	if rv.IsValid() {
-		rv = rv.Call(nil)[0]
-		rv = reflect.Indirect(rv)
-		if rv.Kind() == reflect.Slice {
-			return rv.Len()
-		}
-	}
-	return 0
+	return factory.ObjectsSize(m)
 }
 
 // PagingWithListerCond 通过分页查询接口和附加条件获取分页信息
