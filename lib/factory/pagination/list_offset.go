@@ -89,7 +89,7 @@ func (f *OffsetList) ChunkList(eachPageCallback func() error, size int, offset i
 	initOffset := offset
 	for total := cnt(); int64(offset) < total; offset += size {
 		if f.prog != nil {
-			f.prog(int64(offset), int64(total))
+			f.prog(int64(offset), total)
 		}
 		if offset > initOffset {
 			_, err = f.ListByOffset(f.recv, f.mw, offset, size)
@@ -124,7 +124,7 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond db.Comp
 	step := int64(size)
 	for total := cnt(); offset < total; offset += step {
 		if f.prog != nil {
-			f.prog(offset, total)
+			f.prog(0, total)
 		}
 		if offset > initOffset {
 			_, err = f.ListByOffset(f.recv, f.mw, 0, size, args...)
