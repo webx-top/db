@@ -105,6 +105,9 @@ func (f *OffsetList) ChunkList(eachPageCallback func() error, size int, offset i
 		}
 		err = eachPageCallback()
 		if err != nil {
+			if err == db.ErrNoMoreRows {
+				return nil
+			}
 			return err
 		}
 	}
@@ -140,6 +143,9 @@ func (f *OffsetList) ChunkListNoOffset(eachPageCallback func() (nextCond db.Comp
 		}
 		cond, err = eachPageCallback()
 		if err != nil {
+			if err == db.ErrNoMoreRows {
+				return nil
+			}
 			return err
 		}
 		if cond != nil {

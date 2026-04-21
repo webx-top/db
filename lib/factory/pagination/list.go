@@ -103,6 +103,9 @@ func (f *List) ChunkList(eachPageCallback func() error, size int, page int) erro
 		}
 		err = eachPageCallback()
 		if err != nil {
+			if err == db.ErrNoMoreRows {
+				return nil
+			}
 			return err
 		}
 	}
