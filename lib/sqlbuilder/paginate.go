@@ -87,7 +87,7 @@ func (pag *paginator) Cursor(column string) Paginator {
 
 func (pag *paginator) NextPage(cursorValue interface{}) Paginator {
 	return pag.frame(func(pq *paginatorQuery) error {
-		if pq.cursorValue != nil && pq.cursorColumn == "" {
+		if pq.cursorColumn == "" {
 			return errMissingCursorColumn
 		}
 		pq.cursorValue = cursorValue
@@ -107,7 +107,7 @@ func (pag *paginator) NextPage(cursorValue interface{}) Paginator {
 
 func (pag *paginator) PrevPage(cursorValue interface{}) Paginator {
 	return pag.frame(func(pq *paginatorQuery) error {
-		if pq.cursorValue != nil && pq.cursorColumn == "" {
+		if pq.cursorColumn == "" {
 			return errMissingCursorColumn
 		}
 		pq.cursorValue = cursorValue

@@ -241,7 +241,12 @@ func (r *Result) All(dst interface{}) error {
 
 // One fetches only one Result from the set.
 func (r *Result) One(dst interface{}) error {
-	one := r.Limit(1).(*Result)
+	one, ok := r.Limit(1).(*Result)
+	if !ok {
+		err := fmt.Errorf("unexpected result type: %T", r.Limit(1))
+		r.setErr(err)
+		return err
+	}
 	query, err := one.Paginator()
 	if err != nil {
 		one.setErr(err)

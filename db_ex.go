@@ -225,6 +225,14 @@ func (c *Compounds) AddKVNotEmpty(key, value interface{}) *Compounds {
 		if len(v) == 0 {
 			return c
 		}
+	case uintptr:
+		if v == 0 {
+			return c
+		}
+	case []uintptr:
+		if len(v) == 0 {
+			return c
+		}
 	}
 	*c = append(*c, Cond{key: value})
 	return c
@@ -233,31 +241,31 @@ func (c *Compounds) AddKVNotEmpty(key, value interface{}) *Compounds {
 func (c *Compounds) AddKVGtZero(key, value interface{}) *Compounds {
 	switch v := value.(type) {
 	case int8:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case int16:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case int32:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case int:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case int64:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case float32:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	case float64:
-		if v > 0 {
+		if v <= 0 {
 			return c
 		}
 	default:
@@ -350,7 +358,8 @@ func (c *Compounds) remove(s int) Compounds {
 
 func (c *Compounds) Delete(keys ...interface{}) {
 	for _, key := range keys {
-		for i, v := range *c {
+		for i := 0; i < len(*c); i++ {
+			v := (*c)[i]
 			r, y := v.(Cond)
 			if !y {
 				continue
@@ -362,6 +371,7 @@ func (c *Compounds) Delete(keys ...interface{}) {
 			delete(r, key)
 			if len(r) == 0 {
 				*c = c.remove(i)
+				i--
 			}
 		}
 	}

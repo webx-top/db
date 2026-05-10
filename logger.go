@@ -110,11 +110,21 @@ func BuildSQL(query string, args ...interface{}) string {
 				args = v
 			}
 		}
-		newArgs := make([]interface{}, len(args))
-		for k, v := range args {
-			newArgs[k] = sqlValue(v)
+		// Replace ? placeholders with actual argument values manually
+		// to avoid fmt.Sprintf format string vulnerabilities when the
+		// query contains % characters (e.g. LIKE patterns).
+		parts := strings.Split(query, `?`)
+		if len(parts) > 1 && len(args) > 0 {
+			var b strings.Builder
+			b.Grow(len(query) * 2)
+			for i, part := range parts {
+				b.WriteString(part)
+				if i < len(args) {
+					b.WriteString(fmt.Sprint(sqlValue(args[i])))
+				}
+			}
+			query = b.String()
 		}
-		query = fmt.Sprintf(strings.Replace(query, `?`, `%v`, -1), newArgs...)
 	}
 	return query
 }

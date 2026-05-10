@@ -88,7 +88,12 @@ func (r rawValue) Empty() bool {
 func Raw(value string, args ...interface{}) RawValue {
 	r := rawValue{v: value, a: nil}
 	if len(args) > 0 {
-		r.a = &args
+		// Make a copy of args to avoid sharing the underlying array
+		// with the caller, preventing data races when the caller
+		// modifies the original slice concurrently.
+		argsCopy := make([]interface{}, len(args))
+		copy(argsCopy, args)
+		r.a = &argsCopy
 	}
 	return r
 }
