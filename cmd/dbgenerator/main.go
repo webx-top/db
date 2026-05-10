@@ -68,7 +68,7 @@ func main() {
 	hasMatch := len(cfg.Match) > 0
 	validTables := []string{}
 	columns := map[string][]string{}
-
+	var importBytes bool
 	for _, tableName := range tables {
 		if hasIngore {
 			matched, err := regexp2.MustCompile(cfg.Ignore, 0).MatchString(tableName)
@@ -121,6 +121,7 @@ func main() {
 			goTypeName := f.GoType
 			if goTypeName == `[]byte` {
 				goTypeName = `Bytes`
+				importBytes = true
 			} else {
 				goTypeName = strings.Title(goTypeName)
 			}
@@ -222,6 +223,9 @@ func main() {
 				tplSchema.BeforeUpdate = beforeUpdate
 				tplSchema.SetUpdatedAt = setUpdatedAt
 			}
+		}
+		if importBytes {
+			tplSchema.Imports = append(tplSchema.Imports, `bytes`)
 		}
 		if importTime {
 			tplSchema.Imports = append(tplSchema.Imports, `time`)

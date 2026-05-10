@@ -10,9 +10,9 @@ require (
 	github.com/admpub/regexp2 v1.1.8
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/glebarez/go-sqlite v1.22.0
-	github.com/go-sql-driver/mysql v1.9.3
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/lib/pq v1.12.3
-	github.com/mattn/go-sqlite3 v1.14.42
+	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/satori/go.uuid v1.2.0
 	github.com/segmentio/fasthash v1.0.3
 	github.com/stretchr/testify v1.11.1
@@ -23,7 +23,7 @@ require (
 	github.com/webx-top/tagfast v0.0.1
 	go.mongodb.org/mongo-driver v1.17.9
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	modernc.org/ql v1.4.32
+	modernc.org/ql v1.5.1
 )
 
 require (
@@ -59,11 +59,11 @@ require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.21 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -81,25 +81,25 @@ require (
 	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/crypto v0.50.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/b v1.1.0 // indirect
-	modernc.org/db v1.1.0 // indirect
+	modernc.org/db v1.1.1 // indirect
 	modernc.org/file v1.0.20 // indirect
 	modernc.org/fileutil v1.4.0 // indirect
 	modernc.org/golex v1.1.0 // indirect
 	modernc.org/internal v1.1.10 // indirect
-	modernc.org/libc v1.72.0 // indirect
+	modernc.org/libc v1.72.3 // indirect
 	modernc.org/lldb v1.0.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sortutil v1.2.1 // indirect
-	modernc.org/sqlite v1.49.1 // indirect
+	modernc.org/sqlite v1.50.0 // indirect
 	modernc.org/strutil v1.2.1 // indirect
 	modernc.org/zappy v1.1.0 // indirect
 )

@@ -286,11 +286,15 @@ func (a *{{.StructName}}) Update(mw func(db.Result) db.Result, args ...interface
 }
 
 func (a *{{.StructName}}) GetDiffColumns(old *{{.StructName}}) (changedCols []interface{}) {
-	{{range $k, $v := .TableAndStructFields}}
+	{{- range $k, $v := .TableAndStructFields }}
+	{{- if eq $v.H.dataType `Bytes` }}
+	if !bytes.Equal(old.{{$v.V}}, a.{{$v.V}}) {
+	{{- else }}
 	if old.{{$v.V}} != a.{{$v.V}} {
+	{{- end }}
 		changedCols = append(changedCols, `{{$v.K}}`)
 	}
-	{{end}}
+	{{- end }}
 	return
 }
 
