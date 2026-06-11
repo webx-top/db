@@ -27,6 +27,7 @@ package mysql
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
 	"log"
 	"reflect"
 	"strconv"
@@ -36,7 +37,7 @@ import (
 
 	"database/sql"
 
-	_ "github.com/go-sql-driver/mysql" // MySQL driver.
+	"github.com/go-sql-driver/mysql" // MySQL driver.
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
 	"github.com/webx-top/db/internal/sqladapter/compat"
@@ -77,7 +78,14 @@ func (d *database) Open(connURL db.ConnectionURL) error {
 		return db.ErrMissingConnURL
 	}
 	d.connURL = connURL
-	return d.open()
+	err := d.open()
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, mysql.ErrInvalidConn) {
+		err = driver.ErrBadConn
+	}
+	return err
 }
 
 // NewTx begins a transaction block with the given context.

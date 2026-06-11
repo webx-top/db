@@ -34,7 +34,8 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/lib/pq" // PostgreSQL driver.
+	"github.com/lib/pq" // PostgreSQL driver.
+	"github.com/lib/pq/pqerror"
 	"github.com/webx-top/db"
 	"github.com/webx-top/db/internal/sqladapter"
 	"github.com/webx-top/db/internal/sqladapter/compat"
@@ -75,7 +76,14 @@ func (d *database) Open(connURL db.ConnectionURL) error {
 		return db.ErrMissingConnURL
 	}
 	d.connURL = connURL
-	return d.open()
+	err := d.open()
+	if err == nil {
+		return nil
+	}
+	if pq.As(err, pqerror.ConnectionException, pqerror.ConnectionDoesNotExist, pqerror.ConnectionFailure) != nil {
+		err = driver.ErrBadConn
+	}
+	return err
 }
 
 // NewTx begins a transaction block with the given context.
